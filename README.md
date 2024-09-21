@@ -2,5 +2,3 @@
 - supervisor: Prof. Graham Kirby
 
 # Terrain Sensitive Routing
-
-
