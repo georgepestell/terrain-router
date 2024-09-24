@@ -69,7 +69,8 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300
+    "width": 300,
+    "collapsed": true
   },
   "right": {
     "id": "6a45f2aa33d7f1d1",
@@ -147,5 +148,7 @@
     }
   },
   "active": "d356e638106b0157",
-  "lastOpenFiles": []
+  "lastOpenFiles": [
+    "Dissertation - DOER.md"
+  ]
 }
