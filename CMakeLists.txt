@@ -1,10 +1,10 @@
-cmake_minimum_required(VERSION 3.26)
+cmake_minimum_required(VERSION 3.25)
 
-project(routingLib VERSION 2024.0
+project(terrain_sensitive_routing VERSION 2024.0
                    LANGUAGES CXX
                    HOMEPAGE_URL "https://github.com/georgepestell/terrain_sensitive_routing")
 
-set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(Boost_USE_STATIC_LIBS OFF) 
@@ -29,7 +29,7 @@ endif()
 
 ## LIBRARY
 add_library(${PROJECT_NAME}
-  src/routingLib/routing.cpp)
+  src/routingLib/routing.cpp src/terrainParserLib/TerrainParser.cpp)
 
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
@@ -44,6 +44,8 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   PRIVATE ${Boost_LIBRARIES})
 
+
+
 target_compile_options(${PROJECT_NAME} 
   PRIVATE -Wall -Wextra -pedantic -Werror)
 
@@ -51,9 +53,18 @@ target_compile_features(${PROJECT_NAME}
   PRIVATE cxx_std_20)
 
 
-add_executable(${PROJECT_NAME}-exec src/routingLib/main.cpp)
 
-target_link_libraries(${PROJECT_NAME}-exec PRIVATE ${PROJECT_NAME})
+include_directories(extern/fadeRelease_v2.15/include_fade25d/)
+link_directories(extern/fadeRelease_v2.15/lib_ubuntu20.04_x86_64/)
+
+add_executable(${PROJECT_NAME}-exec src/terrainParserLib/TerrainParser.cpp)
+
+
+TARGET_LINK_LIBRARIES(${PROJECT_NAME}-exec 
+  PUBLIC fade25d pthread 
+  PRIVATE ${PROJECT_NAME})
+
+
 
 include(GNUInstallDirs)
 
