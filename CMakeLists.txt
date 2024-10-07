@@ -12,7 +12,7 @@ set(Boost_USE_MULTITHREADED ON)
 set(Boost_USE_STATIC_RUNTIME OFF)
 
 # find_package(Threads REQUIRED)
-find_package(Boost 1.45.0 COMPONENTS filesystem regex)
+find_package(Boost 1.45.0 COMPONENTS filesystem regex graph) 
 include(FetchContent)
 
 FetchContent_Declare(
@@ -29,7 +29,7 @@ endif()
 
 ## LIBRARY
 add_library(${PROJECT_NAME}
-  src/routingLib/routing.cpp src/terrainParserLib/TerrainParser.cpp)
+  src/routing/routing.cpp src/terrain_parser/terrain_parser.cpp)
 
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
@@ -44,27 +44,21 @@ target_include_directories(${PROJECT_NAME}
 target_link_libraries(${PROJECT_NAME}
   PRIVATE ${Boost_LIBRARIES})
 
-
-
 target_compile_options(${PROJECT_NAME} 
   PRIVATE -Wall -Wextra -pedantic -Werror)
 
 target_compile_features(${PROJECT_NAME} 
   PRIVATE cxx_std_20)
 
+find_package(CGAL REQUIRED)
+find_package(Ceres REQUIRED)
+include_directories("/usr/include/eigen3")
 
-
-include_directories(extern/fadeRelease_v2.15/include_fade25d/)
-link_directories(extern/fadeRelease_v2.15/lib_ubuntu20.04_x86_64/)
-
-add_executable(${PROJECT_NAME}-exec src/terrainParserLib/TerrainParser.cpp)
-
+add_executable(${PROJECT_NAME}-exec src/terrain_parser/terrain_parser.cpp)
 
 TARGET_LINK_LIBRARIES(${PROJECT_NAME}-exec 
-  PUBLIC fade25d pthread 
+  PUBLIC CGAL::CGAL ceres pthread ${BOOST_LIBRARIES}
   PRIVATE ${PROJECT_NAME})
-
-
 
 include(GNUInstallDirs)
 
