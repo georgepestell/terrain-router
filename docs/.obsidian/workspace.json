@@ -4,16 +4,32 @@
     "type": "split",
     "children": [
       {
-        "id": "ae935a2234485479",
+        "id": "83e862350bfd36b7",
         "type": "tabs",
         "children": [
           {
-            "id": "d356e638106b0157",
+            "id": "19c02765fca2823f",
+            "type": "leaf",
+            "state": {
+              "type": "pdf",
+              "state": {
+                "file": "sources/Terrain_Sensitive_Routing_Previous_Report.pdf"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": "d187d2db5a60b5bd",
+        "type": "tabs",
+        "children": [
+          {
+            "id": "9212c13ba8007b7c",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Dissertation - DOER.md",
+                "file": "Context Survey.md",
                 "mode": "source",
                 "source": false
               }
@@ -69,8 +85,7 @@
       }
     ],
     "direction": "horizontal",
-    "width": 300,
-    "collapsed": true
+    "width": 300
   },
   "right": {
     "id": "6a45f2aa33d7f1d1",
@@ -86,7 +101,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Dissertation - DOER.md",
+                "file": "Context Survey.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -103,7 +118,7 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Dissertation - DOER.md",
+                "file": "Context Survey.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
               }
@@ -126,7 +141,7 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Dissertation - DOER.md"
+                "file": "Context Survey.md"
               }
             }
           }
@@ -147,8 +162,21 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "d356e638106b0157",
+  "active": "9212c13ba8007b7c",
   "lastOpenFiles": [
-    "Dissertation - DOER.md"
+    "sources/Terrain_Sensitive_Routing_Previous_Report.pdf",
+    "Context Survey.md",
+    "contextSurvey.tex~",
+    "4913",
+    "contextSurvey.tex",
+    "sources/guide-coordinate-systems-great-britain.pdf",
+    "sources/Steiniger_Weibel_GIS_Software_2010.pdf",
+    "sources/infrastructures-02-00001.pdf",
+    "sources/triangulation-algorithm.md",
+    "Design and Implementation.md",
+    "Untitled",
+    "DOER.md",
+    "ethics-application-form-DRAFT.pdf",
+    "lu1629345fzb.tmp"
   ]
 }
