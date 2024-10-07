@@ -1,2 +1,3 @@
-- [] add ssh host pc1-023-l
-- [] override areas of water with very simplified 2d triangulation
+TODO:  add ssh host pc1-023-l
+TODO:  override areas of water with very simplified 2d triangulation
+TODO: convert water feature data to XYZ locations
