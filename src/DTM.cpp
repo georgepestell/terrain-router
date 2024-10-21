@@ -97,7 +97,7 @@ void DTM::simplify_3d_feature(Delaunay_3D const &source_mesh,
     target_mesh.clear();
     convert_surface_mesh_to_delaunay(*target_surface_mesh, target_mesh);
   } catch (exception &e) {
-    TSR_LOG_FATAL("copying simplified mesh to target mesh failed")
+    TSR_LOG_FATAL("copying simplified mesh to target mesh failed");
     throw e;
   }
 }

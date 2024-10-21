@@ -26,7 +26,7 @@ TEST(TestDTM, test_initalizeDoesNotThrow) {
   points.insert(Point_3(5, 0, 3));
   points.insert(Point_3(2.5, 5, 2));
 
-  TSR_LOG_TRACE("constructing dtm")
+  TSR_LOG_TRACE("constructing dtm");
 
   ASSERT_NO_THROW(make_unique<DTM>(points));
 }
@@ -37,7 +37,7 @@ TEST(TestDTM, test_getTopology) {
   points.insert(Point_3(5, 0, 3));
   points.insert(Point_3(2.5, 5, 2));
 
-  TSR_LOG_TRACE("constructing dtm")
+  TSR_LOG_TRACE("constructing dtm");
 
   auto dtm = make_unique<DTM>(points);
 
@@ -51,7 +51,7 @@ TEST(TestDTM, test_initalizeVertexCountMatchesDEM) {
   points.insert(Point_3(5, 0, 3));
   points.insert(Point_3(2.5, 5, 2));
 
-  TSR_LOG_TRACE("constructing dtm")
+  TSR_LOG_TRACE("constructing dtm");
 
   auto dtm = make_unique<DTM>(points);
 
@@ -68,11 +68,11 @@ TEST(TestDTM, test_simplify_3d_feature) {
   points.insert(Point_3(5, 0, 3));
   points.insert(Point_3(2.5, 5, 2));
 
-  TSR_LOG_TRACE("constructing dtm")
+  TSR_LOG_TRACE("constructing dtm");
 
   auto dtm = make_unique<DTM>(points);
 
-  TSR_LOG_TRACE("simplifying dtm")
+  TSR_LOG_TRACE("simplifying dtm");
 
   // Simplify
   Delaunay_3D &mesh = dtm->get_topology();
