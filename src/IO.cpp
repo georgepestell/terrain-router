@@ -25,9 +25,11 @@ Point_set_3 load_points_from_file(char const *filepath) {
   return points;
 }
 
-const char *path_to_absolute(char const *path_string) {
+const string path_to_absolute(char const *path_string) {
 
   filesystem::path filepath(path_string);
+
+  std::cout << path_string << endl;
 
   // Add pwd to relative path
   if (filepath.is_relative()) {
@@ -35,7 +37,8 @@ const char *path_to_absolute(char const *path_string) {
     filepath = filesystem::current_path() / filepath;
   }
 
-  return filepath.c_str();
+
+  return filepath;
 }
 
 void write_mesh_to_obj(char const *filepath, Delaunay_3D const &mesh) {

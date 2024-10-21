@@ -21,11 +21,11 @@ bool tsr_run(vector<string> args) {
   // Chcek if a DEM filepath was specified
   if (args.size() == 1) {
 
-    const char *filepath = path_to_absolute(args[0].c_str());
+    string filepath = path_to_absolute(args[0].c_str());
 
     // Construct the DTM from filepath
     TSR_LOG_TRACE("loading DEM file: ({:s})", filepath);
-    dtm = make_unique<DTM>(load_points_from_file(filepath));
+    dtm = make_unique<DTM>(load_points_from_file(filepath.c_str()));
 
   } else {
 
