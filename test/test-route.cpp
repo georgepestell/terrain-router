@@ -12,6 +12,14 @@
 
 using namespace tsr;
 
+class Environment : public ::testing::Environment {
+  public:
+    void SetUp() override {
+      log_set_global_loglevel(LogLevel::TRACE);
+      log_set_global_logstream(LogStream::STDERR);    
+    }
+};
+
 TEST(TestDTM, test_initializeEmptyThrows) {
   // Create empty point set
   Point_set_3 empty_points;
