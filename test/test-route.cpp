@@ -1,14 +1,16 @@
-#ifndef TSR_DEBUG
-#define TSR_DEBUG
-#include "tsr/IO.hpp"
-#include <CGAL/Point_2.h>
-#include <CGAL/Point_set_2.h>
-#include <CGAL/Point_set_3.h>
-#endif
+
 
 #include "tsr/DTM.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/IO.hpp"
 #include "gtest/gtest.h"
+#include <CGAL/Segment_2.h>
+
+#ifndef TSR_DEBUG
+#define TSR_DEBUG
+#endif
+
+#include "tsr/logging.hpp"
+
 
 using namespace tsr;
 
@@ -258,4 +260,52 @@ TEST(TestDTM, testCreateBinaryFeature) {
   auto feature_water = create_binary_feature("water", points);
 
   ASSERT_EQ(feature_water->number_of_vertices(), 4);
+}
+
+TEST(TestDTM, testBinaryFeatureEdgeCount) {
+
+  auto points_3d = load_points_from_file("../data/benNevis_filtered_water.xyz"); 
+
+  vector<Point_2> points;
+  for (auto p : points_3d.points()) {
+    points.push_back(Point_2(p.x(), p.y()));
+  }
+
+
+  TSR_LOG_TRACE("Initializing for {:d} points", points.size());
+
+  auto feature_water = create_binary_feature("water", points);
+
+  TSR_LOG_TRACE("vertices: {:d}", feature_water->number_of_vertices());
+  TSR_LOG_TRACE("edges {:d} points", feature_water->all_edges().size());
+
+  using Segment_2 = CGAL::Segment_2<Kernel>;
+
+  vector<Segment_2> good_edges;
+  for(auto edge : feature_water->finite_edges()) {
+    Segment_2 s = feature_water->segment(edge);
+    const Point_2 &p1 = s.point(0);
+    const Point_2 &p2 = s.point(1);
+
+    const double height = p1.y() - p2.y();
+    const double width = p1.x() - p2.x();
+
+    const double length = pow(height, 2) + pow(width, 2);
+
+    const double maxLength = pow(32, 2);
+
+    if (length <= maxLength) {
+      good_edges.push_back(s);
+    }
+  }
+
+  TSR_LOG_INFO("edges between water: {}", good_edges.size());
+
+}
+
+int main(int argc, char* argv[]) {
+    ::testing::InitGoogleTest(&argc, argv);
+    // gtest takes ownership of the TestEnvironment ptr - we don't delete it.
+    ::testing::AddGlobalTestEnvironment(new Environment);
+    return RUN_ALL_TESTS();
 }
