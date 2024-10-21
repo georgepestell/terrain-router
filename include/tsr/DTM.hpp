@@ -1,18 +1,15 @@
 #pragma once
 
-#include <CGAL/Projection_traits_xy_3.h>
 #define CGAL_PMP_USE_CERES_SOLVER
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <CGAL/Point_2.h>
 #include <CGAL/Point_3.h>
 #include <CGAL/Point_set_3.h>
-#include <CGAL/Segment_2.h>
 #include <CGAL/Surface_mesh.h>
 
 #include <CGAL/Delaunay_triangulation_2.h>
-
-#include <unordered_map>
+#include <CGAL/Projection_traits_xy_3.h>
 
 using namespace std;
 
@@ -37,8 +34,6 @@ class DTM {
 private:
   unique_ptr<Delaunay_3D> topology_mesh = make_unique<Delaunay_3D>();
 
-  unordered_map<string, unique_ptr<Delaunay_2D>> binary_features;
-
 public:
   inline DTM(Point_set_3 points) { initialize_dtm(points); }
 
@@ -50,6 +45,7 @@ public:
                            float max_distance_regions,
                            float cosine_max_angle_corners,
                            float max_distance_corners);
+
   void simplify_3d_feature(Delaunay_3D const &source_mesh,
                            Delaunay_3D &target_mesh);
 
