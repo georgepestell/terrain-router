@@ -1,0 +1,201 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  pdfauthor={George Pestell (200007413)},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+
+\title{Terrain Sensitive Routing
+
+Context Survey}
+\author{George Pestell (200007413)}
+\date{2024-10-05}
+
+\begin{document}
+\maketitle
+
+\hypertarget{route-planners}{%
+\section{Route Planners}\label{route-planners}}
+
+Modern routing planner applications are used ubiquitously. The vast
+majority of these focus on car-travel on roads, or limit pedestrian
+users to pre-defined paths and pavements. The vast majority rank routes
+based primarily on the shortest path between two points using the
+network of paths and roads. Few effectively consider the terrain and
+topography when ranking routes.
+
+There are examples of routing planners which provide elevation data.
+Google Maps' Terrain View has the ability to consider elevation data
+along the path network. The Ordinance Survey's OSMaps gives users the
+ability to see terrain difficulty rankings for given pre-defined routes.
+
+\hypertarget{dems}{%
+\section{DEMs}\label{dems}}
+
+A key dataset a terrain-sensitive route planner must consider is
+elevation data, as steep inclines are much more difficult to traverse
+than flat planes. Digital Elevation Maps (DEMs) are raster data
+containing a grid of elevation points across a terrain. Regular DEMs are
+common, as the grid points are evenly spaced and so the X and Y
+positions of each point are easily derived by calculating
+\texttt{x\ =\ column\ *\ cell\_size,\ y\ =\ row\ *\ cell\_size} and
+
+\hypertarget{mesh-derivation}{%
+\section{Mesh Derivation}\label{mesh-derivation}}
+
+As DEM data is given as a raster grid of elevation points, there is a
+need to generate a traversable mesh representing that gradient data.
+There are various ways to derive a mesh from a DEM, each with their own
+benefits and drawbacks. The most popular method used in GIS applications
+is the Triangular Irregular Network (TIN). TINs use a triangulation
+algorithm to create a mesh where each face is a triangle. Delaunay
+triangulation is a popular triangulation algorithm for this, as it aims
+to limit very thin and long triangles, in favour of more equilateral,
+evenly sized triangles. Another method for mesh derivation is the
+square-based mesh-derivation. This creates a mesh consisting of
+square/rectangle faces. This approach is particularly suited to regular
+grid DEMs, because the data is equally spaced, and so the resulting mesh
+consists of regularly sized square faces. Alternative mesh shapes can
+also be used for mesh derivation, UBER's H2 positioning library shows
+the potential to create a mesh from regular hexagons. Like with regular
+square meshes, this has the benefit that each face is the same size, but
+has the added benefit that the distance between hexagons is uniform in
+all directions, unlike square meshes which have a different distance for
+adjacent and diagonal faces, and unlike TINs which can have three
+different distances: one for adjacent faces, and two different distances
+for the diagonal faces.
+
+\hypertarget{triangulation-algorithms}{%
+\subsection{Triangulation Algorithms}\label{triangulation-algorithms}}
+
+\hypertarget{delaunay-triangulation}{%
+\subsection{Delaunay Triangulation}\label{delaunay-triangulation}}
+
+Delaunay triangulation is the process of taking a set of 2D points and
+forming a triangular mesh, given the constraints that the centre point
+of each triangle should
+
+\hypertarget{constrained-delaunay-triangulation}{%
+\subsubsection{Constrained Delaunay
+Triangulation}\label{constrained-delaunay-triangulation}}
+
+\hypertarget{d-delaunay-triangulation}{%
+\subsubsection{2.5-D Delaunay
+triangulation}\label{d-delaunay-triangulation}}
+
+\hypertarget{pre-existing-libraries}{%
+\section{Pre-Existing Libraries}\label{pre-existing-libraries}}
+
+A substantial amount of work has been put into creating libraries which
+extract the complexities of creating an efficient Delaunay
+implementation.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{CGAL} - This suite of tools is open-source, and has
+  simplification and smoothing tools also built-in.
+\item
+  \textbf{tin-terrain} - This open-source tool has been specifically
+  created for the generation of TIN-terrains
+\item
+  \textbf{Fade25D} - This set of tools is especially tailored
+\end{itemize}
+
+\hypertarget{gis-software}{%
+\section{GIS Software}\label{gis-software}}
+
+The amount of data that can be represented on maps is immense. GIS is a
+category of technologies which attempts to organize this data, and allow
+for interesting data analysis. Data is categorized in layers
+representing data on the map such as ``roads'', ``buildings'',
+``rivers'', but there may also be more complex sub-categories.
+Additionally, multiple data types (e.g.~buildings and rivers) may be
+present in the same layer if required. These categories allow for
+efficient filtering for specific applications.
+
+Applications for GIS Software - TODO: EXPLAIN GIS SOFTWARE APPLICATIONS
+
+\hypertarget{coordinate-systems}{%
+\section{Coordinate Systems}\label{coordinate-systems}}
+
+There are two primary categories of coordinate systems that can be used
+to represent points on the earths surface.
+
+\begin{itemize}
+\tightlist
+\item
+  \textbf{Global Coordinate Systems}
+\item
+  \textbf{Projected Coordinate Systems}
+\end{itemize}
+
+Global coordinate systems represent x, y, and z positions of a
+particular point on the earth viewed as a 3-dimensional sphere. An
+example is the latitude, longitude coordinate system
+
+\begin{itemize}
+\tightlist
+\item
+  TODO: EXPLAIN GLOBAL COORDINATE SYSTEMS
+\item
+  TODO: EXPLAIN PROJECTED COORDINATE SYSTEMS
+\end{itemize}
+
+\hypertarget{dijkstra-a-algorithms}{%
+\subsection{Dijkstra / A* Algorithms}\label{dijkstra-a-algorithms}}
+
+A* is famous because it is often an efficient strategy that is
+guaranteed to find the most optimal path given an admissible heuristic.
+An admissible heuristic is one that never over-estimates the difficulty
+of a given step. However, constructing such an admissible heuristic can
+be challenging given a multifactorial routing algorithm. Dijkstra's
+algorithm is a generalization of the A* algorithm, allowing no
+admissible heuristic to be defined.
+
+TODO: EXPLAIN A* TODO: EXPLAIN DIJKSTRA's ALGORITHM
+
+\end{document}

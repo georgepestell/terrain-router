@@ -4,38 +4,39 @@
     "type": "split",
     "children": [
       {
-        "id": "83e862350bfd36b7",
+        "id": "3447b5ff1afc4b56",
         "type": "tabs",
         "children": [
           {
-            "id": "19c02765fca2823f",
-            "type": "leaf",
-            "state": {
-              "type": "pdf",
-              "state": {
-                "file": "sources/Terrain_Sensitive_Routing_Previous_Report.pdf"
-              }
-            }
-          }
-        ]
-      },
-      {
-        "id": "d187d2db5a60b5bd",
-        "type": "tabs",
-        "children": [
-          {
-            "id": "9212c13ba8007b7c",
+            "id": "e7fc4c84eb47f4f5",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Context Survey.md",
+                "file": "File Organisation.md",
+                "mode": "preview",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "File Organisation"
+            }
+          },
+          {
+            "id": "8cc7eb9b1f0c5a1a",
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "Design and Implementation.md",
                 "mode": "source",
                 "source": false
-              }
+              },
+              "icon": "lucide-file",
+              "title": "Design and Implementation"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "vertical"
@@ -55,7 +56,9 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical"
-              }
+              },
+              "icon": "lucide-folder-closed",
+              "title": "Files"
             }
           },
           {
@@ -70,7 +73,9 @@
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical"
-              }
+              },
+              "icon": "lucide-search",
+              "title": "Search"
             }
           },
           {
@@ -78,7 +83,9 @@
             "type": "leaf",
             "state": {
               "type": "bookmarks",
-              "state": {}
+              "state": {},
+              "icon": "lucide-bookmark",
+              "title": "Bookmarks"
             }
           }
         ]
@@ -101,7 +108,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Context Survey.md",
+                "file": "Design and Implementation.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -109,7 +116,9 @@
                 "searchQuery": "",
                 "backlinkCollapsed": false,
                 "unlinkedCollapsed": true
-              }
+              },
+              "icon": "links-coming-in",
+              "title": "Backlinks for Design and Implementation"
             }
           },
           {
@@ -118,10 +127,12 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Context Survey.md",
+                "file": "Design and Implementation.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
-              }
+              },
+              "icon": "links-going-out",
+              "title": "Outgoing links from Design and Implementation"
             }
           },
           {
@@ -132,7 +143,9 @@
               "state": {
                 "sortOrder": "frequency",
                 "useHierarchy": true
-              }
+              },
+              "icon": "lucide-tags",
+              "title": "Tags"
             }
           },
           {
@@ -141,8 +154,10 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Context Survey.md"
-              }
+                "file": "Design and Implementation.md"
+              },
+              "icon": "lucide-list",
+              "title": "Outline of Design and Implementation"
             }
           }
         ]
@@ -162,21 +177,24 @@
       "command-palette:Open command palette": false
     }
   },
-  "active": "9212c13ba8007b7c",
+  "active": "8cc7eb9b1f0c5a1a",
   "lastOpenFiles": [
-    "sources/Terrain_Sensitive_Routing_Previous_Report.pdf",
+    "Untitled.md",
+    "File Organisation.md",
     "Context Survey.md",
-    "contextSurvey.tex~",
-    "4913",
-    "contextSurvey.tex",
-    "sources/guide-coordinate-systems-great-britain.pdf",
-    "sources/Steiniger_Weibel_GIS_Software_2010.pdf",
-    "sources/infrastructures-02-00001.pdf",
+    "context_survey.pdf",
+    "plan.pdf",
+    "lu10826313nbup.tmp",
+    "lu10826313nbuk.tmp",
+    "lu10826313nbug.tmp",
+    "lu10826313nbuc.tmp",
+    "lu10826313nbu8.tmp",
+    "lu10826313nbu4.tmp",
+    "lu10826313nbu2.tmp",
+    "lu10826313nbtx.tmp",
+    "Further Improvements.md",
     "sources/triangulation-algorithm.md",
     "Design and Implementation.md",
-    "Untitled",
-    "DOER.md",
-    "ethics-application-form-DRAFT.pdf",
-    "lu1629345fzb.tmp"
+    "DOER.md"
   ]
 }

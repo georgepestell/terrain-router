@@ -1,90 +1,141 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(terrain_sensitive_routing VERSION 2024.0
-                   LANGUAGES CXX
-                   HOMEPAGE_URL "https://github.com/georgepestell/terrain_sensitive_routing")
+project(terrin_senstive_routing)
 
-set(CMAKE_CXX_STANDARD 20)
+option(TSR_TEST "include test targets in build system" OFF)
+option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
+
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-set(Boost_USE_STATIC_LIBS OFF) 
-set(Boost_USE_MULTITHREADED ON)  
-set(Boost_USE_STATIC_RUNTIME OFF)
+# get current working branch
+execute_process(
+  COMMAND git describe --all --dirty
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  OUTPUT_VARIABLE TSR_GIT_DESCRIPTION
+  OUTPUT_STRIP_TRAILING_WHITESPACE
+)
 
-# find_package(Threads REQUIRED)
-find_package(Boost 1.45.0 COMPONENTS filesystem regex graph) 
+# last commit hash
+execute_process(
+    COMMAND git log -1 --format=%H
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+    OUTPUT_VARIABLE TSR_GIT_COMMIT_HASH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+string(TIMESTAMP TSR_TIMESTAMP "%Y%m%dT%H%MZ" UTC)
+
+find_package(CGAL REQUIRED)
+if (NOT CGAL_FOUND)
+  message(FATAL_ERROR "CGAL not found, cannot proceed")
+endif()
+
+if (CGAL_VERSION VERSION_LESS "5.6")
+  message(FATAL_ERROR "CGAL version \"${CGAL_VERSION}\" is too old, at least 5.6 is required")
+endif()
+
+# Boost
+set(Boost_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
+set(Boost_USE_STATIC_LINS ON)
+find_package(Boost REQUIRED COMPONENTS
+  program_options
+  filesystem
+  system
+)
+
 include(FetchContent)
 
 FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+  fmt
+  GIT_REPOSITORY https://github.com/fmtlib/fmt
+  GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
+
+ FetchContent_MakeAvailable(fmt)
+
+set(TSR_SOURCE_FILES
+  src/DTM.cpp
+  src/logging.cpp
+  src/IO.cpp
 )
 
-FetchContent_GetProperties(googletest)
-if (NOT googletest_POPULATED)
-  FetchContent_POPULATE(googletest)
-  add_subdirectory(${googletest_SOURCE_DIR} ${googletest_BINARY_DIR}
-    EXCLUDE_FROM_ALL)
+configure_file(src/version_info.cpp version_info.cpp)
+
+add_library(tsr
+  ${TSR_SOURCE_FILES}
+)
+
+find_package (Eigen3 3.3 REQUIRED NO_MODULE)
+
+target_compile_definitions(tsr PUBLIC $<$<CONFIG:Debug>:TSR_DEBUG>)
+
+target_include_directories(tsr
+  PUBLIC
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    ${Boost_INCLUDE_DIRS}
+
+  PRIVATE
+    ${CGAL_INCLUDE_DIR}
+)
+
+target_link_libraries(tsr
+  PUBLIC
+    ${Boost_LIBRARIES}
+    fmt::fmt
+
+  PRIVATE
+    CGAL::CGAL
+    Eigen3::Eigen
+)
+
+add_executable(tsr-route
+  src/cmd.cpp
+)
+
+target_compile_definitions(tsr-route 
+  PRIVATE "-DSOURCE_ROOT=\"${CMAKE_CURRENT_SOURCE_DIR}\""
+  PUBLIC $<$<CONFIG:Debug>:TSR_DEBUG>
+  )
+
+target_include_directories(tsr-route
+  PRIVATE 
+    ${Boost_INCLUDE_DIRS}
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/
+)
+
+target_link_libraries(tsr-route
+  PRIVATE
+    ${Boost_LIBRARIES}
+    tsr
+    fmt::fmt
+)
+
+if (TSR_TEST)
+
+  FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
+    )
+  # For Windows: Prevent overriding the parent project's compiler/linker settings
+  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+  FetchContent_MakeAvailable(googletest)
+
+  enable_testing()
+
+
+  add_executable(test-tsr test/test-route.cpp)
+  target_include_directories(test-tsr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  target_link_libraries(test-tsr PRIVATE tsr GTest::gtest_main)
+
+
+  
+  include(GoogleTest)
+  gtest_discover_tests(test-tsr)
+
 endif()
 
-## LIBRARY
-add_library(${PROJECT_NAME}
-  src/routing/routing.cpp src/terrain_parser/terrain_parser.cpp)
-
-add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES
-  VERSION ${PROJECT_VERSION})
-
-target_include_directories(${PROJECT_NAME}
-  PUBLIC include
-  PRIVATE src
-)
-
-target_link_libraries(${PROJECT_NAME}
-  PRIVATE ${Boost_LIBRARIES})
-
-target_compile_options(${PROJECT_NAME} 
-  PRIVATE -Wall -Wextra -pedantic -Werror)
-
-target_compile_features(${PROJECT_NAME} 
-  PRIVATE cxx_std_20)
-
-find_package(CGAL REQUIRED)
-find_package(Ceres REQUIRED)
-include_directories("/usr/include/eigen3")
-
-add_executable(${PROJECT_NAME}-exec src/terrain_parser/terrain_parser.cpp)
-
-TARGET_LINK_LIBRARIES(${PROJECT_NAME}-exec 
-  PUBLIC CGAL::CGAL ceres pthread ${BOOST_LIBRARIES}
-  PRIVATE ${PROJECT_NAME})
-
-include(GNUInstallDirs)
-
-install(TARGETS ${PROJECT_NAME}
-  EXPORT RoutingLibTargets
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
-
-install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-
-## UNIT TESTS
-
-add_executable(${PROJECT_NAME}-tests
-  test/test-routing.cpp)
-
-target_link_libraries(${PROJECT_NAME}-tests
-  PRIVATE gtest_main ${PROJECT_NAME}::${PROJECT_NAME})
-
-target_compile_options(${PROJECT_NAME}-tests
-  PRIVATE -Wall -Wextra -pedantic -Werror)
-
-target_compile_features(${PROJECT_NAME}-tests
-  PRIVATE cxx_std_20)
-
-enable_testing()
-
-include(GoogleTest)
-gtest_discover_tests(${PROJECT_NAME}-tests)
+# Add additional compiler flags if required
+if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
+  target_compile_options(tsr PRIVATE -Wall -Wextra -pedantic -frounding-math)
+  target_compile_options(tsr-route PRIVATE -Wall -Wextra -pedantic -frounding-math)
+endif()

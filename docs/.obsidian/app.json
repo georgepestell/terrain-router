@@ -1,3 +1,18 @@
 {
-  "spellcheck": false
+  "spellcheck": false,
+  "spellcheckDictionary": [
+    "CGAL",
+    "Delaunay",
+    "DEMs",
+    "TINs",
+    "OSMaps",
+    "Pestell"
+  ],
+  "pdfExportSettings": {
+    "includeName": true,
+    "pageSize": "A4",
+    "landscape": false,
+    "margin": "2",
+    "downscalePercent": 80
+  }
 }
