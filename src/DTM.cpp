@@ -8,7 +8,6 @@
 #include <CGAL/boost/graph/copy_face_graph.h>
 #include <CGAL/boost/graph/graph_traits_Delaunay_triangulation_2.h>
 
-#include <algorithm>
 #include <stdexcept>
 
 namespace tsr {
