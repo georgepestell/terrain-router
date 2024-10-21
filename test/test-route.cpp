@@ -212,7 +212,7 @@ TEST(TestDTM, test_simplify_3d_feature_does_not_simplify_long_distances) {
    * @brief Creates a flat plane with an extra vertice along an edge which
    * should be removed upon simplification
    *
-   *    /*
+   *    _*
    *   /   \
    *  *     \
    *  |      \
