@@ -5,9 +5,11 @@ project(terrin_senstive_routing)
 option(TSR_TEST "include test targets in build system" OFF)
 option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+add_definitions ( -Wno-gnu-zero-variadic-macro-arguments )
 
 # get current working branch
 execute_process(
