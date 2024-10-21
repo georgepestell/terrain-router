@@ -34,7 +34,7 @@ void DTM::initialize_dtm(Point_set_3 points) {
   }
 
   TSR_LOG_TRACE("DTM initialization complete with {:d} vertices",
-                dt->number_of_vertices());
+                dt.number_of_vertices());
 
   // convert the delaunay mesh to surface mesh
   *this->topology_mesh = dt;
