@@ -1,5 +1,3 @@
-
-
 #include "tsr/DTM.hpp"
 #include "tsr/IO.hpp"
 #include "gtest/gtest.h"
@@ -10,7 +8,6 @@
 #endif
 
 #include "tsr/logging.hpp"
-
 
 using namespace tsr;
 
