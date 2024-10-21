@@ -16,9 +16,7 @@
                 "file": "File Organisation.md",
                 "mode": "preview",
                 "source": false
-              },
-              "icon": "lucide-file",
-              "title": "File Organisation"
+              }
             }
           },
           {
@@ -27,12 +25,10 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Design and Implementation.md",
+                "file": "Sources and Attributions.md",
                 "mode": "source",
                 "source": false
-              },
-              "icon": "lucide-file",
-              "title": "Design and Implementation"
+              }
             }
           }
         ],
@@ -56,9 +52,7 @@
               "type": "file-explorer",
               "state": {
                 "sortOrder": "alphabetical"
-              },
-              "icon": "lucide-folder-closed",
-              "title": "Files"
+              }
             }
           },
           {
@@ -73,9 +67,7 @@
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical"
-              },
-              "icon": "lucide-search",
-              "title": "Search"
+              }
             }
           },
           {
@@ -83,9 +75,7 @@
             "type": "leaf",
             "state": {
               "type": "bookmarks",
-              "state": {},
-              "icon": "lucide-bookmark",
-              "title": "Bookmarks"
+              "state": {}
             }
           }
         ]
@@ -108,7 +98,7 @@
             "state": {
               "type": "backlink",
               "state": {
-                "file": "Design and Implementation.md",
+                "file": "Sources and Attributions.md",
                 "collapseAll": false,
                 "extraContext": false,
                 "sortOrder": "alphabetical",
@@ -116,9 +106,7 @@
                 "searchQuery": "",
                 "backlinkCollapsed": false,
                 "unlinkedCollapsed": true
-              },
-              "icon": "links-coming-in",
-              "title": "Backlinks for Design and Implementation"
+              }
             }
           },
           {
@@ -127,12 +115,10 @@
             "state": {
               "type": "outgoing-link",
               "state": {
-                "file": "Design and Implementation.md",
+                "file": "Sources and Attributions.md",
                 "linksCollapsed": false,
                 "unlinkedCollapsed": true
-              },
-              "icon": "links-going-out",
-              "title": "Outgoing links from Design and Implementation"
+              }
             }
           },
           {
@@ -143,9 +129,7 @@
               "state": {
                 "sortOrder": "frequency",
                 "useHierarchy": true
-              },
-              "icon": "lucide-tags",
-              "title": "Tags"
+              }
             }
           },
           {
@@ -154,10 +138,8 @@
             "state": {
               "type": "outline",
               "state": {
-                "file": "Design and Implementation.md"
-              },
-              "icon": "lucide-list",
-              "title": "Outline of Design and Implementation"
+                "file": "Sources and Attributions.md"
+              }
             }
           }
         ]
@@ -179,7 +161,8 @@
   },
   "active": "8cc7eb9b1f0c5a1a",
   "lastOpenFiles": [
-    "Untitled.md",
+    "Design and Implementation.md",
+    "Sources and Attributions.md",
     "File Organisation.md",
     "Context Survey.md",
     "context_survey.pdf",
@@ -194,7 +177,6 @@
     "lu10826313nbtx.tmp",
     "Further Improvements.md",
     "sources/triangulation-algorithm.md",
-    "Design and Implementation.md",
     "DOER.md"
   ]
 }

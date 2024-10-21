@@ -1,0 +1,5 @@
+- CGAL Library - https://www.cgal.org/
+- tin-terrain - https://github.com/heremaps/tin-terrain
+- openstreetmaps Overpass API https://wiki.openstreetmap.org/wiki/Overpass_API
+- opentopology API - https://opentopography.org/
+- 
