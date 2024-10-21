@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_COP30.xyz"
+#define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_UTM.xyz"
 
 using namespace std;
 
