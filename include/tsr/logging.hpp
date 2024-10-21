@@ -1,7 +1,11 @@
 #pragma once
 
-#include "fmt/core.h"
-#include <string>
+/** Include fmt core library
+  * Clangd unused_include ignored because the include is required, 
+  * but used in #DEFINE TSR_LOG functions, which are injected into the source code when used.
+  */
+#include "fmt/core.h" // IWYU pragma: keep 
+
 
 namespace tsr {
 
@@ -35,7 +39,10 @@ LogLevel log_get_global_loglevel();
 
 } // namespace tsr
 
-// Compiler-Disable Trace logs when in production
+/**
+  * Remove TSR_LOG_TRACE commands in source code for Release builds.
+  * Improves performance, but allows TRACE logging for debugging.
+ */
 #ifdef TSR_DEBUG
 #define TSR_LOG_TRACE(fmtString, ...)                                          \
   ::tsr::log_message(::tsr::LogLevel::TRACE, __FILE__, __LINE__,               \
@@ -44,6 +51,10 @@ LogLevel log_get_global_loglevel();
 #define TSR_LOG_TRACE(fmtString, ...)
 #endif
 
+/**
+  * Defines the normal logging functions which are injected into the source 
+  * code by the compiler 
+  */
 #define TSR_LOG_DEBUG(fmtString, ...)                                          \
   ::tsr::log_message(::tsr::LogLevel::DEBUG, __FILE__, __LINE__,               \
                      ::fmt::format(fmtString, ##__VA_ARGS__))
