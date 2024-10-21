@@ -25,6 +25,14 @@ enum class LogStream { NONE, STDOUT, STDERR };
 void log_message(LogLevel logLevel, const char *filename, const int line,
                  const std::string &message);
 
+void log_set_global_logstream(LogStream logstream);
+
+void log_set_global_loglevel(LogLevel level);
+
+LogStream log_get_global_logstream();
+LogLevel log_get_global_loglevel();
+
+
 } // namespace tsr
 
 // Compiler-Disable Trace logs when in production

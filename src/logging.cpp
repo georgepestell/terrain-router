@@ -20,8 +20,8 @@ constexpr LogLevel GLOBAL_DEFAULT_LOG_LEVEL = LogLevel::INFO;
 static std::atomic<LogLevel> g_global_log_level = {GLOBAL_DEFAULT_LOG_LEVEL};
 static std::atomic<LogStream> g_global_log_stream = {LogStream::STDERR};
 
-void log_set_global_logstream(LogStream ls) {
-  g_global_log_stream = ls;
+void log_set_global_logstream(LogStream logstream) {
+  g_global_log_stream = logstream;
 }
 
 void log_set_global_loglevel(LogLevel level) {
