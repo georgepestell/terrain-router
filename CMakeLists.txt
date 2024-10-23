@@ -67,9 +67,11 @@ add_library(tsr
   ${TSR_SOURCE_FILES}
 )
 
+find_package(TBB)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_package(OpenCV REQUIRED)
+find_package(TBB REQUIRED)
 
 target_compile_definitions(tsr PUBLIC $<$<CONFIG:Debug>:TSR_DEBUG>)
 
@@ -80,6 +82,7 @@ target_include_directories(tsr
 
   PRIVATE
     ${CGAL_INCLUDE_DIR}
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 target_link_libraries(tsr
@@ -91,7 +94,7 @@ target_link_libraries(tsr
     CGAL::CGAL
     Eigen3::Eigen
     ${OpenCV_LIBS}
-    ${OpenCV_INCLUDE_DIRS}
+    TBB::tbb
 )
 
 add_executable(tsr-route
@@ -114,6 +117,7 @@ target_link_libraries(tsr-route
     ${Boost_LIBRARIES}
     tsr
     fmt::fmt
+    TBB::tbb
 )
 
 if (TSR_TEST)
@@ -131,7 +135,7 @@ if (TSR_TEST)
 
   add_executable(test-tsr test/test-route.cpp)
   target_include_directories(test-tsr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
-  target_link_libraries(test-tsr PRIVATE Eigen3::Eigen ${OpenCV_LIBS} tsr GTest::gtest_main)
+  target_link_libraries(test-tsr PRIVATE Eigen3::Eigen ${OpenCV_LIBS} tsr GTest::gtest_main TBB::tbb)
 
 
   
