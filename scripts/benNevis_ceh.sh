@@ -1,1 +1,0 @@
-wget "https://catalogue.ceh.ac.uk/maps/4728dd2d-064f-4532-be85-ecafc283bdcf?language=eng&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetMap&CRS=CRS:84&LAYERS=LC.10m.GB&STYLE=default&BBOX=-5.1272,56.7612,-4.9651,56.8646&FORMAT=image/tiff&WIDTH=2048&HEIGHT=2048" -O ../data/benNevis_terrain_types.tiff
