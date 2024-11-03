@@ -88,4 +88,8 @@
     "typeinfo": "cpp",
     "variant": "cpp"
   },
+  "cmake.configureArgs": [
+    "-DTSR_TEST=ON",
+    "-DCMAKE_BUILD_TYPE=Debug"
+  ],
 }
