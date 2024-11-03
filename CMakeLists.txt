@@ -59,6 +59,11 @@ set(TSR_SOURCE_FILES
   src/tsr/DTM.cpp
   src/tsr/logging.cpp
   src/tsr/IO.cpp
+  src/tsr/DTM.cpp
+  src/tsr/logging.cpp
+  src/tsr/IO/FileIOHandler.cpp
+  src/tsr/IO/ImageProcessor.cpp
+  src/tsr/API/APICaller.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
@@ -72,6 +77,8 @@ find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_package(OpenCV REQUIRED)
 find_package(TBB REQUIRED)
+### libcurl
+find_package(CURL REQUIRED)
 
 target_compile_definitions(tsr PUBLIC $<$<CONFIG:Debug>:TSR_DEBUG>)
 
