@@ -1,4 +1,4 @@
-#include "tsr/Features/BooleanWaterFeature.hpp"
+#include "tsr/features/BooleanWaterFeature.hpp"
 
 namespace tsr::Features {
 
