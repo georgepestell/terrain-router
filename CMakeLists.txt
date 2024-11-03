@@ -56,11 +56,6 @@ FetchContent_Declare(
  FetchContent_MakeAvailable(fmt)
 
 set(TSR_SOURCE_FILES
-<<<<<<< Updated upstream
-  src/tsr/DTM.cpp
-  src/tsr/logging.cpp
-  src/tsr/IO.cpp
-=======
   src/tsr/DTM.cpp
   src/tsr/logging.cpp
   src/tsr/IO/FileIOHandler.cpp
@@ -69,7 +64,6 @@ set(TSR_SOURCE_FILES
   src/tsr/Feature.cpp
   src/tsr/features/BooleanWaterFeature.cpp
   src/tsr/features/TerrainTypeFeature.cpp
->>>>>>> Stashed changes
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
