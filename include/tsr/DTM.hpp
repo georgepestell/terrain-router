@@ -1,17 +1,11 @@
 #pragma once
 
-#define CGAL_PMP_USE_CERES_SOLVER
 
-#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
-#include <CGAL/Point_2.h>
-#include <CGAL/Point_3.h>
-#include <CGAL/Point_set_3.h>
-#include <CGAL/Surface_mesh.h>
+#include "tsr/Point_3.hpp"
+#include "tsr/Point_2.hpp"
+#include "tsr/Delaunay_3.hpp"
+#include "tsr/Surface_mesh.hpp"
 
-#include <CGAL/Delaunay_triangulation_2.h>
-#include <CGAL/Projection_traits_xy_3.h>
-
-using namespace std;
 
 namespace tsr {
 
@@ -20,44 +14,64 @@ namespace tsr {
 #define DEFAULT_COSINE_MAX_ANGLE_CORNERS 0.9
 #define DEFAULT_MAX_DISTANCE_CORNERS 3.0
 
-using Kernel = CGAL::Exact_predicates_inexact_constructions_kernel;
-using Point_3 = CGAL::Point_3<Kernel>;
-using Point_set_3 = CGAL::Point_set_3<Point_3>;
-using Projection_traits = CGAL::Projection_traits_xy_3<Kernel>;
-using Delaunay_3D = CGAL::Delaunay_triangulation_2<Projection_traits>;
-using Delaunay_2D = CGAL::Delaunay_triangulation_2<Kernel>;
-using Point_2 = CGAL::Point_2<Kernel>;
-using Surface_mesh = CGAL::Surface_mesh<Point_3>;
+std::unique_ptr<Delaunay_3> create_tin_from_points(std::vector<Point_3> &points);
+void convert_surface_mesh_to_tin(Surface_mesh const &source,
+                                      Delaunay_3 &target);
 
-class DTM {
 
-private:
-  unique_ptr<Delaunay_3D> topology_mesh = make_unique<Delaunay_3D>();
+void convert_tin_to_surface_mesh(Delaunay_3 const &source, Surface_mesh &target);
 
-public:
-  inline DTM(Point_set_3 points) { initialize_dtm(points); }
-
-  void initialize_dtm(Point_set_3 topology_points);
-
-  void simplify_3d_feature(Delaunay_3D const &source_mesh,
-                           Delaunay_3D &target_mesh,
+void simplify_mesh(Delaunay_3 const &source_mesh, Delaunay_3 &target_mesh,
                            float cosine_max_angle_regions,
                            float max_distance_regions,
                            float cosine_max_angle_corners,
                            float max_distance_corners);
 
-  void simplify_3d_feature(Delaunay_3D const &source_mesh,
-                           Delaunay_3D &target_mesh);
 
-  Delaunay_3D &get_topology() const;
+void simplify_mesh(Delaunay_3 const &source_mesh, Delaunay_3 &target_mesh);
 
-  Delaunay_2D &get_binary_feature() const;
+void simplify_mesh(Surface_mesh const &source_mesh, Surface_mesh &target_mesh,
+                           float cosine_max_angle_regions,
+                           float max_distance_regions,
+                           float cosine_max_angle_corners,
+                           float max_distance_corners);
+
+void simplify_mesh(Surface_mesh const &source_mesh, Surface_mesh &target_mesh);
+
+double interpolate_z(const Point_3& p1, const Point_3& p2, const Point_3& p3, const double x, const double y);
+
+void denoise_points(std::vector<Point_3> &points);
+
+void jet_smooth_points(std::vector<Point_3> &points);
+
+void simplify_points(std::vector<Point_3> &points);
+
+class DTM {
+
+private:
+  std::unique_ptr<Delaunay_3> mesh;
+  
+
+
+
+
+
+
+
+public:
+
+  inline DTM(std::vector<Point_3> &points) {
+    this->mesh = create_tin_from_points(points);
+  }
+
+  Delaunay_3 &get_mesh() const;
+
+  void add_contour_constraint(std::vector<Point_2> contour, double max_segment_length);
+
+  void tag_feature();
+
 };
 
-void convert_surface_mesh_to_delaunay(Surface_mesh const &source,
-                                      Delaunay_3D &target);
 
-unique_ptr<Delaunay_2D> create_binary_feature(const char *layer_id,
-                                              vector<Point_2> &points);
 
 } // namespace tsr
