@@ -117,12 +117,9 @@ void DTM::add_contour_constraint(std::vector<Point_2> contour, double max_segmen
     Point_3 vertexNextPoint(next_x, next_y, next_z);
     
     // Calculate the Euclidean distance in the XY plane
-    const GeographicLib::Geodesic &geod = GeographicLib::Geodesic::WGS84();
-    double length;
-    geod.Inverse(x,y,next_x,next_y, length);
-
     double dx = next_x - x;
     double dy = next_y - y;
+    double length = sqrt(dx * dx + dy * dy);
 
     std::cout << "length: " << length << std::endl;
     TSR_LOG_WARN("length {}", length);
