@@ -56,12 +56,12 @@ FetchContent_Declare(
  FetchContent_MakeAvailable(fmt)
 
 set(TSR_SOURCE_FILES
-  src/DTM.cpp
-  src/logging.cpp
-  src/IO.cpp
+  src/tsr/DTM.cpp
+  src/tsr/logging.cpp
+  src/tsr/IO.cpp
 )
 
-configure_file(src/version_info.cpp version_info.cpp)
+configure_file(src/tsr/version_info.cpp version_info.cpp)
 
 add_library(tsr
   ${TSR_SOURCE_FILES}
@@ -98,7 +98,7 @@ target_link_libraries(tsr
 )
 
 add_executable(tsr-route
-  src/cmd.cpp
+  src/tsr/cmd.cpp
 )
 
 target_compile_definitions(tsr-route 
