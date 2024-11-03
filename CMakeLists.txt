@@ -56,14 +56,20 @@ FetchContent_Declare(
  FetchContent_MakeAvailable(fmt)
 
 set(TSR_SOURCE_FILES
+<<<<<<< Updated upstream
   src/tsr/DTM.cpp
   src/tsr/logging.cpp
   src/tsr/IO.cpp
+=======
   src/tsr/DTM.cpp
   src/tsr/logging.cpp
   src/tsr/IO/FileIOHandler.cpp
   src/tsr/IO/ImageProcessor.cpp
   src/tsr/API/APICaller.cpp
+  src/tsr/Feature.cpp
+  src/tsr/features/BooleanWaterFeature.cpp
+  src/tsr/features/TerrainTypeFeature.cpp
+>>>>>>> Stashed changes
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
@@ -72,11 +78,24 @@ add_library(tsr
   ${TSR_SOURCE_FILES}
 )
 
+target_sources(tsr PRIVATE
+  include/tsr/DefaultFeatures.hpp
+)
+
 find_package(TBB)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)
 
 find_package(OpenCV REQUIRED)
 find_package(TBB REQUIRED)
+find_package(GeographicLib REQUIRED)
+
+##' GDAL
+find_package(GDAL CONFIG)
+
+if (NOT GDAL_FOUND)
+  find_package(GDAL REQUIRED)
+endif()
+
 ### libcurl
 find_package(CURL REQUIRED)
 
@@ -90,6 +109,7 @@ target_include_directories(tsr
   PRIVATE
     ${CGAL_INCLUDE_DIR}
     ${OpenCV_INCLUDE_DIRS}
+    ${GeographicLib_INCLDUE_DIRS}
 )
 
 target_link_libraries(tsr
@@ -102,6 +122,9 @@ target_link_libraries(tsr
     Eigen3::Eigen
     ${OpenCV_LIBS}
     TBB::tbb
+    ${GeographicLib_LIBRARIES}
+    GDAL::GDAL
+    CURL::libcurl
 )
 
 add_executable(tsr-route
@@ -117,6 +140,7 @@ target_include_directories(tsr-route
   PRIVATE 
     ${Boost_INCLUDE_DIRS}
     ${CMAKE_CURRENT_SOURCE_DIR}/include/
+    ${OpenCV_INCLUDE_DIRS}
 )
 
 target_link_libraries(tsr-route
@@ -125,6 +149,7 @@ target_link_libraries(tsr-route
     tsr
     fmt::fmt
     TBB::tbb
+    ${OPENCV_LIBS}
 )
 
 if (TSR_TEST)
@@ -140,8 +165,8 @@ if (TSR_TEST)
   enable_testing()
 
 
-  add_executable(test-tsr test/test-route.cpp)
-  target_include_directories(test-tsr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include)
+  add_executable(test-tsr test/main.cpp)
+  target_include_directories(test-tsr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${OpenCV_INCLUDE_DIRS})
   target_link_libraries(test-tsr PRIVATE Eigen3::Eigen ${OpenCV_LIBS} tsr GTest::gtest_main TBB::tbb)
 
 
