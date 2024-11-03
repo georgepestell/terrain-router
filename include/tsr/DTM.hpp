@@ -1,11 +1,13 @@
 #pragma once
 
+#include <any>
 
 #include "tsr/Point_3.hpp"
 #include "tsr/Point_2.hpp"
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/Surface_mesh.hpp"
 
+#include "tsr/Feature.hpp"
 
 namespace tsr {
 
@@ -50,13 +52,13 @@ class DTM {
 
 private:
   std::unique_ptr<Delaunay_3> mesh;
-  
 
 
 
 
 
 
+  std::map<std::string, std::unique_ptr<Feature<std::any>>> features;
 
 public:
 
