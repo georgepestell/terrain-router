@@ -20,3 +20,4 @@ int main(int argc, char* argv[]) {
 }
 
 #include "test_dtm.hpp"
+#include "test_api.hpp"
