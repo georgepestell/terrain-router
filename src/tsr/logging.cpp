@@ -36,7 +36,7 @@ LogLevel log_get_global_loglevel() {
   return g_global_log_level;
 }
 
-static const char *loglevel_to_str(const LogLevel level) {
+static std::string loglevel_to_str(const LogLevel level) {
   switch (level) {
   case LogLevel::TRACE:
     return "TRACE";
@@ -55,7 +55,7 @@ static const char *loglevel_to_str(const LogLevel level) {
   }
 }
 
-void log_message(LogLevel level, const char *filename, const int line,
+void log_message(LogLevel level, std::string filename, const int line,
                  const std::string &message) {
 
   const LogLevel global_loglevel = g_global_log_level;
@@ -66,15 +66,15 @@ void log_message(LogLevel level, const char *filename, const int line,
 
   if (global_loglevel <= level && !message.empty() && log_stream) {
     if (level == LogLevel::INFO) {
-      fmt::print(log_stream, "{:s}\n", message.c_str());
+      fmt::print(log_stream, "{:s}\n", message);
     } else {
 
-      const char *filename_last_component = strrchr(filename, '/');
+      char const *filename_last_component = strrchr(filename.c_str(), '/');
       if (filename_last_component) {
         filename = filename_last_component + 1;
       }
       fmt::print(log_stream, "{:s} {:s}:{:d} {:s}\n", loglevel_to_str(level),
-                 filename, line, message.c_str());
+                 filename, line, message);
 
     }
     std::fflush(log_stream);
