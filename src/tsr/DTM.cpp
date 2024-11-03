@@ -121,9 +121,6 @@ void DTM::add_contour_constraint(std::vector<Point_2> contour, double max_segmen
     double dy = next_y - y;
     double length = sqrt(dx * dx + dy * dy);
 
-    std::cout << "length: " << length << std::endl;
-    TSR_LOG_WARN("length {}", length);
-
     if  (length > max_segment_length) {
       // Calculate the number of splits required
       double splits = floor(length / max_segment_length);
