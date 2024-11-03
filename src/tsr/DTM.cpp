@@ -81,7 +81,7 @@ double interpolate_z(const Point_3& p1, const Point_3& p2, const Point_3& p3, co
     return (-A * x - B * y - D) / C;
 }
 
-void DTM::add_contour_constraint(std::vector<Point_2> contour, uint max_segment_length) {
+void DTM::add_contour_constraint(std::vector<Point_2> contour, double max_segment_length) {
 
   for (auto vertexIt = contour.begin(); vertexIt != contour.begin(); ++vertexIt) {
     auto vertexNextIt = std::next(vertexIt);
