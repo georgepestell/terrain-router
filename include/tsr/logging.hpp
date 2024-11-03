@@ -26,7 +26,7 @@ enum class LogLevel {
 
 enum class LogStream { NONE, STDOUT, STDERR };
 
-void log_message(LogLevel logLevel, const char *filename, const int line,
+void log_message(LogLevel logLevel, std::string filename, const int line,
                  const std::string &message);
 
 void log_set_global_logstream(LogStream logstream);
