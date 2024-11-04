@@ -1,5 +1,3 @@
 #include "tsr/features/TerrainTypeFeature.hpp"
 
-namespace tsr::features {
-
-}; // namespace tsr
+namespace tsr::features {}; // namespace tsr::features

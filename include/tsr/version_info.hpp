@@ -10,4 +10,4 @@ std::string get_git_hash();
 
 std::string get_timestamp();
 
-}
+} // namespace tsr

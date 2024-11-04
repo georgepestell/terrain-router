@@ -138,8 +138,8 @@ TEST(TestDTM, test_simplify_tin_mesh_small_angles) {
   Delaunay_3 mesh2;
 
   // Simplify, ensuring distance is not the limiting factor
-  simplify_mesh(meshPtr, mesh2, DEFAULT_COSINE_MAX_ANGLE_REGIONS,
-                           10000, DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
+  simplify_mesh(meshPtr, mesh2, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
+                DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
 
   ASSERT_EQ(mesh2.number_of_vertices(), 3);
 }
@@ -170,7 +170,7 @@ TEST(TestDTM, test_simplify_tin_mesh_small_distances) {
 
   // Simplify, ensuring angle is not the limiting factor
   simplify_mesh(meshPtr, meshPtr, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
-                           DEFAULT_MAX_DISTANCE_CORNERS);
+                DEFAULT_MAX_DISTANCE_CORNERS);
 
   ASSERT_EQ(meshPtr.number_of_vertices(), 3);
 }
@@ -200,8 +200,8 @@ TEST(TestDTM, test_simplify_tin_mesh_keeps_sharp_edges) {
   Delaunay_3 &meshPtr = dtm->get_mesh();
 
   // Simplify, ensuring distance is not the limiting factor
-  simplify_mesh(meshPtr, meshPtr, DEFAULT_COSINE_MAX_ANGLE_REGIONS,
-                           10000, DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
+  simplify_mesh(meshPtr, meshPtr, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
+                DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
 
   ASSERT_EQ(meshPtr.number_of_vertices(), 4);
 }
@@ -232,7 +232,7 @@ TEST(TestDTM, test_simplify_tin_mesh_keeps_long_distances) {
 
   // Simplify, ensuring angle is not the limiting factor
   simplify_mesh(meshPtr, meshPtr, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
-                           DEFAULT_MAX_DISTANCE_CORNERS);
+                DEFAULT_MAX_DISTANCE_CORNERS);
 
   ASSERT_EQ(meshPtr.number_of_vertices(), 4);
 }
@@ -258,7 +258,7 @@ TEST(TestDTM, testConstraintAdd) {
   points.push_back(Point_3(4, 0, 0));
 
   std::vector<Point_2> contour;
-  contour.push_back(Point_2(0,0));
+  contour.push_back(Point_2(0, 0));
   contour.push_back(Point_2(3, 2));
 
   auto dtm = make_unique<DTM>(points);
@@ -291,16 +291,15 @@ TEST(TestDTM, testConstraintAddSplit) {
   points.push_back(Point_3(40, 0, 0));
 
   std::vector<Point_2> contour;
-  contour.push_back(Point_2(0,0));
+  contour.push_back(Point_2(0, 0));
   contour.push_back(Point_2(30, 20));
 
   auto dtm = make_unique<DTM>(points);
 
   // Add constraints
   dtm->add_contour_constraint(contour, 2);
-  
 
-  /** DEBUG BEGIN 
+  /** DEBUG BEGIN
       TODO: Delete writing test to obj file
   */
   Surface_mesh surface_mesh;
@@ -338,12 +337,12 @@ TEST(TestDTM, DISABLED_testRealConstraints) {
 
   TSR_LOG_TRACE("Simplifying");
   simplify_mesh(dtm->get_mesh(), dtm->get_mesh());
-  
 
   TSR_LOG_TRACE("Getting water contours");
   auto water_image = load_image_from_file("../data/benNevis_water.tiff");
 
-  auto water_feature = extract_feature_contours(*water_image, 0.001,-5.1273611, 56.8648611, 3, 3);
+  auto water_feature = extract_feature_contours(*water_image, 0.001, -5.1273611,
+                                                56.8648611, 3, 3);
 
   TSR_LOG_TRACE("Adding {} constraints", water_feature->size());
   for (auto constraint : *water_feature) {
@@ -351,8 +350,10 @@ TEST(TestDTM, DISABLED_testRealConstraints) {
   }
 
   TSR_LOG_TRACE("Getting terrain type contours");
-  auto terrain_types_image = load_image_from_file("../data/benNevis_terrain_types.tiff");
-  auto terrain_type_feature = extract_feature_contours(*terrain_types_image, 0.03, -5.1273611, 56.8648611, 10, 10);
+  auto terrain_types_image =
+      load_image_from_file("../data/benNevis_terrain_types.tiff");
+  auto terrain_type_feature = extract_feature_contours(
+      *terrain_types_image, 0.03, -5.1273611, 56.8648611, 10, 10);
 
   TSR_LOG_TRACE("Adding {} constraints", terrain_type_feature->size());
   for (auto constraint : *terrain_type_feature) {
@@ -365,5 +366,4 @@ TEST(TestDTM, DISABLED_testRealConstraints) {
   Surface_mesh surface_mesh;
   convert_tin_to_surface_mesh(dtm->get_mesh(), surface_mesh);
   write_mesh_to_obj("testBigConstraints.obj", surface_mesh);
-
 }

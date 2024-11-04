@@ -1,15 +1,15 @@
 #pragma once
 
 /** Include fmt core library
-  * Clangd unused_include ignored because the include is required, 
-  * but used in #DEFINE TSR_LOG functions, which are injected into the source code when used.
-  */
-#include "fmt/core.h" // IWYU pragma: keep 
-
+ * Clangd unused_include ignored because the include is required,
+ * but used in #DEFINE TSR_LOG functions, which are injected into the source
+ * code when used.
+ */
+#include "fmt/core.h" // IWYU pragma: keep
 
 namespace tsr {
 
-/** Logging code copied and minimally adapted from tin-terrain 
+/** Logging code copied and minimally adapted from tin-terrain
     https://github.com/heremaps/tin-terrain/blob/master/include/logging.h
 */
 
@@ -36,12 +36,11 @@ void log_set_global_loglevel(LogLevel level);
 LogStream log_get_global_logstream();
 LogLevel log_get_global_loglevel();
 
-
 } // namespace tsr
 
 /**
-  * Remove TSR_LOG_TRACE commands in source code for Release builds.
-  * Improves performance, but allows TRACE logging for debugging.
+ * Remove TSR_LOG_TRACE commands in source code for Release builds.
+ * Improves performance, but allows TRACE logging for debugging.
  */
 #ifdef TSR_DEBUG
 #define TSR_LOG_TRACE(fmtString, ...)                                          \
@@ -52,9 +51,9 @@ LogLevel log_get_global_loglevel();
 #endif
 
 /**
-  * Defines the normal logging functions which are injected into the source 
-  * code by the compiler 
-  */
+ * Defines the normal logging functions which are injected into the source
+ * code by the compiler
+ */
 #define TSR_LOG_DEBUG(fmtString, ...)                                          \
   ::tsr::log_message(::tsr::LogLevel::DEBUG, __FILE__, __LINE__,               \
                      ::fmt::format(fmtString, ##__VA_ARGS__))

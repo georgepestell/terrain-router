@@ -7,16 +7,14 @@ using namespace tsr;
 
 using namespace tsr::API;
 
-
 TEST(TestAPI, testAPICallerInitializeNoThrow) {
-    // Initialize the caller object
-    ASSERT_NO_THROW(APICaller caller);
+  // Initialize the caller object
+  ASSERT_NO_THROW(APICaller caller);
 }
 
-
 TEST(TestAPI, testAPICallerFetchNoThrow) {
-    // Initialize API
-    APICaller caller;
-    // Make HTTPS request
-    ASSERT_NO_THROW(caller.fetchDataFromAPI("https://example.com"));
+  // Initialize API
+  APICaller caller;
+  // Make HTTPS request
+  ASSERT_NO_THROW(caller.fetchDataFromAPI("https://example.com"));
 }

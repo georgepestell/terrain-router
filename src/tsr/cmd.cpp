@@ -13,9 +13,10 @@ namespace tsr {
 
 bool tsr_run(std::vector<std::string> args) {
 
-  std::string filepath = args.size() == 1 ? IO::path_to_absolute(args[0]) : DEFAULT_DEM_FILE;
+  std::string filepath =
+      args.size() == 1 ? IO::path_to_absolute(args[0]) : DEFAULT_DEM_FILE;
 
-    // Construct the DTM from filepath
+  // Construct the DTM from filepath
   TSR_LOG_TRACE("loading dem file ({:s})", filepath);
   auto points = IO::load_dem_from_file(filepath);
 

@@ -4,5 +4,6 @@
 #include <CGAL/Point_2.h>
 
 namespace tsr {
-    typedef CGAL::Point_2<CGAL::Exact_predicates_inexact_constructions_kernel> Point_2; 
+typedef CGAL::Point_2<CGAL::Exact_predicates_inexact_constructions_kernel>
+    Point_2;
 }
