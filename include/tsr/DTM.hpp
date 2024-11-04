@@ -50,7 +50,7 @@ class DTM {
 private:
   std::unique_ptr<Delaunay_3> mesh;
 
-  std::map<std::string, std::unique_ptr<Feature<std::any>>> features;
+  std::unordered_map<std::string, std::unique_ptr<Feature<std::any>>> features;
 
 public:
   inline DTM(std::vector<Point_3> &points) {
