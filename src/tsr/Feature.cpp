@@ -5,6 +5,11 @@
 
 namespace tsr {
 
+template <class DataType> Feature<DataType>::Feature(std::string name) {
+  this->name = name;
+  this->valid = false;
+}
+
 template <class DataType> void Feature<DataType>::set_valid() {
   this->valid = true;
 }
@@ -32,14 +37,15 @@ void Feature<DataType>::add_value(unsigned int index, DataType &value) {
 
 template <class DataType>
 DataType &Feature<DataType>::get_value(unsigned int index) {
-  // Check if the value exists at the given index
-  if (this->values.contains(index)) {
-    return this->values.at(index);
-  } else {
-    throw std::out_of_range("Index out of mesh bounds: " +
-                            std::to_string(index));
-  }
-
+  // Return the value at the index or throw out_of_range exception
   return this->values.at(index);
 }
+
+template <class DataType>
+template <class OtherDataType>
+bool Feature<DataType>::isEqual(Feature<OtherDataType> &otherFeature) {
+  // Equality determined by feature name
+  return this->name == otherFeature.name;
+}
+
 } // namespace tsr

@@ -7,7 +7,7 @@
 #include "tsr/Point_3.hpp"
 #include "tsr/Surface_mesh.hpp"
 
-#include "tsr/Feature.hpp"
+#include "tsr/FeatureManager.hpp"
 
 namespace tsr {
 
@@ -50,7 +50,7 @@ class DTM {
 private:
   std::unique_ptr<Delaunay_3> mesh;
 
-  std::unordered_map<std::string, std::unique_ptr<Feature<std::any>>> features;
+  std::unique_ptr<FeatureManager> feature_manager;
 
 public:
   inline DTM(std::vector<Point_3> &points) {
@@ -61,8 +61,8 @@ public:
 
   void add_contour_constraint(std::vector<Point_2> contour,
                               double max_segment_length);
-
-  void tag_feature();
 };
+
+#include "tsr/FeatureManager.hpp"
 
 } // namespace tsr

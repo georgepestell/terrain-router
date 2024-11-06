@@ -21,3 +21,4 @@ int main(int argc, char *argv[]) {
 
 #include "test_api.hpp"
 #include "test_dtm.hpp"
+#include "test_features.hpp"
