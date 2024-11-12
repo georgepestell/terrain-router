@@ -60,6 +60,9 @@ std::vector<Point_3> Router::calculate_route(Vertex_handle &start,
    * vertices
    */
   while (best_routes.size() < this->dtm->number_of_vertices()) {
+
+    TSR_LOG_TRACE("Getting next node");
+
     // Select best node from queue
     Node current_node = cost_queue.top();
     cost_queue.pop();
@@ -77,8 +80,9 @@ std::vector<Point_3> Router::calculate_route(Vertex_handle &start,
      */
 
     // Loop over the incident faces around the vertex
+    TSR_LOG_TRACE("Getting next node costs");
     auto faceCirculator = current_node.handle->incident_faces();
-    auto start = faceCirculator;
+    auto faceCirculatorEnd = faceCirculator;
     do {
 
       Face_handle face = faceCirculator;
@@ -139,10 +143,8 @@ std::vector<Point_3> Router::calculate_route(Vertex_handle &start,
         // Add the node to the priority queue
         cost_queue.push(node);
       }
-
-      ++faceCirculator;
-    } while (faceCirculator != start);
-  }
+    } while (++faceCirculator != faceCirculatorEnd);
+  } 
 
   // Get the end node point
   std::vector<Node> route;
