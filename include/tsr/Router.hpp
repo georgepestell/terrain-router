@@ -1,16 +1,25 @@
-#include "tsr/DTM.hpp"
 #include <limits>
 
 #include "tsr/Delaunay_3.hpp"
+#include "tsr/Point_3.hpp"
 
 namespace tsr {
 
 class Node {
 public:
-  double g_cost;
-  bool visited;
+  double gCost;
+  bool closed;
+  Vertex_handle handle;
+  Vertex_handle parent;
 
-  Node() : g_cost(std::numeric_limits<double>::infinity()), visited(false) {}
+  Node() = default;
+  Node(Vertex_handle handle)
+      : gCost(std::numeric_limits<double>::infinity()), closed(false),
+        handle(handle), parent(nullptr) {}
+
+  bool operator==(const Node &other) const {
+    return this->handle == other.handle;
+  }
 };
 
 class Face {
@@ -33,7 +42,7 @@ private:
 
   // double calculate_face_cost(Face_handle face);
 
-  double calculate_distance(const Point_3 &p1, const Point_3 &p2);
+  double calculate_distance(Point_3 &p1, Point_3 &p2);
 
   double calculate_trivial_cost(Face_handle &face, Vertex_handle &vertex_start,
                                 Vertex_handle &vertex_end);

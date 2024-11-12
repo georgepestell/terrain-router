@@ -7,8 +7,6 @@
 #include "tsr/Point_3.hpp"
 #include "tsr/Surface_mesh.hpp"
 
-#include "tsr/FeatureManager.hpp"
-
 namespace tsr {
 
 #define DEFAULT_COSINE_MAX_ANGLE_REGIONS 0.60
@@ -50,8 +48,6 @@ class DTM {
 private:
   std::unique_ptr<Delaunay_3> mesh;
 
-  std::unique_ptr<FeatureManager> feature_manager;
-
 public:
   inline DTM(std::vector<Point_3> &points) {
     this->mesh = create_tin_from_points(points);
@@ -62,7 +58,5 @@ public:
   void add_contour_constraint(std::vector<Point_2> contour,
                               double max_segment_length);
 };
-
-#include "tsr/FeatureManager.hpp"
 
 } // namespace tsr

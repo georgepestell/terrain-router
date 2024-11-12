@@ -61,10 +61,7 @@ set(TSR_SOURCE_FILES
   src/tsr/IO/FileIOHandler.cpp
   src/tsr/IO/ImageProcessor.cpp
   src/tsr/API/APICaller.cpp
-  src/tsr/Feature.cpp
-  src/tsr/FeatureManager.cpp
-  src/tsr/features/BooleanWaterFeature.cpp
-  src/tsr/features/TerrainTypeFeature.cpp
+  src/tsr/Router.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
