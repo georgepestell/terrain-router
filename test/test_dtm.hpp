@@ -7,6 +7,8 @@
 
 #include "gtest/gtest.h"
 
+#include "tsr/Router.hpp"
+
 #include <memory>
 
 using namespace tsr;
@@ -351,8 +353,14 @@ TEST(TestDTM, DISABLED_testRealConstraints) {
 
   TSR_LOG_INFO("final vertices: {}", dtm.number_of_vertices());
 
-  TSR_LOG_TRACE("Writing to obj file");
-  Surface_mesh surface_mesh;
-  convert_tin_to_surface_mesh(dtm, surface_mesh);
-  write_mesh_to_obj("testBigConstraints.obj", surface_mesh);
+  Router router(dtm);
+
+  //
+  router.calculate_route(Point_2(373213.35, 6297480.64),
+                         Point_2(375040.66, 6301756.19));
+
+  // TSR_LOG_TRACE("Writing to obj file");
+  // Surface_mesh surface_mesh;
+  // convert_tin_to_surface_mesh(dtm, surface_mesh);
+  // write_mesh_to_obj("testBigConstraints.obj", surface_mesh);
 }

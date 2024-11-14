@@ -38,8 +38,8 @@ struct HashNode {
 // TODO: Implement constnat face cost
 double Router::calculate_constant_face_cost(Face_handle face) { return 1.0; }
 
-std::vector<Point_3> Router::calculate_route(Point_3 &start_point,
-                                             Point_3 &end_point) {
+std::vector<Point_3> Router::calculate_route(Point_2 &start_point,
+                                             Point_2 &end_point) {
 
   auto start_face = this->dtm->locate(start_point);
   auto end_face = this->dtm->locate(end_point);
