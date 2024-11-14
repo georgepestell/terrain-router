@@ -6,7 +6,7 @@ curl "https://portal.opentopography.org/API/globaldem?demtype=COP30&south=56.761
 # curl "https://portal.opentopography.org/API/globaldem?demtype=COP30&south=56.00&north=57.00&west=-3.5&east=-1.50&outputFormat=AAIGrid&API_Key=${OPEN_TOP_KEY}" -o ../data/big_COP30.asc
 
 rm ../data/benNevis_DEM.xyz
-# gdalwarp -ot UInt16 -s_srs WGS84 -t_srs '+proj=utm +zone=30 +datum=WGS84 +units=m +no_defs' ../data/benNevis_DEM.tiff ../data/benNevis_DEM.xyz
-gdalwarp -ot UInt16 -s_srs WGS84 -t_srs WGS84 ../data/benNevis_DEM.tiff ../data/benNevis_DEM.xyz
+gdalwarp -ot UInt16 -s_srs WGS84 -t_srs '+proj=utm +zone=30 +datum=WGS84 +units=m +no_defs' ../data/benNevis_DEM.tiff ../data/benNevis_DEM.xyz
+# gdalwarp -ot UInt16 -s_srs WGS84 -t_srs WGS84 ../data/benNevis_DEM.tiff ../data/benNevis_DEM.xyz
 
 rm ../data/benNevis_DEM.tiff

@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_UTM.xyz"
+#define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_DEM.xyz"
 
 namespace tsr {
 
@@ -21,7 +21,7 @@ bool tsr_run(std::vector<std::string> args) {
   auto points = IO::load_dem_from_file(filepath);
 
   TSR_LOG_TRACE("creating dtm from point cloud");
-  auto dtm = std::make_unique<DTM>(*points);
+  auto dtm = create_tin_from_points(*points);
 
   return EXIT_SUCCESS;
 }

@@ -4,21 +4,31 @@
 #include <string>
 #include <unordered_map>
 
+#include "tsr/Delaunay_3.hpp"
+
 namespace tsr {
 
-class DTM;
+class State {
+  public:
+    Delaunay_3 dtm;
+    Vertex_handle startVertex; 
+    Vertex_handle endVertex;
+    Face_handle face;
+    double x_from_endVertex;
+    double y_from_endVertex;
+};
 
-enum FEATURE_TYPE { BOOLEAN, CONTINUOUS, DISCREET };
 
-template <typename DataType> class Feature {
+class Feature {
 private:
   bool valid; /// Whether the feature tags are up to date
   std::string name;
-  std::unordered_map<unsigned int, DataType> values;
 
 public:
-  virtual DataType &get_value(unsigned int index);
-  virtual void add_value(unsigned int index, DataType &value);
+  virtual double
+  get_cost(State &state,
+           std::vector<std::shared_ptr<Feature>> &dependencies) = 0;
+  virtual void tag(State &state, std::vector<std::shared_ptr<Feature>> &dependencies) = 0;
 
   /**
    * @brief Resets the valid flag, allowing value updates
@@ -30,10 +40,7 @@ public:
 
   Feature(std::string name);
 
-  template <class OtherDataType>
-  bool isEqual(Feature<OtherDataType> &otherFeature);
-
-  virtual void tag(std::unique_ptr<DTM> &dtm);
+  bool isEqual(Feature &otherFeature);
 };
 
 } // namespace tsr

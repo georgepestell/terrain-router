@@ -1,9 +1,15 @@
 cmake_minimum_required(VERSION 3.25)
 
+
 project(terrin_senstive_routing)
+
+set(CMAKE_CXX_COMPILER ${CPP_COMPILER})
+set(CMAKE_C_COMPILER ${C_COMPILER})
 
 option(TSR_TEST "include test targets in build system" OFF)
 option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
+
+
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)

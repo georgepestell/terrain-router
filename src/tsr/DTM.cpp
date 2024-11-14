@@ -26,10 +26,14 @@ typedef CGAL::Vector_3<CGAL::Exact_predicates_inexact_constructions_kernel>
     Vector_3;
 typedef CGAL::Parallel_if_available_tag Concurrency_tag;
 
-Delaunay_3 &DTM::get_mesh() const { return *this->mesh; }
+void convert_surface_mesh_to_tin(Surface_mesh const &source,
+                                 Delaunay_3 &target) {
+  for (auto v : source.vertices()) {
+    target.insert(source.point(v));
+  }
+}
 
-std::unique_ptr<Delaunay_3>
-create_tin_from_points(std::vector<Point_3> &points) {
+Delaunay_3 create_tin_from_points(std::vector<Point_3> &points) {
   TSR_LOG_TRACE("creating TIN from point cloud");
 
   // validate point set contains points
@@ -39,26 +43,18 @@ create_tin_from_points(std::vector<Point_3> &points) {
   }
 
   // triangulate points using 2.5D Delaunay triangulation
-  auto tin = std::make_unique<Delaunay_3>();
-  tin->insert(points.begin(), points.end());
+  Delaunay_3 tin;
+  tin.insert(points.begin(), points.end());
 
   // validate triangulated mesh
-  if (!tin->is_valid()) {
+  if (!tin.is_valid()) {
     TSR_LOG_ERROR("initalized DTM invalid");
     throw std::runtime_error("DTM Delaunay Triangulated mesh invalid");
   }
 
-  TSR_LOG_TRACE("TIN initialized with {:d} vertices",
-                tin->number_of_vertices());
+  TSR_LOG_TRACE("TIN initialized with {:d} vertices", tin.number_of_vertices());
 
   return tin;
-}
-
-void convert_surface_mesh_to_tin(Surface_mesh const &source,
-                                 Delaunay_3 &target) {
-  for (auto v : source.vertices()) {
-    target.insert(source.point(v));
-  }
 }
 
 double interpolate_z(const Point_3 &p1, const Point_3 &p2, const Point_3 &p3,
@@ -82,8 +78,8 @@ double interpolate_z(const Point_3 &p1, const Point_3 &p2, const Point_3 &p3,
   return (-A * x - B * y - D) / C;
 }
 
-void DTM::add_contour_constraint(std::vector<Point_2> contour,
-                                 double max_segment_length) {
+void add_contour_constraint(Delaunay_3 &dtm, std::vector<Point_2> contour,
+                            double max_segment_length) {
 
   for (auto vertexIt = contour.begin(); vertexIt != contour.end(); ++vertexIt) {
     auto vertexNextIt = std::next(vertexIt);
@@ -93,9 +89,9 @@ void DTM::add_contour_constraint(std::vector<Point_2> contour,
     const double x = vertexIt->x();
     const double y = vertexIt->y();
 
-    Delaunay_3::Face_handle vertexFace = this->mesh->locate(Point_3(x, y, 0));
+    Delaunay_3::Face_handle vertexFace = dtm.locate(Point_3(x, y, 0));
 
-    if (vertexFace == nullptr || this->mesh->is_infinite(vertexFace)) {
+    if (vertexFace == nullptr || dtm.is_infinite(vertexFace)) {
       TSR_LOG_WARN("Point outside boundary x: {} y: {}", x, y);
       continue;
     }
@@ -110,9 +106,9 @@ void DTM::add_contour_constraint(std::vector<Point_2> contour,
     const double next_y = vertexNextIt->y();
 
     Delaunay_3::Face_handle vertexNextFace =
-        this->mesh->locate(Point_3(next_x, next_y, 0));
+        dtm.locate(Point_3(next_x, next_y, 0));
 
-    if (vertexNextFace == nullptr || this->mesh->is_infinite(vertexNextFace)) {
+    if (vertexNextFace == nullptr || dtm.is_infinite(vertexNextFace)) {
       TSR_LOG_WARN("Point outside boundary x: {} y: {}", next_x, next_y);
       continue;
     }
@@ -139,9 +135,9 @@ void DTM::add_contour_constraint(std::vector<Point_2> contour,
         double split_y = round(y + (dy / splits) * split);
 
         Delaunay_3::Face_handle vertexSplitFace =
-            this->mesh->locate(Point_3(split_x, split_y, 0));
+            dtm.locate(Point_3(split_x, split_y, 0));
 
-        if (this->mesh->is_infinite(vertexSplitFace)) {
+        if (dtm.is_infinite(vertexSplitFace)) {
           TSR_LOG_ERROR("Point outside boundary x: {} y: {}", split_x, split_y);
           return;
         }
@@ -154,17 +150,16 @@ void DTM::add_contour_constraint(std::vector<Point_2> contour,
       }
 
       // Add the constraints
-      this->mesh->insert_constraint(vertexPoint, splitPoints[0]);
+      dtm.insert_constraint(vertexPoint, splitPoints[0]);
       ushort splitIndex;
       for (splitIndex = 1; splitIndex < splitPoints.size(); splitIndex++) {
-        this->mesh->insert_constraint(splitPoints[splitIndex - 1],
-                                      splitPoints[splitIndex]);
+        dtm.insert_constraint(splitPoints[splitIndex - 1],
+                              splitPoints[splitIndex]);
       }
-      this->mesh->insert_constraint(splitPoints[splitIndex - 1],
-                                    vertexNextPoint);
+      dtm.insert_constraint(splitPoints[splitIndex - 1], vertexNextPoint);
 
     } else {
-      this->mesh->insert_constraint(vertexPoint, vertexNextPoint);
+      dtm.insert_constraint(vertexPoint, vertexNextPoint);
     }
   }
 }
@@ -208,7 +203,7 @@ void simplify_points(std::vector<Point_3> &points) {
 
   points.erase(CGAL::hierarchy_simplify_point_set(
                    points,
-                   CGAL::parameters::size(2.2)     // Max cluster size
+                   CGAL::parameters::size(22)      // Max cluster size
                        .maximum_variation(0.001)), // Max surface variation
                points.end());
 

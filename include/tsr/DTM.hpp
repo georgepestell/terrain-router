@@ -14,8 +14,8 @@ namespace tsr {
 #define DEFAULT_COSINE_MAX_ANGLE_CORNERS 0.9
 #define DEFAULT_MAX_DISTANCE_CORNERS 3.0
 
-std::unique_ptr<Delaunay_3>
-create_tin_from_points(std::vector<Point_3> &points);
+Delaunay_3 create_tin_from_points(std::vector<Point_3> &points);
+
 void convert_surface_mesh_to_tin(Surface_mesh const &source,
                                  Delaunay_3 &target);
 
@@ -43,20 +43,7 @@ void jet_smooth_points(std::vector<Point_3> &points);
 
 void simplify_points(std::vector<Point_3> &points);
 
-class DTM {
-
-private:
-  std::unique_ptr<Delaunay_3> mesh;
-
-public:
-  inline DTM(std::vector<Point_3> &points) {
-    this->mesh = create_tin_from_points(points);
-  }
-
-  Delaunay_3 &get_mesh() const;
-
-  void add_contour_constraint(std::vector<Point_2> contour,
-                              double max_segment_length);
-};
+void add_contour_constraint(Delaunay_3 &dtm, std::vector<Point_2> contour,
+                            double max_segment_length);
 
 } // namespace tsr

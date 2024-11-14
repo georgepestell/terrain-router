@@ -17,7 +17,7 @@ TEST(TestDTM, test_initializeEmptyThrows) {
   std::vector<Point_3> empty_points;
 
   // Initialize empty DTM
-  EXPECT_THROW(make_unique<DTM>(empty_points), std::invalid_argument);
+  EXPECT_THROW(create_tin_from_points(empty_points), std::invalid_argument);
 }
 
 TEST(TestDTM, test_initalizeDoesNotThrow) {
@@ -28,7 +28,7 @@ TEST(TestDTM, test_initalizeDoesNotThrow) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  ASSERT_NO_THROW(make_unique<DTM>(points));
+  ASSERT_NO_THROW(create_tin_from_points(points));
 }
 
 TEST(TestDTM, test_getTopology) {
@@ -39,9 +39,9 @@ TEST(TestDTM, test_getTopology) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  auto dtm = make_unique<DTM>(points);
+  auto dtm = create_tin_from_points(points);
 
-  ASSERT_NO_THROW(dtm->get_mesh().number_of_vertices());
+  ASSERT_NO_THROW(dtm.number_of_vertices());
 }
 
 TEST(TestDTM, test_initalizeVertexCountMatchesDEM) {
@@ -53,11 +53,11 @@ TEST(TestDTM, test_initalizeVertexCountMatchesDEM) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  auto dtm = make_unique<DTM>(points);
+  auto dtm = create_tin_from_points(points);
 
   TSR_LOG_TRACE("verifying vertex count");
 
-  ASSERT_EQ(dtm->get_mesh().number_of_vertices(), points.size());
+  ASSERT_EQ(dtm.number_of_vertices(), points.size());
 }
 
 TEST(TestDTM, test_simplify_mesh_tin) {
@@ -70,15 +70,14 @@ TEST(TestDTM, test_simplify_mesh_tin) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  auto dtm = make_unique<DTM>(points);
+  auto dtm = create_tin_from_points(points);
 
   TSR_LOG_TRACE("simplifying dtm");
 
   // Simplify
-  Delaunay_3 &mesh = dtm->get_mesh();
-  ASSERT_NO_THROW(simplify_mesh(mesh, mesh));
+  ASSERT_NO_THROW(simplify_mesh(dtm, dtm));
 
-  ASSERT_TRUE(dtm->get_mesh().is_valid());
+  ASSERT_TRUE(dtm.is_valid());
 }
 
 TEST(TestDTM, test_simplify_tin_mesh_flat_plane) {
@@ -101,14 +100,12 @@ TEST(TestDTM, test_simplify_tin_mesh_flat_plane) {
   points.push_back(Point_3(2, 4, 0));
   points.push_back(Point_3(4, 0, 0));
 
-  auto dtm = make_unique<DTM>(points);
-
-  Delaunay_3 &meshPtr = dtm->get_mesh();
+  auto dtm = create_tin_from_points(points);
 
   // Simplify
-  simplify_mesh(meshPtr, meshPtr);
+  simplify_mesh(dtm, dtm);
 
-  ASSERT_EQ(meshPtr.number_of_vertices(), 3);
+  ASSERT_EQ(dtm.number_of_vertices(), 3);
 }
 
 TEST(TestDTM, test_simplify_tin_mesh_small_angles) {
@@ -131,17 +128,15 @@ TEST(TestDTM, test_simplify_tin_mesh_small_angles) {
   points.push_back(Point_3(2, 4, 0));
   points.push_back(Point_3(4, 0, 0));
 
-  auto dtm = make_unique<DTM>(points);
+  auto dtm = create_tin_from_points(points);
 
-  Delaunay_3 &meshPtr = dtm->get_mesh();
-
-  Delaunay_3 mesh2;
+  Delaunay_3 dtm_simple;
 
   // Simplify, ensuring distance is not the limiting factor
-  simplify_mesh(meshPtr, mesh2, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
+  simplify_mesh(dtm, dtm_simple, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
                 DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
 
-  ASSERT_EQ(mesh2.number_of_vertices(), 3);
+  ASSERT_EQ(dtm_simple.number_of_vertices(), 3);
 }
 
 TEST(TestDTM, test_simplify_tin_mesh_small_distances) {
@@ -164,15 +159,13 @@ TEST(TestDTM, test_simplify_tin_mesh_small_distances) {
   points.push_back(Point_3(2, 4, 0));
   points.push_back(Point_3(4, 0, 0));
 
-  auto dtm = make_unique<DTM>(points);
-
-  Delaunay_3 &meshPtr = dtm->get_mesh();
+  auto dtm = create_tin_from_points(points);
 
   // Simplify, ensuring angle is not the limiting factor
-  simplify_mesh(meshPtr, meshPtr, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
+  simplify_mesh(dtm, dtm, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
                 DEFAULT_MAX_DISTANCE_CORNERS);
 
-  ASSERT_EQ(meshPtr.number_of_vertices(), 3);
+  ASSERT_EQ(dtm.number_of_vertices(), 3);
 }
 
 TEST(TestDTM, test_simplify_tin_mesh_keeps_sharp_edges) {
@@ -195,15 +188,13 @@ TEST(TestDTM, test_simplify_tin_mesh_keeps_sharp_edges) {
   points.push_back(Point_3(2, 4, 0));
   points.push_back(Point_3(4, 0, 0));
 
-  auto dtm = make_unique<DTM>(points);
-
-  Delaunay_3 &meshPtr = dtm->get_mesh();
+  auto dtm = create_tin_from_points(points);
 
   // Simplify, ensuring distance is not the limiting factor
-  simplify_mesh(meshPtr, meshPtr, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
+  simplify_mesh(dtm, dtm, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
                 DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
 
-  ASSERT_EQ(meshPtr.number_of_vertices(), 4);
+  ASSERT_EQ(dtm.number_of_vertices(), 4);
 }
 
 TEST(TestDTM, test_simplify_tin_mesh_keeps_long_distances) {
@@ -226,15 +217,13 @@ TEST(TestDTM, test_simplify_tin_mesh_keeps_long_distances) {
   points.push_back(Point_3(20000, 40000, 0));
   points.push_back(Point_3(40000, 0, 0));
 
-  auto dtm = make_unique<DTM>(points);
-
-  Delaunay_3 &meshPtr = dtm->get_mesh();
+  auto dtm = create_tin_from_points(points);
 
   // Simplify, ensuring angle is not the limiting factor
-  simplify_mesh(meshPtr, meshPtr, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
+  simplify_mesh(dtm, dtm, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
                 DEFAULT_MAX_DISTANCE_CORNERS);
 
-  ASSERT_EQ(meshPtr.number_of_vertices(), 4);
+  ASSERT_EQ(dtm.number_of_vertices(), 4);
 }
 
 TEST(TestDTM, testConstraintAdd) {
@@ -261,13 +250,13 @@ TEST(TestDTM, testConstraintAdd) {
   contour.push_back(Point_2(0, 0));
   contour.push_back(Point_2(3, 2));
 
-  auto dtm = make_unique<DTM>(points);
+  auto dtm = create_tin_from_points(points);
 
   // Add constraints
-  dtm->add_contour_constraint(contour, 22);
+  add_contour_constraint(dtm, contour, 22);
 
-  ASSERT_EQ(dtm->get_mesh().number_of_vertices(), 5);
-  ASSERT_EQ(dtm->get_mesh().number_of_faces(), 3);
+  ASSERT_EQ(dtm.number_of_vertices(), 5);
+  ASSERT_EQ(dtm.number_of_faces(), 3);
 }
 
 TEST(TestDTM, testConstraintAddSplit) {
@@ -294,16 +283,16 @@ TEST(TestDTM, testConstraintAddSplit) {
   contour.push_back(Point_2(0, 0));
   contour.push_back(Point_2(30, 20));
 
-  auto dtm = make_unique<DTM>(points);
+  auto dtm = create_tin_from_points(points);
 
   // Add constraints
-  dtm->add_contour_constraint(contour, 2);
+  add_contour_constraint(dtm, contour, 2);
 
   /** DEBUG BEGIN
       TODO: Delete writing test to obj file
   */
   Surface_mesh surface_mesh;
-  convert_tin_to_surface_mesh(dtm->get_mesh(), surface_mesh);
+  convert_tin_to_surface_mesh(dtm, surface_mesh);
   /** DEBUG END */
 
   write_mesh_to_obj("test.obj", surface_mesh);
@@ -311,7 +300,7 @@ TEST(TestDTM, testConstraintAddSplit) {
   // sqrt(300^2 + 200^2) = 360.555...
   // 360.555... / 20 - 1 = 17 additional vertices
 
-  ASSERT_EQ(dtm->get_mesh().number_of_vertices(), 22);
+  ASSERT_EQ(dtm.number_of_vertices(), 22);
 }
 
 TEST(TestDTM, DISABLED_testRealConstraints) {
@@ -333,37 +322,37 @@ TEST(TestDTM, DISABLED_testRealConstraints) {
   TSR_LOG_TRACE("point count: {}", points->size());
 
   TSR_LOG_TRACE("Triangulating");
-  auto dtm = std::make_unique<DTM>(*points);
+  auto dtm = create_tin_from_points(*points);
 
   TSR_LOG_TRACE("Simplifying");
-  simplify_mesh(dtm->get_mesh(), dtm->get_mesh());
+  simplify_mesh(dtm, dtm);
 
   TSR_LOG_TRACE("Getting water contours");
   auto water_image = load_image_from_file("../data/benNevis_water.tiff");
 
-  auto water_feature = extract_feature_contours(*water_image, 0.001, -5.1273611,
-                                                56.8648611, 3, 3);
+  auto water_feature = extract_feature_contours(*water_image, 0.001, 369953.765,
+                                                6304359.542, 3, 3);
 
   TSR_LOG_TRACE("Adding {} constraints", water_feature->size());
   for (auto constraint : *water_feature) {
-    dtm->add_contour_constraint(constraint, 0.001);
+    add_contour_constraint(dtm, constraint, 22);
   }
 
   TSR_LOG_TRACE("Getting terrain type contours");
   auto terrain_types_image =
       load_image_from_file("../data/benNevis_terrain_types.tiff");
   auto terrain_type_feature = extract_feature_contours(
-      *terrain_types_image, 0.03, -5.1273611, 56.8648611, 10, 10);
+      *terrain_types_image, 0.03, 369953.765, 6304359.542, 10, 10);
 
   TSR_LOG_TRACE("Adding {} constraints", terrain_type_feature->size());
   for (auto constraint : *terrain_type_feature) {
-    dtm->add_contour_constraint(constraint, 22);
+    add_contour_constraint(dtm, constraint, 22);
   }
 
-  TSR_LOG_INFO("final vertices: {}", dtm->get_mesh().number_of_vertices());
+  TSR_LOG_INFO("final vertices: {}", dtm.number_of_vertices());
 
   TSR_LOG_TRACE("Writing to obj file");
   Surface_mesh surface_mesh;
-  convert_tin_to_surface_mesh(dtm->get_mesh(), surface_mesh);
+  convert_tin_to_surface_mesh(dtm, surface_mesh);
   write_mesh_to_obj("testBigConstraints.obj", surface_mesh);
 }

@@ -62,8 +62,8 @@ public:
 
   void propagate_costs();
 
-  std::vector<Point_3> calculate_route(Vertex_handle &start,
-                                       Vertex_handle &end);
+  std::vector<Point_3> calculate_route(Point_3 &start_point,
+                                       Point_3 &end_point);
 };
 
 } // namespace tsr
