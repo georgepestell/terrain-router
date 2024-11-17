@@ -1,3 +1,8 @@
 Index:
-  Background: false
-  External: None
+  Background: true
+InlayHints:
+    TypeNameLimit: 8
+Diagnostics:
+  ClangTidy:
+    CheckOptions:
+      readability-identifier-naming.VariableCase: CamelCase

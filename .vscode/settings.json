@@ -90,4 +90,5 @@
     "-DTSR_TEST=ON",
     "-DCMAKE_BUILD_TYPE=Debug"
   ],
+  "clangd.path": "/usr/bin/clangd",
 }
