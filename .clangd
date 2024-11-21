@@ -1,5 +1,5 @@
 Index:
-  Background: true
+  Background: Skip
 InlayHints:
     TypeNameLimit: 8
 Diagnostics:
