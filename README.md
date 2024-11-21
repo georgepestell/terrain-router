@@ -12,7 +12,7 @@ This project uses CMAKE to configure the project, and ninja to build.
 ```bash
 mkdir build && cd build
 
-cmake -G Ninja -DCMAKE_BUILD_TYPE=Release ..
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DTSR_TEST=OFF
 ```
 
 For performance reasons, setting `CMAKE_BUILD_TYPE=Release` is highly reccommended. Note: this will disable TRACE logs, except in testing. See [#Testing] for more info on tests. 
@@ -37,11 +37,8 @@ ninja tsr-route
 To build tests, set `TSR_TEST=ON` in cmake configuration:
 
 ```bash
-cmake -G Ninja -DTSR_TEST=ON
+cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug -DTSR_TEST=ON
 ```
-
-Even if `CMAKE_RELEASE_TYPE` is set to `Release`, all logging information will be displayed for the test cases.
-
 # Running
 
 ## Running The Tests
