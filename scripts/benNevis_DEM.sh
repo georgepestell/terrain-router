@@ -1,3 +1,5 @@
+mkdir ../data
+
 OPEN_TOP_KEY=$(cat ../opentop.key)
 curl "https://portal.opentopography.org/API/globaldem?demtype=COP30&south=56.7612&north=56.8646&west=-5.1272&east=-4.9651&outputFormat=GeoTiff&API_Key=${OPEN_TOP_KEY}" -o ../data/benNevis_DEM.tiff
 

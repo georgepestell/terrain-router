@@ -1,6 +1,9 @@
+#pragma once
+
 #include <limits>
 
 #include "tsr/Delaunay_3.hpp"
+#include "tsr/FeatureManager.hpp"
 #include "tsr/Point_3.hpp"
 
 namespace tsr {
@@ -22,9 +25,16 @@ public:
   }
 };
 
-class Face {
-public:
-  double constant_weight;
+struct CompareNode {
+  bool operator()(const Node &node1, const Node &node2) {
+    return node1.gCost > node2.gCost;
+  }
+};
+
+struct HashNode {
+  bool operator()(const Node &node1) {
+    return std::hash<Vertex_handle>()(node1.handle);
+  }
 };
 
 /**
@@ -34,36 +44,21 @@ public:
  */
 class Router {
 private:
-  std::unique_ptr<Delaunay_3> dtm;
-  std::unordered_map<Face_handle, double> constant_weights;
+  std::shared_ptr<Delaunay_3> dtm;
+  FeatureManager feature_manager;
+
   std::unordered_map<Vertex_handle, Node> nodes;
-
-  double calculate_constant_face_cost(Face_handle face);
-
-  // double calculate_face_cost(Face_handle face);
-
-  double calculate_distance(Point_3 &p1, Point_3 &p2);
-
-  double calculate_trivial_cost(Face_handle &face, Vertex_handle &vertex_start,
-                                Vertex_handle &vertex_end);
-
-  // double calculate_indirect_cost(Face_handle &face, Vertex_handle
-  // &vertex_start,
-  //                                Point_3 &point_middle,
-  //                                Vertex_handle &vertex_end);
-
-  // double calculate_direct_cost(Face_handle &face, Vertex_handle
-  // &vertex_start,
-  //                              Point_3 &point_middle_1, Point_3
-  //                              &point_middle_2, Vertex_handle &vertex_end);
+  double calculateTrivialCost(Face_handle face, Vertex_handle vertex_start,
+                              Vertex_handle vertex_end);
 
 public:
-  Router(Delaunay_3 &dtm);
+  Router(Delaunay_3 &dtm, FeatureManager &feature_manager);
 
   void propagate_costs();
 
-  std::vector<Point_3> calculate_route(Point_2 &start_point,
-                                       Point_2 &end_point);
+  Vertex_handle nearestVertexToPoint(Point_3 &point);
+
+  std::vector<Point_3> calculateRoute(Point_3 &start_point, Point_3 &end_point);
 };
 
 } // namespace tsr

@@ -6,3 +6,6 @@ Diagnostics:
   ClangTidy:
     CheckOptions:
       readability-identifier-naming.VariableCase: CamelCase
+    FastCheckFilter: Strict
+  UnusedIncludes: Strict
+  MissingIncludes: Strict

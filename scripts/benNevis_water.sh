@@ -1,5 +1,7 @@
 #!/bin/sh
 
+mkdir ../data
+
 wget "https://lz4.overpass-api.de/api/interpreter?data=
 [out:xml][timeout:25];
 (

@@ -3,9 +3,6 @@ cmake_minimum_required(VERSION 3.25)
 
 project(terrin_senstive_routing)
 
-set(CMAKE_CXX_COMPILER ${CPP_COMPILER})
-set(CMAKE_C_COMPILER ${C_COMPILER})
-
 option(TSR_TEST "include test targets in build system" OFF)
 option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
 
@@ -60,12 +57,20 @@ FetchContent_Declare(
  FetchContent_MakeAvailable(fmt)
 
 set(TSR_SOURCE_FILES
-  src/tsr/DTM.cpp
+  src/tsr/DelaunayTriangulation.cpp
+  src/tsr/MeshUtils.cpp
   src/tsr/logging.cpp
-  src/tsr/IO/FileIOHandler.cpp
-  src/tsr/IO/ImageProcessor.cpp
+  src/tsr/IO/FileIO.cpp
+  src/tsr/IO/ImageIO.cpp
+  src/tsr/IO/GPXFormatter.cpp
+  src/tsr/IO/MeshIO.cpp
+  src/tsr/IO/MapIO.cpp
   src/tsr/API/APICaller.cpp
   src/tsr/Router.cpp
+  src/tsr/PointProcessor.cpp
+  src/tsr/Mesh.cpp
+  src/tsr/Feature.cpp
+  src/tsr/FeatureManager.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)

@@ -1,8 +1,37 @@
-#include "tsr/IO/ImageProcesor.hpp"
+#include "tsr/IO/ImageIO.hpp"
 
+#include <cmath>
+#include <opencv2/core/mat.hpp>
+#include <opencv2/core/types.hpp>
+#include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
+#include "tsr/Point_2.hpp"
+#include "tsr/logging.hpp"
+
+#include <memory>
+#include <stdexcept>
+#include <string>
+#include <vector>
+
 namespace tsr::IO {
+
+cv::Mat load_image_from_file(std::string filepath) {
+  auto img = cv::imread(filepath, cv::IMREAD_GRAYSCALE);
+
+  if (img.empty()) {
+    TSR_LOG_ERROR("failed to open image");
+    throw std::runtime_error("failed to open image");
+  }
+
+  return img;
+}
+
+cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image) {
+  cv::Mat rgbImage;
+  cv::cvtColor(image, rgbImage, cv::COLOR_GRAY2RGB);
+  return rgbImage;
+}
 
 std::unique_ptr<std::vector<std::vector<Point_2>>>
 extract_feature_contours(cv::Mat &image, double simplification_factor,

@@ -1,24 +1,16 @@
+#include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
-#include "tsr/logging.hpp"
 
-#include <stdexcept>
+#include "tsr/logging.hpp"
 
 namespace tsr {
 
-Feature::Feature(std::string name) {
-  this->name = name;
-  this->valid = false;
+void FeatureBase::add_dependency(std::shared_ptr<FeatureBase> feature) {
+  this->dependencies.push_back(feature);
 }
 
-void Feature::set_valid() { this->valid = true; }
-
-void Feature::set_invalid() { this->valid = false; }
-
-void Feature::reset() { this->valid = false; }
-
-bool Feature::isEqual(Feature &otherFeature) {
-  // Equality determined by feature name
-  return this->name == otherFeature.name;
-}
+void FeatureBase::preProcessing(Delaunay_3 &dtm) {
+  TSR_LOG_TRACE("No pre-processing required for feature {}", featureID);
+};
 
 } // namespace tsr

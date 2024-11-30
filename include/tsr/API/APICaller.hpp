@@ -22,6 +22,7 @@ class APICallerConfig;
 class APICaller {
 public:
   std::string fetchDataFromAPI(const std::string &url);
+
   APICaller();
   ~APICaller();
 

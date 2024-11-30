@@ -1,58 +1,115 @@
 #include "tsr/Router.hpp"
 #include "tsr/Delaunay_3.hpp"
+#include "tsr/FeatureManager.hpp"
+#include "tsr/Point_3.hpp"
 #include "tsr/logging.hpp"
 
 #include <CGAL/circulator.h>
 #include <algorithm>
-#include <functional>
+#include <cmath>
 #include <limits>
 #include <memory>
 #include <queue>
-#include <unordered_set>
+#include <stdexcept>
+#include <unordered_map>
 #include <vector>
 
 namespace tsr {
 
-Router::Router(Delaunay_3 &dtm) {
-  this->dtm = std::make_unique<Delaunay_3>(dtm);
+Router::Router(Delaunay_3 &dtm,
+               FeatureManager &feature_manager) {
 
-  // Calculate the constant weights for each face
-  for (auto face = this->dtm->finite_faces_begin();
-       face != this->dtm->finite_faces_end(); face++) {
-    this->constant_weights[face] = this->calculate_constant_face_cost(face);
+  if (!dtm.is_valid()) {
+    TSR_LOG_WARN("Invalid DTM");
+  }
+
+  this->dtm = std::make_shared<Delaunay_3>(dtm);
+
+  // Check feature manager is valid
+  if (feature_manager.outputFeature == nullptr) {
+    TSR_LOG_ERROR("feature manager invalid");
+    throw std::runtime_error("feature manager invalid");
+  }
+
+  this->feature_manager = feature_manager;
+}
+
+// TODO: Better mesh trimming
+void delete_nodes_outside_rectangle(Delaunay_3 &cdt, const Point_3 &p1,
+                                    const Point_3 &p2) {
+  // Calculate the rectangle bounds
+  double x_min = std::min(p1.x(), p2.x());
+  double x_max = std::max(p1.x(), p2.x());
+  double y_min = std::min(p1.y(), p2.y());
+  double y_max = std::max(p1.y(), p2.y());
+
+  // Find all vertices to be removed
+  std::vector<Vertex_handle> vertices_to_remove;
+  for (auto v = cdt.finite_vertices_begin(); v != cdt.finite_vertices_end();
+       ++v) {
+    Point_3 p = v->point();
+    if (p.x() < x_min || p.x() > x_max || p.y() < y_min || p.y() > y_max) {
+      vertices_to_remove.push_back(v);
+    }
+  }
+
+  // Remove constraints and then vertices outside the rectangle
+  for (auto v : vertices_to_remove) {
+    cdt.remove_incident_constraints(v);
+    // Finally, remove the vertex itself
+    cdt.remove(v);
   }
 }
 
-struct CompareNode {
-  bool operator()(const Node &node1, const Node &node2) {
-    return node1.gCost > node2.gCost;
+double calculateXYDistance(Point_3 p1, Point_3 p2) {
+
+  double dx = p1.x() - p2.x();
+  double dy = p1.y() - p2.y();
+
+  return std::hypot(dx, dy);
+}
+
+Vertex_handle Router::nearestVertexToPoint(Point_3 &point) {
+  TSR_LOG_TRACE("Locating nearest vertex");
+  Face_handle face = this->dtm->locate(point);
+
+  TSR_LOG_TRACE("Checking face is in domain");
+  if (face == nullptr || !face->is_valid() || this->dtm->is_infinite(face)) {
+    TSR_LOG_ERROR("Point outside DTM domain");
+    throw std::runtime_error("Point outside DTM domain");
   }
-};
 
-struct HashNode {
-  bool operator()(const Node &node1) {
-    return std::hash<Vertex_handle>()(node1.handle);
+  Vertex_handle vertex = face->vertex(0);
+  double minDistance = calculateXYDistance(face->vertex(0)->point(), point);
+  for (int i = 1; i < 3; i++) {
+    double distance = calculateXYDistance(face->vertex(i)->point(), point);
+    if (distance < minDistance) {
+      vertex = face->vertex(i);
+      minDistance = distance;
+    }
   }
-};
 
-// TODO: Implement constnat face cost
-double Router::calculate_constant_face_cost(Face_handle face) { return 1.0; }
+  return vertex;
+}
 
-std::vector<Point_3> Router::calculate_route(Point_2 &start_point,
-                                             Point_2 &end_point) {
+std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
+                                            Point_3 &end_point) {
 
-  auto start_face = this->dtm->locate(start_point);
-  auto end_face = this->dtm->locate(end_point);
+  TSR_LOG_TRACE("Routing");
 
-  Vertex_handle start = start_face->vertex(0);
-  Vertex_handle end = end_face->vertex(1);
+  // TSR_LOG_DEBUG("Deleting outside vertices");
+  // delete_nodes_outside_rectangle(*this->dtm, start_point, end_point);
+  // TSR_LOG_DEBUG("Kept: {} vertices", this->dtm->number_of_vertices());
+
+  Vertex_handle startVertex = nearestVertexToPoint(start_point);
+  Vertex_handle endVertex = nearestVertexToPoint(end_point);
 
   // Setup the queue of gCosts to calculate and CLOSED set
   std::priority_queue<Node, std::vector<Node>, CompareNode> cost_queue;
   std::unordered_map<Vertex_handle, Node> best_routes;
 
   // Initialize the start node
-  Node startNode(start);
+  Node startNode(startVertex);
   startNode.gCost = 0;
   cost_queue.push(startNode);
 
@@ -62,15 +119,23 @@ std::vector<Point_3> Router::calculate_route(Point_2 &start_point,
    * - We need the face, the adjacent face connecting the next node, and the
    * vertices
    */
-  while (best_routes.size() < this->dtm->number_of_vertices()) {
+  TSR_LOG_TRACE("Starting search");
+  do {
 
     // Select best node from queue
     Node current_node = cost_queue.top();
     cost_queue.pop();
 
-    // Check if the best_route gCost is better than the current best_route gCost
+    // Check if this route is already beaten
     if (best_routes.contains(current_node.handle)) {
       continue;
+    }
+
+    // Check if the route is possible
+    TSR_LOG_TRACE("Searched {} nodes", best_routes.size());
+    if (current_node.gCost == std::numeric_limits<double>::infinity()) {
+      TSR_LOG_FATAL("Could not find safe path");
+      throw std::runtime_error("Could not find safe path");
     }
 
     // Add this as the best_route to that node
@@ -85,21 +150,19 @@ std::vector<Point_3> Router::calculate_route(Point_2 &start_point,
       throw std::runtime_error("Invalid DTM detected");
     }
 
-    // Loop over the incident faces around the vertex
+    // Fetch each vertices
     auto faceCirculator = current_node.handle->incident_faces();
-
     if (faceCirculator != nullptr) {
       auto faceCirculatorEnd = faceCirculator;
       do {
 
         auto face = faceCirculator;
-
         if (this->dtm->is_infinite(face)) {
           continue;
         }
 
-        // Get the neighboring face adjacent to current vertex and the others
-        for (int i = 0; i <= 2; i++) {
+        // Get vertices of adjacent face
+        for (int i = 0; i < 3; i++) {
           Vertex_handle connectedVertex = face->vertex(i);
           if (connectedVertex == current_node.handle) {
             continue;
@@ -115,34 +178,27 @@ std::vector<Point_3> Router::calculate_route(Point_2 &start_point,
           Node node(connectedVertex);
           Face_handle faceHandle = face;
           node.gCost = current_node.gCost +
-                       calculate_trivial_cost(faceHandle, current_node.handle,
-                                              connectedVertex);
+                       calculateTrivialCost(faceHandle, current_node.handle,
+                                            connectedVertex);
           node.parent = current_node.handle;
-
-          // TSR_LOG_TRACE(
-          //     "FROM: {} {} {}, TO: {} {} {}",
-          //     current_node.handle->point().x(),
-          //     current_node.handle->point().y(),
-          //     current_node.handle->point().z(), connectedVertex->point().x(),
-          //     connectedVertex->point().y(), connectedVertex->point().z());
-          // TSR_LOG_TRACE("Cost calculated: {}", node.gCost);
 
           // Add the node to the priority queue
           cost_queue.push(node);
         }
       } while (++faceCirculator != faceCirculatorEnd);
     }
-  }
+  } while (!best_routes.contains(endVertex));
 
   // Get the end node point
   std::vector<Point_3> route;
-  Node current_node = best_routes[end];
-  route.push_back(current_node.handle->point());
+  Node current_node = best_routes[endVertex];
+  route.push_back(end_point);
 
-  while (current_node.handle != start) {
+  while (current_node != startNode) {
     current_node = best_routes[current_node.parent];
     route.push_back(current_node.handle->point());
   }
+
   std::reverse(route.begin(), route.end());
 
   TSR_LOG_TRACE("Cost queue has {} nodes skipped", cost_queue.size());
@@ -152,57 +208,11 @@ std::vector<Point_3> Router::calculate_route(Point_2 &start_point,
   return route;
 }
 
-double calculate_gradient(Point_3 &p1, Point_3 &p2) {
-
-  // TSR_LOG_TRACE("p1, p2: {} {} {}, {} {} {}", p1.x(), p1.y(), p1.z(), p2.x(),
-  //                p2.y(), p2.z());
-
-  double dz = p2.z() - p1.z();
-
-  double dx = p2.x() - p1.x();
-  double dy = p2.y() - p1.y();
-  double distance = sqrt(dx * dx + dy * dy);
-
-  if (distance == 0) {
-    return 0;
-  }
-
-  double gradient = dz / distance;
-
-  return gradient;
-}
-
-// TODO: Trivial cost more than just distance
-double Router::calculate_trivial_cost(Face_handle &face,
-                                      Vertex_handle &vertex_start,
-                                      Vertex_handle &vertex_end) {
-  // TODO: Use features to determine the cost
-
-  // TODO: DELETE JUST GETTING THE GRADIENT
-  double distance =
-      this->calculate_distance(vertex_start->point(), vertex_end->point());
-
-  // Calculate the gradient TODO: Cost curves
-  double gradient =
-      abs(calculate_gradient(vertex_start->point(), vertex_end->point()));
-
-  // DEBUG: Print start and end vertex points and the distance and gradients
-  // TSR_LOG_TRACE("Start: {} {} {}, End: {} {} {}, Distance: {}, Gradient: {}",
-  //               vertex_start->point().x(), vertex_start->point().y(),
-  //               vertex_start->point().z(), vertex_end->point().x(),
-  //               vertex_end->point().y(), vertex_end->point().z(), distance,
-  //               gradient);
-
-  // Simple gradient curve TODO: Proper Gradient cost curve
-  double gradientInfluence = gradient * 10 + 1;
-
-  return gradientInfluence * distance;
-}
-
-double Router::calculate_distance(Point_3 &p1, Point_3 &p2) {
-  // calculate the absolute distance between the two points
-  return sqrt(pow(p2.x() - p1.x(), 2) + pow(p2.y() - p1.y(), 2) +
-              pow(p2.z() - p1.z(), 2));
+double Router::calculateTrivialCost(Face_handle face,
+                                    Vertex_handle vertex_start,
+                                    Vertex_handle vertex_end) {
+  return this->feature_manager.calculateCost(face, vertex_start->point(),
+                                             vertex_end->point());
 }
 
 } // namespace tsr
