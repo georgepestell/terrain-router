@@ -44,21 +44,16 @@ struct HashNode {
  */
 class Router {
 private:
-  std::shared_ptr<Delaunay_3> dtm;
-  FeatureManager feature_manager;
-
   std::unordered_map<Vertex_handle, Node> nodes;
-  double calculateTrivialCost(Face_handle face, Vertex_handle vertex_start,
+  double calculateTrivialCost(FeatureManager &fm, Face_handle face,
+                              Vertex_handle vertex_start,
                               Vertex_handle vertex_end);
 
 public:
-  Router(Delaunay_3 &dtm, FeatureManager &feature_manager);
+  Vertex_handle nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point);
 
-  void propagate_costs();
-
-  Vertex_handle nearestVertexToPoint(Point_3 &point);
-
-  std::vector<Point_3> calculateRoute(Point_3 &start_point, Point_3 &end_point);
+  std::vector<Point_3> calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
+                                      Point_3 &start_point, Point_3 &end_point);
 };
 
 } // namespace tsr

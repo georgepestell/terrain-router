@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/FeatureManager.hpp"
 #include "tsr/Point_3.hpp"
 #include "tsr/logging.hpp"
@@ -38,20 +39,12 @@ TEST(TestRouter, routerInitiailizeTest) {
   points.push_back(Point_3(25, 0, 0));
 
   TSR_LOG_TRACE("Initializing TIN");
-  Delaunay_3 tin;
-  tin.insert(points.begin(), points.end());
+  auto tin = create_tin_from_points(points);
 
   FeatureManager fm;
   fm.setOutputFeature(std::make_shared<GradientFeature>("GRADIENT"));
 
-  ASSERT_NO_THROW(Router router(tin, fm));
-}
-
-TEST(TestRouter, routerInitializeFailsWithInvalidFeatureManagerTest) {
-  Delaunay_3 tin;
-  FeatureManager fm;
-
-  ASSERT_THROW(Router router(tin, fm), std::runtime_error);
+  ASSERT_NO_THROW(Router router);
 }
 
 TEST(TestRouter, routerDistanceCheck) {
@@ -73,8 +66,7 @@ TEST(TestRouter, routerDistanceCheck) {
   points.push_back(Point_3(20, 5, 0));
   points.push_back(Point_3(25, 0, 0));
 
-  Delaunay_3 tin;
-  tin.insert(points.begin(), points.end());
+  auto tin = create_tin_from_points(points);
 
   TSR_LOG_TRACE("Initializing TIN");
 
@@ -83,14 +75,15 @@ TEST(TestRouter, routerDistanceCheck) {
 
   featureManager.setOutputFeature(distanceFeature);
 
-  Router router(tin, featureManager);
+  Router router;
 
   // Get the vertex handle of a point
   Point_3 start_point(0, 5, 0);
   Point_3 end_point(25, 0, 0);
 
   TSR_LOG_TRACE("Calculating route");
-  auto route = router.calculateRoute(start_point, end_point);
+  auto route =
+      router.calculateRoute(tin, featureManager, start_point, end_point);
 
   for (auto &point : route) {
     TSR_LOG_INFO("Point: ({}, {}, {})", point.x(), point.y(), point.z());
@@ -124,8 +117,7 @@ TEST(TestRouter, routerGradientCheck) {
 
   TSR_LOG_TRACE("Initializing TIN");
 
-  Delaunay_3 tin;
-  tin.insert(points.begin(), points.end());
+  auto tin = create_tin_from_points(points);
 
   TSR_LOG_TRACE("Initializing feature manager");
 
@@ -147,14 +139,15 @@ TEST(TestRouter, routerGradientCheck) {
 
   TSR_LOG_TRACE("Initializing router");
 
-  Router router(tin, feature_manager);
+  Router router;
 
   // Get the vertex handle of a point
   Point_3 start_point(0, 5, 0);
   Point_3 end_point(25, 0, 0);
 
   TSR_LOG_TRACE("Calculating route");
-  auto route = router.calculateRoute(start_point, end_point);
+  auto route =
+      router.calculateRoute(tin, feature_manager, start_point, end_point);
 
   for (auto &point : route) {
     TSR_LOG_INFO("Point: ({}, {}, {})", point.x(), point.y(), point.z());

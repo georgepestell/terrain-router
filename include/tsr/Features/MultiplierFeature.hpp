@@ -13,7 +13,7 @@ namespace tsr {
 
 class MultiplierFeature : public Feature<double> {
 public:
-  enum DEPENDENCY_TYPE { INT, DOUBLE };
+  enum DEPENDENCY_TYPE { INT, DOUBLE, BOOL };
 
   std::unordered_map<std::string, DEPENDENCY_TYPE> dependency_types;
 
@@ -35,6 +35,12 @@ public:
         auto feature = std::dynamic_pointer_cast<Feature<double>>(f);
         double value = feature->calculate(face, source_point, target_point);
         total *= value;
+        break;
+      }
+      case BOOL: {
+        auto feature = std::dynamic_pointer_cast<Feature<bool>>(f);
+        double value = feature->calculate(face, source_point, target_point);
+        total *= value ? 1 : 0;
         break;
       }
       default:

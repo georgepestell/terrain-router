@@ -8,59 +8,12 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
-#include <memory>
 #include <queue>
 #include <stdexcept>
 #include <unordered_map>
 #include <vector>
 
 namespace tsr {
-
-Router::Router(Delaunay_3 &dtm,
-               FeatureManager &feature_manager) {
-
-  if (!dtm.is_valid()) {
-    TSR_LOG_WARN("Invalid DTM");
-  }
-
-  this->dtm = std::make_shared<Delaunay_3>(dtm);
-
-  // Check feature manager is valid
-  if (feature_manager.outputFeature == nullptr) {
-    TSR_LOG_ERROR("feature manager invalid");
-    throw std::runtime_error("feature manager invalid");
-  }
-
-  this->feature_manager = feature_manager;
-}
-
-// TODO: Better mesh trimming
-void delete_nodes_outside_rectangle(Delaunay_3 &cdt, const Point_3 &p1,
-                                    const Point_3 &p2) {
-  // Calculate the rectangle bounds
-  double x_min = std::min(p1.x(), p2.x());
-  double x_max = std::max(p1.x(), p2.x());
-  double y_min = std::min(p1.y(), p2.y());
-  double y_max = std::max(p1.y(), p2.y());
-
-  // Find all vertices to be removed
-  std::vector<Vertex_handle> vertices_to_remove;
-  for (auto v = cdt.finite_vertices_begin(); v != cdt.finite_vertices_end();
-       ++v) {
-    Point_3 p = v->point();
-    if (p.x() < x_min || p.x() > x_max || p.y() < y_min || p.y() > y_max) {
-      vertices_to_remove.push_back(v);
-    }
-  }
-
-  // Remove constraints and then vertices outside the rectangle
-  for (auto v : vertices_to_remove) {
-    cdt.remove_incident_constraints(v);
-    // Finally, remove the vertex itself
-    cdt.remove(v);
-  }
-}
-
 double calculateXYDistance(Point_3 p1, Point_3 p2) {
 
   double dx = p1.x() - p2.x();
@@ -69,12 +22,10 @@ double calculateXYDistance(Point_3 p1, Point_3 p2) {
   return std::hypot(dx, dy);
 }
 
-Vertex_handle Router::nearestVertexToPoint(Point_3 &point) {
-  TSR_LOG_TRACE("Locating nearest vertex");
-  Face_handle face = this->dtm->locate(point);
+Vertex_handle Router::nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point) {
+  Face_handle face = dtm.locate(point);
 
-  TSR_LOG_TRACE("Checking face is in domain");
-  if (face == nullptr || !face->is_valid() || this->dtm->is_infinite(face)) {
+  if (face == nullptr || !face->is_valid() || dtm.is_infinite(face)) {
     TSR_LOG_ERROR("Point outside DTM domain");
     throw std::runtime_error("Point outside DTM domain");
   }
@@ -92,7 +43,8 @@ Vertex_handle Router::nearestVertexToPoint(Point_3 &point) {
   return vertex;
 }
 
-std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
+std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
+                                            Point_3 &start_point,
                                             Point_3 &end_point) {
 
   TSR_LOG_TRACE("Routing");
@@ -101,8 +53,8 @@ std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
   // delete_nodes_outside_rectangle(*this->dtm, start_point, end_point);
   // TSR_LOG_DEBUG("Kept: {} vertices", this->dtm->number_of_vertices());
 
-  Vertex_handle startVertex = nearestVertexToPoint(start_point);
-  Vertex_handle endVertex = nearestVertexToPoint(end_point);
+  Vertex_handle startVertex = nearestVertexToPoint(dtm, start_point);
+  Vertex_handle endVertex = nearestVertexToPoint(dtm, end_point);
 
   // Setup the queue of gCosts to calculate and CLOSED set
   std::priority_queue<Node, std::vector<Node>, CompareNode> cost_queue;
@@ -132,7 +84,6 @@ std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
     }
 
     // Check if the route is possible
-    TSR_LOG_TRACE("Searched {} nodes", best_routes.size());
     if (current_node.gCost == std::numeric_limits<double>::infinity()) {
       TSR_LOG_FATAL("Could not find safe path");
       throw std::runtime_error("Could not find safe path");
@@ -145,7 +96,7 @@ std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
      * Calculate the costs of the adjacent not-closed nodes
      */
 
-    if (!this->dtm->is_valid()) {
+    if (!dtm.is_valid()) {
       TSR_LOG_FATAL("Invalid DTM detected");
       throw std::runtime_error("Invalid DTM detected");
     }
@@ -157,7 +108,7 @@ std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
       do {
 
         auto face = faceCirculator;
-        if (this->dtm->is_infinite(face)) {
+        if (dtm.is_infinite(face)) {
           continue;
         }
 
@@ -178,7 +129,7 @@ std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
           Node node(connectedVertex);
           Face_handle faceHandle = face;
           node.gCost = current_node.gCost +
-                       calculateTrivialCost(faceHandle, current_node.handle,
+                       calculateTrivialCost(fm, faceHandle, current_node.handle,
                                             connectedVertex);
           node.parent = current_node.handle;
 
@@ -208,11 +159,10 @@ std::vector<Point_3> Router::calculateRoute(Point_3 &start_point,
   return route;
 }
 
-double Router::calculateTrivialCost(Face_handle face,
+double Router::calculateTrivialCost(FeatureManager &fm, Face_handle face,
                                     Vertex_handle vertex_start,
                                     Vertex_handle vertex_end) {
-  return this->feature_manager.calculateCost(face, vertex_start->point(),
-                                             vertex_end->point());
+  return fm.calculateCost(face, vertex_start->point(), vertex_end->point());
 }
 
 } // namespace tsr

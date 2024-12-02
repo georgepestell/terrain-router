@@ -1,3 +1,5 @@
+#pragma once
+
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
 #include "tsr/Point_3.hpp"
@@ -5,12 +7,13 @@
 #include "tsr/logging.hpp"
 
 #include <CGAL/Kernel/global_functions_3.h>
-#include <gdal.h>
+#include <gdal/gdal.h>
+#include <gdal/gdal_priv.h>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
 
-#include "gdal_priv.h"
+#include <gdal/gdal_priv.h>
 
 namespace tsr {
 
@@ -20,7 +23,8 @@ private:
   std::unordered_map<Face_handle, bool> waterMap;
 
 public:
-  BoolWaterFeature(std::string name, Delaunay_3 &dtm, GDALDatasetH waterData)
+  BoolWaterFeature(std::string name, Delaunay_3 &dtm, GDALDatasetH &waterData,
+                   double cell_size)
       : Feature(name) {
 
     GDALDataset *dataset = (GDALDataset *)waterData;
@@ -59,15 +63,19 @@ public:
 
       Point_3 center = CGAL::circumcenter(p0, p1, p2);
 
+      this->waterMap[face] = true;
+      continue;
+
       // Convert UTM coordinates to pixel coordinates
-      int pixel_x =
-          static_cast<int>((center.x() - geotransform[0]) / geotransform[1]);
-      int pixel_y =
-          static_cast<int>((center.y() - geotransform[3]) / geotransform[5]);
+      int pixel_x = static_cast<int>(
+          ((center.x() / cell_size) - geotransform[0]) / geotransform[1]);
+      int pixel_y = static_cast<int>(
+          ((center.y() / cell_size) - geotransform[3]) / geotransform[5]);
 
       if (pixel_x < 0 || pixel_x >= raster_x_size || pixel_y < 0 ||
           pixel_y >= raster_y_size) {
-        TSR_LOG_ERROR("Point outside water dataset bounds");
+        TSR_LOG_ERROR("Point outside water dataset bounds {} {}", center.x(),
+                      center.y());
         throw std::runtime_error("Point outside water dataset bounds");
       }
 
@@ -82,6 +90,15 @@ public:
 
       this->waterMap[face] = value > 0 ? true : false;
     }
+  }
+
+  bool calculate(Face_handle face, Point_3 &source_point,
+                 Point_3 &target_point) override {
+    if (!waterMap.contains(face)) {
+      TSR_LOG_WARN("Water value not set for face");
+      return true;
+    }
+    return this->waterMap[face];
   }
 };
 

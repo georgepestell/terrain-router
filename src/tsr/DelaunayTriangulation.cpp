@@ -3,32 +3,27 @@
 #include "tsr/Mesh.hpp"
 #include "tsr/MeshUtils.hpp"
 #include "tsr/Point_3.hpp"
-#include "tsr/Vector_3.hpp"
 #include "tsr/logging.hpp"
 
-#include <CGAL/Kernel/global_functions_3.h>
-#include <CGAL/Named_function_parameters.h>
+#include <CGAL/Polygon_mesh_processing/connected_components.h>
 #include <CGAL/Polygon_mesh_processing/region_growing.h>
 #include <CGAL/Polygon_mesh_processing/remesh_planar_patches.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
+#include <CGAL/Polygon_mesh_processing/repair_degeneracies.h>
+#include <CGAL/Polygon_mesh_processing/repair_polygon_soup.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_faces.h>
 #include <CGAL/boost/graph/copy_face_graph.h>
 #include <CGAL/boost/graph/graph_traits_Constrained_Delaunay_triangulation_2.h>
 #include <CGAL/boost/graph/graph_traits_Surface_mesh.h>
 #include <CGAL/boost/graph/helpers.h>
-#include <CGAL/grid_simplify_point_set.h>
-#include <CGAL/hierarchy_simplify_point_set.h>
-#include <CGAL/jet_smooth_point_set.h>
 #include <CGAL/property_map.h>
 #include <CGAL/tags.h>
-#include <CGAL/wlop_simplify_and_regularize_point_set.h>
 
 #include <boost/property_map/vector_property_map.hpp>
 #include <cmath>
 #include <cstddef>
 #include <exception>
 #include <iterator>
-#include <memory>
-#include <stdexcept>
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <sys/types.h>
@@ -40,6 +35,22 @@ void convert_surface_mesh_to_tin(Mesh const &source, Delaunay_3 &target) {
   for (auto v : source.vertices()) {
     target.insert(source.point(v));
   }
+}
+
+void convert_tin_to_surface_mesh(Delaunay_3 const &source, Mesh &target) {
+  CGAL::copy_face_graph(source, target);
+}
+
+Delaunay_3 create_tin_from_points(std::vector<Point_3> &points) {
+  if (points.empty()) {
+    TSR_LOG_WARN("empty TIN created");
+  }
+
+  Delaunay_3 tin;
+
+  tin.insert(points.begin(), points.end());
+
+  return tin;
 }
 
 double calculateAngle(const Point_3 &p1, const Point_3 &p2) {
@@ -68,11 +79,7 @@ Point_3 rotatePoint(const Point_3 &center, const Point_3 &p, double angle) {
   return Point_3(newX + center.x(), newY + center.y(), p.z());
 }
 
-void convert_tin_to_surface_mesh(Delaunay_3 const &source, Mesh &target) {
-  CGAL::copy_face_graph(source, target);
-}
-
-// Function to check if a point is inside a rectangle
+// Function to check if a point is inside a rotated rectangle
 bool isPointInRectangle(const Point_3 &center, double width, double height,
                         double angle, const Point_3 &point) {
   // Rotate the point back (inverse rotation)
@@ -81,26 +88,27 @@ bool isPointInRectangle(const Point_3 &center, double width, double height,
   // Check if the rotated point is within the axis-aligned rectangle
   double halfWidth = width / 2.0;
   double halfHeight = height / 2.0;
-  return (rotatedPoint.x() >= center.x() - halfWidth &&
-          rotatedPoint.x() <= center.x() + halfWidth &&
-          rotatedPoint.y() >= center.y() - halfHeight &&
-          rotatedPoint.y() <= center.y() + halfHeight);
+
+  bool withinBounds = (rotatedPoint.x() >= center.x() - halfWidth &&
+                       rotatedPoint.x() <= center.x() + halfWidth &&
+                       rotatedPoint.y() >= center.y() - halfHeight &&
+                       rotatedPoint.y() <= center.y() + halfHeight);
+
+  return withinBounds;
 }
 
 Delaunay_3 create_tin_from_points(std::vector<Point_3> &points,
-                                                   Point_3 source_point,
-                                                   Point_3 target_point,
-                                                   double radiiMultiplier) {
+                                  Point_3 source_point, Point_3 target_point,
+                                  double radiiMultiplier) {
   TSR_LOG_TRACE("creating TIN from point cloud");
 
   // validate point set contains points
   if (points.empty()) {
-    TSR_LOG_WARN("TIN point vector is empty");
-    throw std::invalid_argument("TIN point vector is empty");
+    TSR_LOG_WARN("empty TIN created");
   }
 
   // triangulate points using 2.5D Delaunay triangulation
-  Delaunay_3 tin;
+  std::vector<Point_3> filteredPoints;
 
   // Calculate domain boundary
 
@@ -121,7 +129,7 @@ Delaunay_3 create_tin_from_points(std::vector<Point_3> &points,
     bool inRectangle =
         isPointInRectangle(midpoint, boundaryWidth, boundaryHeight, angle, p);
     if (inRectangle) {
-      tin.insert(p);
+      filteredPoints.push_back(p);
     } else {
       d++;
     }
@@ -129,16 +137,7 @@ Delaunay_3 create_tin_from_points(std::vector<Point_3> &points,
 
   TSR_LOG_TRACE("Discarded {} points", d);
 
-  // validate triangulated mesh
-  if (!tin.is_valid()) {
-    TSR_LOG_ERROR("initalized DTM invalid");
-    throw std::runtime_error("DTM Delaunay Triangulated mesh invalid");
-  }
-
-  TSR_LOG_TRACE("TIN initialized with {:d} vertices",
-                tin.number_of_vertices());
-
-  return tin;
+  return create_tin_from_points(filteredPoints);
 }
 
 void add_contour_constraint(Delaunay_3 &dtm, std::vector<Point_2> contour,
@@ -236,46 +235,87 @@ void simplify_tin(Delaunay_3 const &source_mesh, Delaunay_3 &target_mesh,
   Mesh sourceSurfaceMesh;
   convert_tin_to_surface_mesh(source_mesh, sourceSurfaceMesh);
 
+  CGAL::Polygon_mesh_processing::remove_degenerate_faces(sourceSurfaceMesh);
+  CGAL::Polygon_mesh_processing::remove_almost_degenerate_faces(
+      sourceSurfaceMesh);
+  CGAL::Polygon_mesh_processing::remove_degenerate_edges(sourceSurfaceMesh);
+  CGAL::Polygon_mesh_processing::triangulate_faces(sourceSurfaceMesh);
+
+  typedef boost::graph_traits<Mesh>::vertex_descriptor vertex_descriptor;
+  // typedef boost::graph_traits<Mesh>::halfedge_descriptor halfedge_descriptor;
+
   if (!CGAL::is_valid_polygon_mesh(sourceSurfaceMesh)) {
     TSR_LOG_ERROR("Source mesh is invalid!");
     return;
   }
 
-  // Required simplification information
-  std::vector<size_t> regionIdMap(CGAL::num_faces(sourceSurfaceMesh));
-  std::vector<size_t> cornerIdMap(CGAL::num_vertices(sourceSurfaceMesh), -1);
-  std::vector<bool> ecm(CGAL::num_edges(sourceSurfaceMesh), false);
-  boost::vector_property_map<CGAL::Epick::Vector_3> normalMap;
+  // // Required simplification information
+  // std::vector<size_t> regionIdMap(CGAL::num_faces(sourceSurfaceMesh));
+  // std::vector<size_t> cornerIdMap(CGAL::num_vertices(sourceSurfaceMesh), -1);
+  // std::vector<bool> ecm(CGAL::num_edges(sourceSurfaceMesh), false);
+  // boost::vector_property_map<CGAL::Epick::Vector_3> normalMap;
 
-  TSR_LOG_TRACE("detecting mesh regions for simplification");
+  // TSR_LOG_TRACE("detecting mesh regions for simplification");
 
-  size_t nbRegions =
-      CGAL::Polygon_mesh_processing::region_growing_of_planes_on_faces(
-          sourceSurfaceMesh, CGAL::make_random_access_property_map(regionIdMap),
-          CGAL::parameters::cosine_of_maximum_angle(cosine_max_angle_regions)
-              .region_primitive_map(normalMap)
-              .maximum_distance(max_distance_regions));
-  TSR_LOG_TRACE("Detected {} regions", nbRegions);
+  // size_t nbRegions =
+  //     CGAL::Polygon_mesh_processing::region_growing_of_planes_on_faces(
+  //         sourceSurfaceMesh,
+  //         CGAL::make_random_access_property_map(regionIdMap),
+  //         CGAL::parameters::cosine_of_maximum_angle(cosine_max_angle_regions)
+  //             .region_primitive_map(normalMap)
+  //             .maximum_distance(max_distance_regions));
+  // TSR_LOG_TRACE("Detected {} regions", nbRegions);
 
-  TSR_LOG_TRACE("detecting mesh corners for simplification");
+  // TSR_LOG_TRACE("detecting mesh corners for simplification");
 
-  size_t nbCorners = CGAL::Polygon_mesh_processing::detect_corners_of_regions(
-      sourceSurfaceMesh, CGAL::make_random_access_property_map(regionIdMap),
-      nbRegions, CGAL::make_random_access_property_map(cornerIdMap),
-      CGAL::parameters::cosine_of_maximum_angle(cosine_max_angle_corners)
-          .maximum_distance(max_distance_corners)
-          .edge_is_constrained_map(CGAL::make_random_access_property_map(ecm)));
-  TSR_LOG_TRACE("Detected {} corners", nbCorners);
+  // size_t nbCorners =
+  // CGAL::Polygon_mesh_processing::detect_corners_of_regions(
+  //     sourceSurfaceMesh, CGAL::make_random_access_property_map(regionIdMap),
+  //     nbRegions, CGAL::make_random_access_property_map(cornerIdMap),
+  //     CGAL::parameters::cosine_of_maximum_angle(cosine_max_angle_corners)
+  //         .maximum_distance(max_distance_corners)
+  //         .edge_is_constrained_map(CGAL::make_random_access_property_map(ecm)));
+  // TSR_LOG_TRACE("Detected {} corners", nbCorners);
 
   Mesh targetSurfaceMesh;
   try {
     TSR_LOG_TRACE("simplifying mesh");
-    CGAL::Polygon_mesh_processing::remesh_almost_planar_patches(
-        sourceSurfaceMesh, targetSurfaceMesh, nbRegions, nbCorners,
-        CGAL::make_random_access_property_map(regionIdMap),
-        CGAL::make_random_access_property_map(cornerIdMap),
-        CGAL::make_random_access_property_map(ecm),
-        CGAL::parameters::patch_normal_map(normalMap));
+
+    TSR_LOG_TRACE("source vert: {}", sourceSurfaceMesh.number_of_vertices());
+    // Count non manifold vertices
+    int counter = 0;
+    for (vertex_descriptor v : vertices(sourceSurfaceMesh)) {
+      if (CGAL::Polygon_mesh_processing::is_non_manifold_vertex(
+              v, sourceSurfaceMesh)) {
+        std::cout << "vertex " << v << " is non-manifold" << std::endl;
+        ++counter;
+      }
+    }
+
+    TSR_LOG_TRACE("Non manifold vertices: {}", counter);
+
+    TSR_LOG_TRACE("source vert: {}", sourceSurfaceMesh.number_of_vertices());
+    TSR_LOG_TRACE("source is valid: {}",
+                  CGAL::is_valid_polygon_mesh(sourceSurfaceMesh));
+
+    // typedef boost::property_map<Mesh, CGAL::vertex_index_t>::type
+    //     VertexIndexMap;
+    // VertexIndexMap vim = get(CGAL::vertex_index, sourceSurfaceMesh);
+
+    // typedef boost::property_map<Mesh, CGAL::face_patch_id_t<int>>::type
+    //     FacePatchIdMap;
+    // FacePatchIdMap patch_id_map =
+    //     get(CGAL::face_patch_id_t<int>(), sourceSurfaceMesh);
+
+    // bool res = CGAL::Polygon_mesh_processing::remesh_almost_planar_patches(
+    //     sourceSurfaceMesh, targetSurfaceMesh, nbRegions, nbCorners,
+    //     CGAL::make_random_access_property_map(regionIdMap),
+    //     CGAL::make_random_access_property_map(cornerIdMap),
+    //     CGAL::make_random_access_property_map(ecm),
+    //     CGAL::parameters::patch_normal_map(normalMap));
+    // if (!res) {
+    //   throw std::runtime_error("return value indicates failure");
+    // }
     TSR_LOG_TRACE("Simplified mesh has {} vertices",
                   targetSurfaceMesh.number_of_vertices());
   } catch (std::exception &e) {
@@ -292,7 +332,7 @@ void simplify_tin(Delaunay_3 const &source_mesh, Delaunay_3 &target_mesh,
   try {
     TSR_LOG_TRACE("writing to target mesh");
     target_mesh.clear();
-    convert_surface_mesh_to_tin(targetSurfaceMesh, target_mesh);
+    convert_surface_mesh_to_tin(sourceSurfaceMesh, target_mesh);
   } catch (std::exception &e) {
     TSR_LOG_FATAL("copying simplified mesh to target mesh failed");
     throw e;

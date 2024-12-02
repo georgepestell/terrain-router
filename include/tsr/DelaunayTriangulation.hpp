@@ -8,15 +8,16 @@
 
 namespace tsr {
 
-#define DEFAULT_COSINE_MAX_ANGLE_REGIONS 0.7
-#define DEFAULT_MAX_DISTANCE_REGIONS 10.0
-#define DEFAULT_COSINE_MAX_ANGLE_CORNERS 0.85
-#define DEFAULT_MAX_DISTANCE_CORNERS 5.0
+#define DEFAULT_COSINE_MAX_ANGLE_REGIONS 0.60
+#define DEFAULT_MAX_DISTANCE_REGIONS 5.0
+#define DEFAULT_COSINE_MAX_ANGLE_CORNERS 0.9
+#define DEFAULT_MAX_DISTANCE_CORNERS 3.0
 
 Delaunay_3 create_tin_from_points(std::vector<Point_3> &points,
-                                                   Point_3 source_point,
-                                                   Point_3 target_point,
-                                                   double radii);
+                                  Point_3 source_point, Point_3 target_point,
+                                  double radii);
+
+Delaunay_3 create_tin_from_points(std::vector<Point_3> &points);
 
 void convert_surface_mesh_to_tin(Mesh const &source, Delaunay_3 &target);
 
