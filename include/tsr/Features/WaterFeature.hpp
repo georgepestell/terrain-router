@@ -2,16 +2,20 @@
 
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
+#include "tsr/IO/FileIO.hpp"
 #include "tsr/Point_3.hpp"
 
 #include "tsr/logging.hpp"
 
 #include <CGAL/Kernel/global_functions_3.h>
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
+
+#include "tsr/IO/KMLWriter.hpp"
 
 #include <gdal/gdal_priv.h>
 
@@ -21,10 +25,12 @@ class BoolWaterFeature : public Feature<bool> {
 
 private:
   std::unordered_map<Face_handle, bool> waterMap;
+  double max_traversable_distance = 0;
+
+  enum DEPENDENCIES { DISTANCE };
 
 public:
-  BoolWaterFeature(std::string name, Delaunay_3 &dtm, GDALDatasetH &waterData,
-                   double cell_size)
+  BoolWaterFeature(std::string name, Delaunay_3 &dtm, GDALDatasetH &waterData)
       : Feature(name) {
 
     GDALDataset *dataset = (GDALDataset *)waterData;
@@ -54,6 +60,7 @@ public:
     }
 
     // Mark whether a face is water or not
+    int waterCount = 0;
     for (Face_handle face : dtm.all_face_handles()) {
 
       // Get the circumcenter poing
@@ -63,20 +70,17 @@ public:
 
       Point_3 center = CGAL::circumcenter(p0, p1, p2);
 
-      this->waterMap[face] = true;
-      continue;
-
       // Convert UTM coordinates to pixel coordinates
-      int pixel_x = static_cast<int>(
-          ((center.x() / cell_size) - geotransform[0]) / geotransform[1]);
-      int pixel_y = static_cast<int>(
-          ((center.y() / cell_size) - geotransform[3]) / geotransform[5]);
+      int pixel_x =
+          static_cast<int>((center.x() - geotransform[0]) / geotransform[1]);
+      int pixel_y =
+          static_cast<int>((center.y() - geotransform[3]) / geotransform[5]);
 
       if (pixel_x < 0 || pixel_x >= raster_x_size || pixel_y < 0 ||
           pixel_y >= raster_y_size) {
-        TSR_LOG_ERROR("Point outside water dataset bounds {} {}", center.x(),
-                      center.y());
-        throw std::runtime_error("Point outside water dataset bounds");
+        TSR_LOG_WARN("Point outside water dataset bounds {} {}", center.x(),
+                     center.y());
+        continue;
       }
 
       // Read the value at the specified pixel
@@ -88,16 +92,42 @@ public:
             "failed to read pixel value from water dataset");
       }
 
-      this->waterMap[face] = value > 0 ? true : false;
+      this->waterMap[face] = value > 0.0 ? true : false;
+      if (!this->waterMap[face]) {
+        waterCount++;
+      }
     }
+    TSR_LOG_TRACE("faces with water: {}", waterCount);
+  }
+
+  void writeWaterMapToKML() {
+    std::vector<Face_handle> faces;
+
+    for (auto f : this->waterMap) {
+      if (f.second) {
+        faces.push_back(f.first);
+      }
+    }
+
+    std::string kml = IO::generateKML(faces);
+
+    IO::write_data_to_file("water.kml", kml);
   }
 
   bool calculate(Face_handle face, Point_3 &source_point,
                  Point_3 &target_point) override {
+
     if (!waterMap.contains(face)) {
       TSR_LOG_WARN("Water value not set for face");
       return true;
     }
+
+    // auto distanceFeature = std::dynamic_pointer_cast<Feature<double>>(
+    //     this->dependencies[DEPENDENCIES::DISTANCE]);
+
+    // double distance =
+    //     distanceFeature->calculate(face, source_point, target_point);
+
     return this->waterMap[face];
   }
 };

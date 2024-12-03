@@ -4,6 +4,7 @@
 #include "tsr/Feature.hpp"
 #include "tsr/Point_3.hpp"
 #include "tsr/logging.hpp"
+#include <limits>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -28,19 +29,37 @@ public:
       case INT: {
         auto feature = std::dynamic_pointer_cast<Feature<int>>(f);
         int value = feature->calculate(face, source_point, target_point);
+
+        if (total == std::numeric_limits<double>::infinity() ||
+            ((double)value) == std::numeric_limits<double>::infinity()) {
+          total = std::numeric_limits<double>::infinity();
+          break;
+        }
+
         total *= (double)value;
         break;
       }
       case DOUBLE: {
         auto feature = std::dynamic_pointer_cast<Feature<double>>(f);
         double value = feature->calculate(face, source_point, target_point);
+
+        if (total == std::numeric_limits<double>::infinity() ||
+            value == std::numeric_limits<double>::infinity()) {
+          total = std::numeric_limits<double>::infinity();
+          break;
+        }
+
         total *= value;
         break;
       }
       case BOOL: {
         auto feature = std::dynamic_pointer_cast<Feature<bool>>(f);
-        double value = feature->calculate(face, source_point, target_point);
-        total *= value ? 1 : 0;
+        bool value = feature->calculate(face, source_point, target_point);
+        if (value) {
+          break;
+        } else {
+          return 0;
+        }
         break;
       }
       default:

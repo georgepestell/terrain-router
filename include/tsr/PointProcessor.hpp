@@ -17,4 +17,7 @@ Point_3 WGS84_point_to_UTM(Point_3 pointWGS84);
 void jet_smooth_points(std::vector<Point_3> &points);
 void simplify_points(std::vector<Point_3> &points);
 
+void filter_points_domain(std::vector<Point_3> &points, Point_3 &source_point,
+                          Point_3 &target_point, double radii_multiplier);
+
 } // namespace tsr

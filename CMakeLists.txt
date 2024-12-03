@@ -71,6 +71,7 @@ set(TSR_SOURCE_FILES
   src/tsr/Mesh.cpp
   src/tsr/Feature.cpp
   src/tsr/FeatureManager.cpp
+  src/tsr/IO/KMLWriter.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
