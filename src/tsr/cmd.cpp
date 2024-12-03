@@ -1,5 +1,4 @@
 #include "tsr/DelaunayTriangulation.hpp"
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/FeatureManager.hpp"
 #include "tsr/Features/DistanceFeature.hpp"
 #include "tsr/Features/GradientFeature.hpp"
@@ -7,6 +6,7 @@
 #include "tsr/Features/InverseFeature.hpp"
 #include "tsr/Features/MultiplierFeature.hpp"
 #include "tsr/Features/WaterFeature.hpp"
+#include "tsr/Mesh.hpp"
 #include "tsr/PointProcessor.hpp"
 
 #include "tsr/IO/ImageIO.hpp"
@@ -22,6 +22,7 @@
 
 #include "tsr/Router.hpp"
 
+#include <boost/program_options/cmdline.hpp>
 #include <boost/program_options/options_description.hpp>
 #include <boost/program_options/parsers.hpp>
 #include <boost/program_options/positional_options.hpp>
@@ -29,7 +30,11 @@
 #include <boost/program_options/variables_map.hpp>
 #include <cstdlib>
 #include <exception>
+#include <gdal/gdal.h>
+#include <iostream>
 #include <memory>
+#include <ostream>
+#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -53,7 +58,9 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   auto points = IO::load_dem_from_file("../data/benNevis_DEM.xyz");
 
   TSR_LOG_TRACE("Filtering domain");
-  // TODO: Simplify domain
+
+  double DEFAULT_RADII_MULTIPLIER = 1;
+  filter_points_domain(points, startPoint, endPoint, DEFAULT_RADII_MULTIPLIER);
 
   // TSR_LOG_TRACE("Smoothing");
   // jet_smooth_points(points);
@@ -64,7 +71,7 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   TSR_LOG_TRACE("point count: {}", points.size());
 
   TSR_LOG_TRACE("Triangulating");
-  auto dtm = create_tin_from_points(points, startPoint, endPoint, 1);
+  auto dtm = create_tin_from_points(points);
   // auto dtm = create_tin_from_points(points);
 
   TSR_LOG_TRACE("Simplfying");
@@ -96,17 +103,17 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   FeatureManager fm;
 
   auto gradientFeature = std::make_shared<GradientFeature>("gradient");
-  auto distanceFeature = std::make_shared<DistanceFeature>("distance");
+  auto distance = std::make_shared<DistanceFeature>("distance");
   auto gradientSpeedInfluence =
       std::make_shared<GradientSpeedFeature>("gradient_speed");
-  auto timeFeature = std::make_shared<MultiplierFeature>("time");
+  gradientSpeedInfluence->add_dependency(gradientFeature);
 
   auto waterDataset =
       IO::load_gdal_dataset_from_file("../data/benNevis_water.tiff");
   std::shared_ptr<BoolWaterFeature> waterFeature;
   try {
     waterFeature =
-        std::make_shared<BoolWaterFeature>("water", dtm, *waterDataset, 3.0);
+        std::make_shared<BoolWaterFeature>("water", dtm, *waterDataset);
   } catch (std::exception e) {
     GDALClose(*waterDataset);
     throw e;
@@ -114,20 +121,22 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   GDALClose(*waterDataset);
 
-  gradientSpeedInfluence->add_dependency(gradientFeature);
+  waterFeature->writeWaterMapToKML();
+
+  auto waterSpeedInfluence = std::make_shared<InverseFeature<bool, bool>>("water_speed");
+  waterSpeedInfluence->add_dependency(waterFeature);
 
   auto speedFeature = std::make_shared<MultiplierFeature>("speed");
-  speedFeature->add_dependency(waterFeature, MultiplierFeature::BOOL);
-  speedFeature->add_dependency(gradientSpeedInfluence,
-                               MultiplierFeature::DOUBLE);
+  speedFeature->add_dependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
+  speedFeature->add_dependency(waterSpeedInfluence, MultiplierFeature::BOOL);
 
-  auto inverseSpeedFeature =
-      std::make_shared<InverseFeature<double>>("inverse_speed");
-
+  auto inverseSpeedFeature = std::make_shared<InverseFeature<double, double>>("inverse_speed");
   inverseSpeedFeature->add_dependency(speedFeature);
 
-  timeFeature->add_dependency(distanceFeature, MultiplierFeature::DOUBLE);
-  timeFeature->add_dependency(inverseSpeedFeature, MultiplierFeature::DOUBLE);
+  auto timeFeature = std::make_shared<MultiplierFeature>("time");
+  timeFeature->add_dependency(distance, MultiplierFeature::DOUBLE);
+  timeFeature->add_dependency(inverseSpeedFeature,
+  MultiplierFeature::DOUBLE);
 
   fm.setOutputFeature(timeFeature);
 
@@ -148,17 +157,13 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   // Output the route as a gpx file
   IO::write_data_to_file("route.gpx", IO::formatPointsAsGPXRoute(routeWGS84));
 
-  // TSR_LOG_TRACE("Writing to obj file");
-  // Surface_mesh surface_mesh;
-  // convert_tin_to_surface_mesh(dtm, surface_mesh);
-  // write_mesh_to_obj("testBigConstraints.obj", surface_mesh);
   return EXIT_SUCCESS;
 }
 
 } // namespace tsr
 
 int main(int argc, char **argv) {
-  try {
+  try {                
     // Define allowed options
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "Print help message")(

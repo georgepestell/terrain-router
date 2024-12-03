@@ -143,11 +143,13 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
   // Get the end node point
   std::vector<Point_3> route;
   Node current_node = best_routes[endVertex];
+  TSR_LOG_TRACE("cost: {}", current_node.gCost);
   route.push_back(end_point);
 
   while (current_node != startNode) {
     current_node = best_routes[current_node.parent];
     route.push_back(current_node.handle->point());
+    TSR_LOG_TRACE("cost: {}", current_node.gCost);
   }
 
   std::reverse(route.begin(), route.end());

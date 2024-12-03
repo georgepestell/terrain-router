@@ -53,93 +53,6 @@ Delaunay_3 create_tin_from_points(std::vector<Point_3> &points) {
   return tin;
 }
 
-double calculateAngle(const Point_3 &p1, const Point_3 &p2) {
-  return std::atan2(p2.y() - p1.y(), p2.x() - p1.x());
-}
-
-// Function to calculate distance between two points
-double calculateDistance(const Point_3 &p1, const Point_3 &p2) {
-  return std::sqrt(std::pow(p2.x() - p1.x(), 2) + std::pow(p2.y() - p1.y(), 2));
-}
-
-// Function to rotate a point around a center by an angle
-Point_3 rotatePoint(const Point_3 &center, const Point_3 &p, double angle) {
-  double s = std::sin(angle);
-  double c = std::cos(angle);
-
-  // Translate point to origin
-  double x = p.x() - center.x();
-  double y = p.y() - center.y();
-
-  // Rotate point
-  double newX = x * c - y * s;
-  double newY = x * s + y * c;
-
-  // Translate back
-  return Point_3(newX + center.x(), newY + center.y(), p.z());
-}
-
-// Function to check if a point is inside a rotated rectangle
-bool isPointInRectangle(const Point_3 &center, double width, double height,
-                        double angle, const Point_3 &point) {
-  // Rotate the point back (inverse rotation)
-  Point_3 rotatedPoint = rotatePoint(center, point, -angle);
-
-  // Check if the rotated point is within the axis-aligned rectangle
-  double halfWidth = width / 2.0;
-  double halfHeight = height / 2.0;
-
-  bool withinBounds = (rotatedPoint.x() >= center.x() - halfWidth &&
-                       rotatedPoint.x() <= center.x() + halfWidth &&
-                       rotatedPoint.y() >= center.y() - halfHeight &&
-                       rotatedPoint.y() <= center.y() + halfHeight);
-
-  return withinBounds;
-}
-
-Delaunay_3 create_tin_from_points(std::vector<Point_3> &points,
-                                  Point_3 source_point, Point_3 target_point,
-                                  double radiiMultiplier) {
-  TSR_LOG_TRACE("creating TIN from point cloud");
-
-  // validate point set contains points
-  if (points.empty()) {
-    TSR_LOG_WARN("empty TIN created");
-  }
-
-  // triangulate points using 2.5D Delaunay triangulation
-  std::vector<Point_3> filteredPoints;
-
-  // Calculate domain boundary
-
-  double distance = calculateDistance(source_point, target_point);
-  Point_3 midpoint = Point_3((source_point.x() + target_point.x()) / 2.0,
-                             (source_point.y() + target_point.y()) / 2.0, 0);
-
-  double radius = (distance / 2.0) * radiiMultiplier;
-
-  double angle = calculateAngle(source_point, target_point);
-
-  double boundaryWidth = distance + 2 * radius;
-  double boundaryHeight = 2 * radius;
-
-  // Add points inside boundary
-  int d = 0;
-  for (auto p : points) {
-    bool inRectangle =
-        isPointInRectangle(midpoint, boundaryWidth, boundaryHeight, angle, p);
-    if (inRectangle) {
-      filteredPoints.push_back(p);
-    } else {
-      d++;
-    }
-  }
-
-  TSR_LOG_TRACE("Discarded {} points", d);
-
-  return create_tin_from_points(filteredPoints);
-}
-
 void add_contour_constraint(Delaunay_3 &dtm, std::vector<Point_2> contour,
                             double max_segment_length) {
 
@@ -277,53 +190,37 @@ void simplify_tin(Delaunay_3 const &source_mesh, Delaunay_3 &target_mesh,
   //         .edge_is_constrained_map(CGAL::make_random_access_property_map(ecm)));
   // TSR_LOG_TRACE("Detected {} corners", nbCorners);
 
-  Mesh targetSurfaceMesh;
-  try {
-    TSR_LOG_TRACE("simplifying mesh");
+  // Mesh targetSurfaceMesh;
+  // try {
+  //   TSR_LOG_TRACE("simplifying mesh");
 
-    TSR_LOG_TRACE("source vert: {}", sourceSurfaceMesh.number_of_vertices());
-    // Count non manifold vertices
-    int counter = 0;
-    for (vertex_descriptor v : vertices(sourceSurfaceMesh)) {
-      if (CGAL::Polygon_mesh_processing::is_non_manifold_vertex(
-              v, sourceSurfaceMesh)) {
-        std::cout << "vertex " << v << " is non-manifold" << std::endl;
-        ++counter;
-      }
-    }
+  //   // typedef boost::property_map<Mesh, CGAL::vertex_index_t>::type
+  //   //     VertexIndexMap;
+  //   // VertexIndexMap vim = get(CGAL::vertex_index, sourceSurfaceMesh);
 
-    TSR_LOG_TRACE("Non manifold vertices: {}", counter);
+  //   // typedef boost::property_map<Mesh, CGAL::face_patch_id_t<int>>::type
+  //   //     FacePatchIdMap;
+  //   // FacePatchIdMap patch_id_map =
+  //   //     get(CGAL::face_patch_id_t<int>(), sourceSurfaceMesh);
 
-    TSR_LOG_TRACE("source vert: {}", sourceSurfaceMesh.number_of_vertices());
-    TSR_LOG_TRACE("source is valid: {}",
-                  CGAL::is_valid_polygon_mesh(sourceSurfaceMesh));
+  //   // bool res =
+  //   CGAL::Polygon_mesh_processing::remesh_almost_planar_patches(
+  //   //     sourceSurfaceMesh, targetSurfaceMesh, nbRegions, nbCorners,
+  //   //     CGAL::make_random_access_property_map(regionIdMap),
+  //   //     CGAL::make_random_access_property_map(cornerIdMap),
+  //   //     CGAL::make_random_access_property_map(ecm),
+  //   //     CGAL::parameters::patch_normal_map(normalMap));
+  //   // if (!res) {
+  //   //   throw std::runtime_error("return value indicates failure");
+  //   // }
+  //   TSR_LOG_TRACE("Simplified mesh has {} vertices",
+  //                 sourceSu.number_of_vertices());
+  // } catch (std::exception &e) {
+  //   TSR_LOG_ERROR("simplification failed: {}", e.what());
+  //   throw e;
+  // }
 
-    // typedef boost::property_map<Mesh, CGAL::vertex_index_t>::type
-    //     VertexIndexMap;
-    // VertexIndexMap vim = get(CGAL::vertex_index, sourceSurfaceMesh);
-
-    // typedef boost::property_map<Mesh, CGAL::face_patch_id_t<int>>::type
-    //     FacePatchIdMap;
-    // FacePatchIdMap patch_id_map =
-    //     get(CGAL::face_patch_id_t<int>(), sourceSurfaceMesh);
-
-    // bool res = CGAL::Polygon_mesh_processing::remesh_almost_planar_patches(
-    //     sourceSurfaceMesh, targetSurfaceMesh, nbRegions, nbCorners,
-    //     CGAL::make_random_access_property_map(regionIdMap),
-    //     CGAL::make_random_access_property_map(cornerIdMap),
-    //     CGAL::make_random_access_property_map(ecm),
-    //     CGAL::parameters::patch_normal_map(normalMap));
-    // if (!res) {
-    //   throw std::runtime_error("return value indicates failure");
-    // }
-    TSR_LOG_TRACE("Simplified mesh has {} vertices",
-                  targetSurfaceMesh.number_of_vertices());
-  } catch (std::exception &e) {
-    TSR_LOG_ERROR("simplification failed: {}", e.what());
-    throw e;
-  }
-
-  if (targetSurfaceMesh.number_of_vertices() == 0) {
+  if (sourceSurfaceMesh.number_of_vertices() == 0) {
     TSR_LOG_WARN("Empty target surface mesh");
   }
 
