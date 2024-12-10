@@ -29,6 +29,8 @@ execute_process(
 )
 string(TIMESTAMP TSR_TIMESTAMP "%Y%m%dT%H%MZ" UTC)
 
+# CGAL
+
 find_package(CGAL REQUIRED)
 if (NOT CGAL_FOUND)
   message(FATAL_ERROR "CGAL not found, cannot proceed")
@@ -48,6 +50,17 @@ find_package(Boost REQUIRED COMPONENTS
 )
 
 include(FetchContent)
+
+
+# SimdJSON
+
+FetchContent_Declare(
+  simdjson
+  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
+  GIT_TAG  tags/v3.6.0
+  GIT_SHALLOW TRUE)
+
+FetchContent_MakeAvailable(simdjson)
 
 FetchContent_Declare(
   fmt
@@ -72,6 +85,11 @@ set(TSR_SOURCE_FILES
   src/tsr/Feature.cpp
   src/tsr/FeatureManager.cpp
   src/tsr/IO/KMLWriter.cpp
+  src/tsr/IO/JSONParser.cpp
+  src/tsr/MapUtils.cpp
+  src/tsr/API/Chunking.cpp
+  src/tsr/API/GDALHandler.cpp
+  src/tsr/API/APICaller.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
@@ -127,6 +145,7 @@ target_link_libraries(tsr
     ${GeographicLib_LIBRARIES}
     GDAL::GDAL
     CURL::libcurl
+    simdjson
 )
 
 add_executable(tsr-route

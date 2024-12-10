@@ -18,10 +18,10 @@ private:
 
   enum DEPENDENCIES { X };
 
-  static inline std::vector<double> DEFAULT_UPWARDS_COEFFS = {
-      1, -2.3, 7.61, -20.66, -8.11, 22.46};
+  static inline std::vector<double> DEFAULT_UPWARDS_COEFFS = {1, -2.7, -34.83,
+                                                              200.63, -292.06};
   static inline std::vector<double> DEFAULT_DOWNWARDS_COEFFS = {
-      0.99, 4.37, -21.08, -4.87, 20.59};
+      1, -0.01, 79.31, 1164.83, 4622.34, 5737.68};
 
 public:
   GradientSpeedFeature(std::string name,
@@ -54,11 +54,14 @@ public:
     // Get the dependency value
     double gradient = inputFeature->calculate(face, source_point, target_point);
 
+    double speedInfluence;
     if (gradient > 0) {
-      return solvePolynomial(gradient, this->upwards_coefficients);
+      speedInfluence = solvePolynomial(gradient, this->upwards_coefficients);
     } else {
-      return solvePolynomial(gradient, downwards_coefficients);
+      speedInfluence = solvePolynomial(gradient, this->downwards_coefficients);
     }
+
+    return speedInfluence < 0 ? 0 : speedInfluence;
   }
 };
 

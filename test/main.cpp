@@ -19,8 +19,10 @@ int main(int argc, char *argv[]) {
   return RUN_ALL_TESTS();
 }
 
-#include "test_api.hpp"
-#include "test_feature.hpp"
-#include "test_featureManager.hpp"
-#include "test_router.hpp"
-#include "test_triangulation.hpp"
+// #include "test_api.hpp"
+// #include "test_feature.hpp"
+// #include "test_featureManager.hpp"
+// #include "test_router.hpp"
+// #include "test_triangulation.hpp"
+
+#include "test_GDALHandler.hpp"

@@ -1,15 +1,20 @@
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/FeatureManager.hpp"
+#include "tsr/Features/CEHTerrainFeature.hpp"
+#include "tsr/Features/ConditionalFeature.hpp"
+#include "tsr/Features/ConstantFeature.hpp"
 #include "tsr/Features/DistanceFeature.hpp"
 #include "tsr/Features/GradientFeature.hpp"
 #include "tsr/Features/GradientSpeedFeature.hpp"
 #include "tsr/Features/InverseFeature.hpp"
 #include "tsr/Features/MultiplierFeature.hpp"
+#include "tsr/Features/PathFeature.hpp"
 #include "tsr/Features/WaterFeature.hpp"
 #include "tsr/Mesh.hpp"
 #include "tsr/PointProcessor.hpp"
 
 #include "tsr/IO/ImageIO.hpp"
+#include "tsr/IO/JSONParser.hpp"
 #include "tsr/IO/MapIO.hpp"
 
 #include "tsr/Point_3.hpp"
@@ -59,7 +64,7 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   TSR_LOG_TRACE("Filtering domain");
 
-  double DEFAULT_RADII_MULTIPLIER = 1;
+  double DEFAULT_RADII_MULTIPLIER = 1.5;
   filter_points_domain(points, startPoint, endPoint, DEFAULT_RADII_MULTIPLIER);
 
   // TSR_LOG_TRACE("Smoothing");
@@ -88,9 +93,20 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   TSR_LOG_TRACE("Vertices: {}", dtm.number_of_vertices());
 
+  double DEFAULT_MAX_SEGMENT_LENGTH = 30;
+
   TSR_LOG_TRACE("Adding water contours");
   for (auto contour : *contours) {
-    add_contour_constraint(dtm, contour, 30);
+    add_contour_constraint(dtm, contour, DEFAULT_MAX_SEGMENT_LENGTH);
+  }
+
+  const std::string DEFAULT_PATH_LAYER_ID = "features";
+  auto pathsContours = IO::load_contours_from_file(
+      "../data/benNevis_paths.json", DEFAULT_PATH_LAYER_ID);
+
+  TSR_LOG_TRACE("Adding path constraints");
+  for (auto contour : pathsContours) {
+    add_contour_constraint(dtm, contour, DEFAULT_MAX_SEGMENT_LENGTH);
   }
 
   Mesh tmpMesh;
@@ -108,35 +124,61 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
       std::make_shared<GradientSpeedFeature>("gradient_speed");
   gradientSpeedInfluence->add_dependency(gradientFeature);
 
+  auto terrainTypeDataset =
+      IO::load_gdal_dataset_from_file("../data/benNevis_terrain_types.tiff");
+
+  std::shared_ptr<CEHTerrainFeature> terrainFeature;
+  try {
+    terrainFeature = std::make_shared<CEHTerrainFeature>("terrain_type", dtm,
+                                                         terrainTypeDataset);
+  } catch (std::exception e) {
+    GDALClose(terrainTypeDataset);
+  }
+  GDALClose(terrainTypeDataset);
+
   auto waterDataset =
       IO::load_gdal_dataset_from_file("../data/benNevis_water.tiff");
+
   std::shared_ptr<BoolWaterFeature> waterFeature;
   try {
     waterFeature =
-        std::make_shared<BoolWaterFeature>("water", dtm, *waterDataset);
+        std::make_shared<BoolWaterFeature>("water", dtm, waterDataset);
   } catch (std::exception e) {
-    GDALClose(*waterDataset);
+    GDALClose(waterDataset);
     throw e;
   }
-
-  GDALClose(*waterDataset);
+  GDALClose(waterDataset);
 
   waterFeature->writeWaterMapToKML();
 
-  auto waterSpeedInfluence = std::make_shared<InverseFeature<bool, bool>>("water_speed");
+  auto pathFeature = std::make_shared<PathFeature>("paths", pathsContours);
+
+  auto waterSpeedInfluence =
+      std::make_shared<InverseFeature<bool, bool>>("water_speed");
   waterSpeedInfluence->add_dependency(waterFeature);
 
   auto speedFeature = std::make_shared<MultiplierFeature>("speed");
-  speedFeature->add_dependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
   speedFeature->add_dependency(waterSpeedInfluence, MultiplierFeature::BOOL);
+  speedFeature->add_dependency(terrainFeature, MultiplierFeature::DOUBLE);
+  speedFeature->add_dependency(gradientSpeedInfluence,
+                               MultiplierFeature::DOUBLE);
 
-  auto inverseSpeedFeature = std::make_shared<InverseFeature<double, double>>("inverse_speed");
-  inverseSpeedFeature->add_dependency(speedFeature);
+  auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
+  pathSpeed->add_dependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
+
+  auto speedWithPathFeature =
+      std::make_shared<ConditionalFeature<double>>("speed_with_path");
+  speedWithPathFeature->add_dependency(pathFeature);
+  speedWithPathFeature->add_dependency(pathSpeed);
+  speedWithPathFeature->add_dependency(speedFeature);
+
+  auto inverseSpeedFeature =
+      std::make_shared<InverseFeature<double, double>>("inverse_speed");
+  inverseSpeedFeature->add_dependency(speedWithPathFeature);
 
   auto timeFeature = std::make_shared<MultiplierFeature>("time");
   timeFeature->add_dependency(distance, MultiplierFeature::DOUBLE);
-  timeFeature->add_dependency(inverseSpeedFeature,
-  MultiplierFeature::DOUBLE);
+  timeFeature->add_dependency(inverseSpeedFeature, MultiplierFeature::DOUBLE);
 
   fm.setOutputFeature(timeFeature);
 
@@ -163,7 +205,7 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 } // namespace tsr
 
 int main(int argc, char **argv) {
-  try {                
+  try {
     // Define allowed options
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "Print help message")(
@@ -187,9 +229,8 @@ int main(int argc, char **argv) {
         po::command_line_parser(argc, argv)
             .options(desc)
             .positional(positionalArgs)
-            .style(po::command_line_style::long_allow_next |
-                   po::command_line_style::allow_long_disguise)
-
+            .style(po::command_line_style::allow_long |
+                   boost::program_options::command_line_style::long_allow_next)
             .run();
 
     po::store(parsed, vm);
