@@ -4,6 +4,7 @@
 #include "tsr/Feature.hpp"
 #include "tsr/Point_3.hpp"
 #include "tsr/logging.hpp"
+#include <boost/concept_check.hpp>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -20,15 +21,14 @@ public:
 
   using Feature<double>::Feature;
 
-  double calculate(Face_handle face, Point_3 &source_point,
-                   Point_3 &target_point) override {
+  double calculate(TSRState &state) override {
 
     double total = 1;
     for (auto f : this->dependencies) {
       switch (this->dependency_types[f->featureID]) {
       case INT: {
         auto feature = std::dynamic_pointer_cast<Feature<int>>(f);
-        int value = feature->calculate(face, source_point, target_point);
+        int value = feature->calculate(state);
 
         if (total == std::numeric_limits<double>::infinity() ||
             ((double)value) == std::numeric_limits<double>::infinity()) {
@@ -41,7 +41,7 @@ public:
       }
       case DOUBLE: {
         auto feature = std::dynamic_pointer_cast<Feature<double>>(f);
-        double value = feature->calculate(face, source_point, target_point);
+        double value = feature->calculate(state);
 
         if (total == std::numeric_limits<double>::infinity() ||
             value == std::numeric_limits<double>::infinity()) {
@@ -54,7 +54,7 @@ public:
       }
       case BOOL: {
         auto feature = std::dynamic_pointer_cast<Feature<bool>>(f);
-        bool value = feature->calculate(face, source_point, target_point);
+        bool value = feature->calculate(state);
         if (value) {
           break;
         } else {
@@ -76,6 +76,7 @@ public:
   }
 
   void add_dependency(std::shared_ptr<FeatureBase> feature) override {
+    boost::ignore_unused_variable_warning(feature);
     TSR_LOG_ERROR(
         "Multiplier add_dependency requires specifying the feature type");
     throw std::runtime_error(

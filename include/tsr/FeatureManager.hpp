@@ -1,5 +1,6 @@
 #pragma once
 #include "tsr/Feature.hpp"
+#include "tsr/TSRState.hpp"
 
 #include <memory>
 
@@ -7,9 +8,9 @@ namespace tsr {
 
 class FeatureManager {
 private:
-  bool
-  has_dependency_cycle(std::shared_ptr<FeatureBase> current_feature,
-                       std::unordered_set<std::string> &preexisting_features);
+  bool has_dependency_cycle(
+      std::shared_ptr<FeatureBase> current_feature,
+      std::unordered_set<std::string> &preexisting_features) const;
 
 public:
   // Final cost output feature
@@ -17,10 +18,9 @@ public:
 
   void setOutputFeature(std::shared_ptr<Feature<double>> feature);
 
-  bool has_dependency_cycle();
+  bool has_dependency_cycle() const;
 
-  double calculateCost(Face_handle face, Point_3 &source_point,
-                       Point_3 &target_point);
+  double calculateCost(TSRState &state) const;
 };
 
 } // namespace tsr

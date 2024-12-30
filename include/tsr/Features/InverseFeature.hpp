@@ -1,4 +1,5 @@
 #include "tsr/Feature.hpp"
+#include "tsr/TSRState.hpp"
 #include "tsr/logging.hpp"
 #include <limits>
 #include <memory>
@@ -13,25 +14,19 @@ private:
 public:
   using Feature<outDataType>::Feature;
 
-  outDataType calculate(Face_handle face, Point_3 &source_point,
-                        Point_3 &target_point);
+  outDataType calculate(TSRState &state);
 };
 
-template <>
-inline bool InverseFeature<bool, bool>::calculate(Face_handle face,
-                                                  Point_3 &source_point,
-                                                  Point_3 &target_point) {
+template <> inline bool InverseFeature<bool, bool>::calculate(TSRState &state) {
   auto feature =
       std::dynamic_pointer_cast<Feature<bool>>(this->dependencies[VALUE]);
-  return !feature->calculate(face, source_point, target_point);
+  return !feature->calculate(state);
 }
 template <>
-inline double InverseFeature<bool, double>::calculate(Face_handle face,
-                                                      Point_3 &source_point,
-                                                      Point_3 &target_point) {
+inline double InverseFeature<bool, double>::calculate(TSRState &state) {
   auto feature =
       std::dynamic_pointer_cast<Feature<bool>>(this->dependencies[VALUE]);
-  if (!feature->calculate(face, source_point, target_point)) {
+  if (!feature->calculate(state)) {
     return 1;
   } else {
     return std::numeric_limits<double>::infinity();
@@ -39,14 +34,12 @@ inline double InverseFeature<bool, double>::calculate(Face_handle face,
 }
 
 template <>
-inline double InverseFeature<double, double>::calculate(Face_handle face,
-                                                        Point_3 &source_point,
-                                                        Point_3 &target_point) {
+inline double InverseFeature<double, double>::calculate(TSRState &state) {
 
   auto feature =
       std::dynamic_pointer_cast<Feature<double>>(this->dependencies[VALUE]);
 
-  double value = feature->calculate(face, source_point, target_point);
+  double value = feature->calculate(state);
 
   if (value == 0) {
     return std::numeric_limits<double>::infinity();

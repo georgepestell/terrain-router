@@ -1,7 +1,7 @@
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
+#include "tsr/PointProcessor.hpp"
 
-#include "tsr/logging.hpp"
+#include <memory>
 
 namespace tsr {
 
@@ -9,8 +9,25 @@ void FeatureBase::add_dependency(std::shared_ptr<FeatureBase> feature) {
   this->dependencies.push_back(feature);
 }
 
-void FeatureBase::preProcessing(Delaunay_3 &dtm) {
-  TSR_LOG_TRACE("No pre-processing required for feature {}", featureID);
-};
+void FeatureBase::addWarning(TSRState &state, const std::string &warning,
+                             const unsigned short priority) {
+
+  auto face = state.current_face;
+
+  if (state.warnings.contains(face)) {
+    size_t existingIndex = state.warnings[face];
+    const unsigned short existingPriority =
+        state.warning_priorities[existingIndex];
+
+    if (existingPriority > priority) {
+      return;
+    }
+  }
+
+  // Either no warning already exists, or the new priority is higher than old
+  size_t newIndex = state.addWarning(warning, priority);
+
+  state.warnings[face] = newIndex;
+}
 
 } // namespace tsr

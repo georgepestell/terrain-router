@@ -1,10 +1,14 @@
 cmake_minimum_required(VERSION 3.25)
 
-
 project(terrin_senstive_routing)
 
 option(TSR_TEST "include test targets in build system" OFF)
 option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math -ffp-model=strict")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math -ffp-model=strict")
+
+set(CGAL_DISABLE_ROUNDING_MATH_CHECK ON)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,16 +82,20 @@ set(TSR_SOURCE_FILES
   src/tsr/IO/GPXFormatter.cpp
   src/tsr/IO/MeshIO.cpp
   src/tsr/IO/MapIO.cpp
+  src/tsr/IO/ChunkCache.cpp
   src/tsr/API/APICaller.cpp
   src/tsr/Router.cpp
   src/tsr/PointProcessor.cpp
   src/tsr/Mesh.cpp
+  src/tsr/TSRState.cpp
+  src/tsr/MeshBoundary.cpp
   src/tsr/Feature.cpp
+  src/tsr/Features/APIFeature.cpp
   src/tsr/FeatureManager.cpp
   src/tsr/IO/KMLWriter.cpp
   src/tsr/IO/JSONParser.cpp
   src/tsr/MapUtils.cpp
-  src/tsr/API/Chunking.cpp
+  src/tsr/Chunker.cpp
   src/tsr/API/GDALHandler.cpp
   src/tsr/API/APICaller.cpp
 )

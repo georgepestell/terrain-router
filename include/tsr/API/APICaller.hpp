@@ -4,7 +4,7 @@
     APICaller allows API requests to be made to various mapping data sources.
  */
 
-#include <memory>
+#include <curl/curl.h>
 #include <string>
 
 namespace tsr::API {
@@ -21,13 +21,10 @@ class APICallerConfig;
 
 class APICaller {
 public:
-  std::string fetchDataFromAPI(const std::string &url);
+  bool fetchDataFromAPI(const std::string &url, const std::string &filepath);
 
   APICaller();
   ~APICaller();
-
-private:
-  std::unique_ptr<APICallerConfig> config;
 };
 
 }; // namespace tsr::API

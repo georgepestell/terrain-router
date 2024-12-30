@@ -1,7 +1,11 @@
 #include "tsr/Router.hpp"
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/FeatureManager.hpp"
+#include "tsr/Features/WaterFeature.hpp"
+#include "tsr/IO/FileIO.hpp"
+#include "tsr/IO/KMLWriter.hpp"
 #include "tsr/Point_3.hpp"
+#include "tsr/TSRState.hpp"
 #include "tsr/logging.hpp"
 
 #include <CGAL/circulator.h>
@@ -27,6 +31,7 @@ Vertex_handle Router::nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point) {
 
   if (face == nullptr || !face->is_valid() || dtm.is_infinite(face)) {
     TSR_LOG_ERROR("Point outside DTM domain");
+    TSR_LOG_TRACE("point: {} {}", point.x(), point.y());
     throw std::runtime_error("Point outside DTM domain");
   }
 
@@ -44,8 +49,33 @@ Vertex_handle Router::nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point) {
 }
 
 std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
+                                            MeshBoundary &boundary,
                                             Point_3 &start_point,
                                             Point_3 &end_point) {
+
+  double minX = 100000000;
+  double maxX = -100000000;
+  double minY = 100000000;
+  double maxY = -100000000;
+  for (auto v : dtm.all_vertex_handles()) {
+    if (dtm.is_infinite(v)) {
+      continue;
+    }
+    Point_3 p = v->point();
+
+    if (p.x() > maxX)
+      maxX = p.x();
+    if (p.x() < minX)
+      minX = p.x();
+
+    if (p.y() > maxY)
+      maxY = p.y();
+    if (p.y() < minY)
+      minY = p.y();
+  }
+
+  TSR_LOG_TRACE("minX: {}, maxX: {}, minY: {}, maxY: {}", minX, maxX, minY,
+                maxY);
 
   TSR_LOG_TRACE("Routing");
 
@@ -53,15 +83,14 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
   // delete_nodes_outside_rectangle(*this->dtm, start_point, end_point);
   // TSR_LOG_DEBUG("Kept: {} vertices", this->dtm->number_of_vertices());
 
-  Vertex_handle startVertex = nearestVertexToPoint(dtm, start_point);
-  Vertex_handle endVertex = nearestVertexToPoint(dtm, end_point);
+  this->state.start_vertex = nearestVertexToPoint(dtm, start_point);
+  this->state.end_vertex = nearestVertexToPoint(dtm, end_point);
 
   // Setup the queue of gCosts to calculate and CLOSED set
   std::priority_queue<Node, std::vector<Node>, CompareNode> cost_queue;
-  std::unordered_map<Vertex_handle, Node> best_routes;
 
   // Initialize the start node
-  Node startNode(startVertex);
+  Node startNode(this->state.start_vertex, nullptr);
   startNode.gCost = 0;
   cost_queue.push(startNode);
 
@@ -79,18 +108,20 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
     cost_queue.pop();
 
     // Check if this route is already beaten
-    if (best_routes.contains(current_node.handle)) {
+    if (this->state.routes.contains(current_node.vertex)) {
       continue;
     }
 
     // Check if the route is possible
     if (current_node.gCost == std::numeric_limits<double>::infinity()) {
       TSR_LOG_FATAL("Could not find safe path");
+      IO::writeFailureStateToKML("failure.kml", state);
       throw std::runtime_error("Could not find safe path");
     }
 
     // Add this as the best_route to that node
-    best_routes[current_node.handle] = current_node;
+    this->state.routes[current_node.vertex] = current_node;
+    this->state.current_vertex = current_node.vertex;
 
     /**
      * Calculate the costs of the adjacent not-closed nodes
@@ -102,7 +133,7 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
     }
 
     // Fetch each vertices
-    auto faceCirculator = current_node.handle->incident_faces();
+    auto faceCirculator = current_node.vertex->incident_faces();
     if (faceCirculator != nullptr) {
       auto faceCirculatorEnd = faceCirculator;
       do {
@@ -112,59 +143,54 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
           continue;
         }
 
+        this->state.current_face = face;
+
         // Get vertices of adjacent face
         for (int i = 0; i < 3; i++) {
           Vertex_handle connectedVertex = face->vertex(i);
-          if (connectedVertex == current_node.handle) {
+          if (connectedVertex == current_node.vertex) {
             continue;
           }
 
           // Skip vertices already searched
-          if (best_routes.contains(connectedVertex)) {
+          if (this->state.routes.contains(connectedVertex)) {
+            continue;
+          }
+
+          // Check the point is bounded
+          if (!boundary.isBoundedSafe(connectedVertex->point())) {
             continue;
           }
 
           // Calculate the cost
           // TODO: Face_handle neighbourFace = face->neighbor(edgeIndex);
-          Node node(connectedVertex);
-          Face_handle faceHandle = face;
-          node.gCost = current_node.gCost +
-                       calculateTrivialCost(fm, faceHandle, current_node.handle,
-                                            connectedVertex);
-          node.parent = current_node.handle;
+          Node node(connectedVertex, face);
+          this->state.next_vertex = connectedVertex;
+          node.gCost =
+              current_node.gCost + calculateTrivialCost(fm, this->state);
+          node.parent = current_node.vertex;
 
           // Add the node to the priority queue
           cost_queue.push(node);
         }
       } while (++faceCirculator != faceCirculatorEnd);
     }
-  } while (!best_routes.contains(endVertex));
+  } while (!this->state.routes.contains(this->state.end_vertex));
 
-  // Get the end node point
-  std::vector<Point_3> route;
-  Node current_node = best_routes[endVertex];
-  TSR_LOG_TRACE("cost: {}", current_node.gCost);
-  route.push_back(end_point);
-
-  while (current_node != startNode) {
-    current_node = best_routes[current_node.parent];
-    route.push_back(current_node.handle->point());
-    TSR_LOG_TRACE("cost: {}", current_node.gCost);
-  }
-
-  std::reverse(route.begin(), route.end());
+  auto route = this->state.fetchRoute();
 
   TSR_LOG_TRACE("Cost queue has {} nodes skipped", cost_queue.size());
-  TSR_LOG_TRACE("Sucessfully analysed {} nodes", best_routes.size());
+  TSR_LOG_TRACE("Sucessfully analysed {} nodes", this->state.routes.size());
+
+  // Filter the warnings along the route
+  IO::writeSuccessStateToKML("success.kml", state);
 
   TSR_LOG_TRACE("Completed!");
   return route;
 }
 
-double Router::calculateTrivialCost(FeatureManager &fm, Face_handle face,
-                                    Vertex_handle vertex_start,
-                                    Vertex_handle vertex_end) {
-  return fm.calculateCost(face, vertex_start->point(), vertex_end->point());
+double Router::calculateTrivialCost(const FeatureManager &fm, TSRState &state) {
+  return fm.calculateCost(state);
 }
 
 } // namespace tsr

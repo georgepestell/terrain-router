@@ -1,18 +1,24 @@
 #include "tsr/Feature.hpp"
+#include "tsr/TSRState.hpp"
+#include <boost/concept_check.hpp>
 
 namespace tsr {
 
-class ConstantFeature : public Feature<double> {
+template <typename DataType> class ConstantFeature : public Feature<DataType> {
 private:
-  double constant;
+  const DataType constant;
 
 public:
   // Disable the default
-  ConstantFeature(std::string name, double constant)
-      : Feature<double>(name), constant(constant) {}
+  ConstantFeature(std::string name, DataType constant)
+      : Feature<DataType>(name), constant(constant) {}
 
-  double calculate(Face_handle face, Point_3 &source_point,
-                   Point_3 &target_point) override {
+  DataType calculate(TSRState &state) override {
+
+    // Ignore compiler unused variable warnings. Keeps the template for
+    // calculate the same as other features
+    boost::ignore_unused_variable_warning(state);
+
     return this->constant;
   }
 };

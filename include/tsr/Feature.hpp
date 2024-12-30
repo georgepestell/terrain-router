@@ -1,10 +1,12 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
-#include "tsr/Point_3.hpp"
+#include <gdal/gdal_priv.h>
+
 #include <memory>
 #include <string>
 #include <vector>
+
+#include "tsr/TSRState.hpp"
 
 namespace tsr {
 
@@ -20,10 +22,13 @@ public:
   /// Adds a dependency to the feature, ensuring access to those features
   virtual void add_dependency(std::shared_ptr<FeatureBase> feature);
 
-  /// Allows some pre-set conditions to be calculated and cached
-  virtual void preProcessing(Delaunay_3 &dtm);
+  /// Features can override or re-define with their own initialization functions
+  FeatureBase(const std::string &featureID) : featureID(featureID) {}
 
-  /// Destructor
+  static void addWarning(TSRState &state, const std::string &warning,
+                         const unsigned short priority);
+
+  /// Default destructor. Features with malloced attributes should overrite this
   virtual ~FeatureBase() = default;
 
   /// Equality operator to compare Feature objects
@@ -35,10 +40,9 @@ public:
 template <typename DataType> class Feature : public FeatureBase {
 
 public:
-  Feature(const std::string &featureID) { this->featureID = featureID; }
+  using FeatureBase::FeatureBase;
 
-  virtual DataType calculate(Face_handle face, Point_3 &source_point,
-                             Point_3 &target_point) = 0;
+  virtual DataType calculate(TSRState &state) = 0;
 };
 
 } // namespace tsr

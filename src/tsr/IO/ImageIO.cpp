@@ -33,12 +33,21 @@ cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image) {
   return rgbImage;
 }
 
-std::unique_ptr<std::vector<std::vector<Point_2>>>
+std::vector<std::vector<Point_2>>
 extract_feature_contours(cv::Mat &image, double simplification_factor,
                          double uloffset_x, double uloffset_y,
                          double cellsize_x, double cellsize_y) {
 
-  cv::cvtColor(image, image, cv::COLOR_BGR2HSV);
+  // Convert images to RGB
+  unsigned int channels = image.channels();
+  if (channels == 1) {
+    cv::cvtColor(image, image, cv::COLOR_GRAY2RGB);
+  } else if (channels == 4) {
+    cv::cvtColor(image, image, cv::COLOR_BGRA2RGB);
+  }
+
+  // Convert RGB to HSV for better canny edge detection
+  cv::cvtColor(image, image, cv::COLOR_RGB2HSV);
 
   cv::Mat edges;
   cv::Canny(image, edges, 100, 200);
@@ -49,7 +58,7 @@ extract_feature_contours(cv::Mat &image, double simplification_factor,
                    cv::CHAIN_APPROX_SIMPLE);
 
   // Convert contours to CGAL contours
-  auto contours = std::make_unique<std::vector<std::vector<Point_2>>>();
+  std::vector<std::vector<Point_2>> contours;
 
   for (const auto &cv_contour : cv_contours) {
     std::vector<cv::Point> new_contour;
@@ -72,7 +81,7 @@ extract_feature_contours(cv::Mat &image, double simplification_factor,
       contour.push_back(cgal_point);
     }
 
-    contours->push_back(contour);
+    contours.push_back(contour);
   }
 
   return contours;

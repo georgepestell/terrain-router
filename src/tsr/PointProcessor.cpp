@@ -1,6 +1,8 @@
 #include "tsr/PointProcessor.hpp"
+#include "tsr/MeshBoundary.hpp"
 #include "tsr/logging.hpp"
 #include <GeographicLib/UTMUPS.hpp>
+#include <cmath>
 
 #include "tsr/Point_2.hpp"
 #include "tsr/Point_3.hpp"
@@ -18,6 +20,17 @@ Point_3 UTM_point_to_WGS84(Point_3 pointUTM, short zone,
                                  pointUTM.y(), lat, lon);
 
   return Point_3(lat, lon, pointUTM.z());
+}
+
+Point_2 UTM_point_to_WGS84(Point_2 pointUTM, short zone,
+                           bool isNorthernHemisphere) {
+
+  double lat, lon;
+
+  GeographicLib::UTMUPS::Reverse(zone, isNorthernHemisphere, pointUTM.x(),
+                                 pointUTM.y(), lat, lon);
+
+  return Point_2(lat, lon);
 }
 
 Point_2 WGS84_point_to_UTM(Point_2 pointWGS84) {
@@ -76,48 +89,13 @@ void simplify_points(std::vector<Point_3> &points) {
   points = points_simplified;
 }
 
-double calculateAngle(const Point_3 &p1, const Point_3 &p2) {
+double calculate_xy_angle(const Point_3 &p1, const Point_3 &p2) {
   return std::atan2(p2.y() - p1.y(), p2.x() - p1.x());
 }
 
 // Function to calculate distance between two points
-double calculateDistance(const Point_3 &p1, const Point_3 &p2) {
+double calculate_xy_distance(const Point_3 &p1, const Point_3 &p2) {
   return std::sqrt(std::pow(p2.x() - p1.x(), 2) + std::pow(p2.y() - p1.y(), 2));
-}
-
-// Function to rotate a point around a center by an angle
-Point_3 rotatePoint(const Point_3 &center, const Point_3 &p, double angle) {
-  double s = std::sin(angle);
-  double c = std::cos(angle);
-
-  // Translate point to origin
-  double x = p.x() - center.x();
-  double y = p.y() - center.y();
-
-  // Rotate point
-  double newX = x * c - y * s;
-  double newY = x * s + y * c;
-
-  // Translate back
-  return Point_3(newX + center.x(), newY + center.y(), p.z());
-}
-
-// Function to check if a point is inside a rotated rectangle
-bool isPointInRectangle(const Point_3 &center, double width, double height,
-                        double angle, const Point_3 &point) {
-  // Rotate the point back (inverse rotation)
-  Point_3 rotatedPoint = rotatePoint(center, point, -angle);
-
-  // Check if the rotated point is within the axis-aligned rectangle
-  double halfWidth = width / 2.0;
-  double halfHeight = height / 2.0;
-
-  bool withinBounds = (rotatedPoint.x() >= center.x() - halfWidth &&
-                       rotatedPoint.x() <= center.x() + halfWidth &&
-                       rotatedPoint.y() >= center.y() - halfHeight &&
-                       rotatedPoint.y() <= center.y() + halfHeight);
-
-  return withinBounds;
 }
 
 void filter_points_domain(std::vector<Point_3> &points, Point_3 &source_point,
@@ -129,36 +107,8 @@ void filter_points_domain(std::vector<Point_3> &points, Point_3 &source_point,
     return;
   }
 
-  // triangulate points using 2.5D Delaunay triangulation
-  std::vector<Point_3> filteredPoints;
-
-  // Calculate domain boundary
-
-  double distance = calculateDistance(source_point, target_point);
-  Point_3 midpoint = Point_3((source_point.x() + target_point.x()) / 2.0,
-                             (source_point.y() + target_point.y()) / 2.0, 0);
-
-  double radius = (distance / 2.0) * radii_multiplier;
-
-  double angle = calculateAngle(source_point, target_point);
-
-  double boundaryWidth = distance + 2 * radius;
-  double boundaryHeight = 2 * radius;
-
-  // Add points inside boundary
-  int d = 0;
-  for (auto p : points) {
-    bool inRectangle =
-        isPointInRectangle(midpoint, boundaryWidth, boundaryHeight, angle, p);
-    if (inRectangle) {
-      filteredPoints.push_back(p);
-    } else {
-      d++;
-    }
-  }
-
-  TSR_LOG_TRACE("Discarded {} points", d);
-  points.swap(filteredPoints);
+  MeshBoundary boundary(source_point, target_point, radii_multiplier);
+  boundary.filterPointsOutsideBoundary(points);
 }
 
 }; // namespace tsr

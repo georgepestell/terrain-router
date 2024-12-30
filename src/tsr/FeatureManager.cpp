@@ -2,6 +2,7 @@
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
 #include "tsr/Point_3.hpp"
+#include "tsr/TSRState.hpp"
 #include "tsr/logging.hpp"
 #include <memory>
 #include <stdexcept>
@@ -10,7 +11,7 @@
 
 namespace tsr {
 
-bool FeatureManager::has_dependency_cycle() {
+bool FeatureManager::has_dependency_cycle() const {
   std::unordered_set<std::string> existingFeatures = {
       this->outputFeature->featureID};
 
@@ -19,7 +20,7 @@ bool FeatureManager::has_dependency_cycle() {
 
 bool FeatureManager::has_dependency_cycle(
     std::shared_ptr<FeatureBase> current_feature,
-    std::unordered_set<std::string> &preexisting_features) {
+    std::unordered_set<std::string> &preexisting_features) const {
 
   if (current_feature == nullptr) {
     return false;
@@ -57,9 +58,19 @@ void FeatureManager::setOutputFeature(
   }
 }
 
-double FeatureManager::calculateCost(Face_handle face, Point_3 &source_point,
-                                     Point_3 &target_point) {
-  return this->outputFeature->calculate(face, source_point, target_point);
+double FeatureManager::calculateCost(TSRState &state) const {
+
+  // const auto Pc = state.current_vertex->point();
+  // const auto Pn = state.next_vertex->point();
+
+  // TSR_LOG_TRACE("\ncurrent position: {} {} {}", Pc.x(), Pc.y(), Pc.z());
+  // TSR_LOG_TRACE("next position: {} {} {}", Pn.x(), Pn.y(), Pn.z());
+  // TSR_LOG_TRACE("face id: {}", (void *)&state.current_face);
+
+  return this->outputFeature->calculate(state);
+
+  // TSR_LOG_TRACE("cost: {}\n", cost);
+  // return cost;
 }
 
 } // namespace tsr

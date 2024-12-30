@@ -11,10 +11,10 @@
 #include "tsr/Features/PathFeature.hpp"
 #include "tsr/Features/WaterFeature.hpp"
 #include "tsr/Mesh.hpp"
+#include "tsr/MeshBoundary.hpp"
 #include "tsr/PointProcessor.hpp"
 
 #include "tsr/IO/ImageIO.hpp"
-#include "tsr/IO/JSONParser.hpp"
 #include "tsr/IO/MapIO.hpp"
 
 #include "tsr/Point_3.hpp"
@@ -33,6 +33,7 @@
 #include <boost/program_options/positional_options.hpp>
 #include <boost/program_options/value_semantic.hpp>
 #include <boost/program_options/variables_map.hpp>
+#include <cfenv>
 #include <cstdlib>
 #include <exception>
 #include <gdal/gdal.h>
@@ -48,10 +49,21 @@
 namespace po = boost::program_options;
 
 #define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_DEM.xyz"
+#define RADII_MULTIPLIER 5
+#define DEM_API_KEY "0f789809fed28dc634c8d75695d0cc5c"
+
+#include <sys/resource.h>
 
 namespace tsr {
 
 bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
+
+  struct rlimit limit;
+  getrlimit(RLIMIT_STACK, &limit);
+  limit.rlim_cur = 16 * 1024 * 1024;
+  setrlimit(RLIMIT_STACK, &limit);
+
+  fesetround(FE_TONEAREST);
 
   log_set_global_loglevel(LogLevel::TRACE);
 
@@ -59,60 +71,12 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   Point_3 startPoint = WGS84_point_to_UTM(Point_3(sLat, sLon, 0));
   Point_3 endPoint = WGS84_point_to_UTM(Point_3(eLat, eLon, 0));
 
-  TSR_LOG_TRACE("Loading points");
-  auto points = IO::load_dem_from_file("../data/benNevis_DEM.xyz");
+  MeshBoundary boundary(startPoint, endPoint, RADII_MULTIPLIER);
 
-  TSR_LOG_TRACE("Filtering domain");
+  TSR_LOG_TRACE("Initializing mesh");
+  Delaunay_3 cdt = initializeMesh(boundary, DEM_API_KEY);
 
-  double DEFAULT_RADII_MULTIPLIER = 1.5;
-  filter_points_domain(points, startPoint, endPoint, DEFAULT_RADII_MULTIPLIER);
-
-  // TSR_LOG_TRACE("Smoothing");
-  // jet_smooth_points(points);
-
-  TSR_LOG_TRACE("Simplifying");
-  simplify_points(points);
-
-  TSR_LOG_TRACE("point count: {}", points.size());
-
-  TSR_LOG_TRACE("Triangulating");
-  auto dtm = create_tin_from_points(points);
-  // auto dtm = create_tin_from_points(points);
-
-  TSR_LOG_TRACE("Simplfying");
-  simplify_tin(dtm, dtm);
-
-  // Add water contours
-  TSR_LOG_TRACE("Preparing water contours");
-  auto waterImage = IO::load_image_from_file("../data/benNevis_water.tiff");
-
-  auto waterRGB = IO::convert_grayscale_image_to_rgb(waterImage);
-
-  auto contours = IO::extract_feature_contours(waterRGB, 0.001, 369951.000,
-                                               6304362.000, 3.0, 3.0);
-
-  TSR_LOG_TRACE("Vertices: {}", dtm.number_of_vertices());
-
-  double DEFAULT_MAX_SEGMENT_LENGTH = 30;
-
-  TSR_LOG_TRACE("Adding water contours");
-  for (auto contour : *contours) {
-    add_contour_constraint(dtm, contour, DEFAULT_MAX_SEGMENT_LENGTH);
-  }
-
-  const std::string DEFAULT_PATH_LAYER_ID = "features";
-  auto pathsContours = IO::load_contours_from_file(
-      "../data/benNevis_paths.json", DEFAULT_PATH_LAYER_ID);
-
-  TSR_LOG_TRACE("Adding path constraints");
-  for (auto contour : pathsContours) {
-    add_contour_constraint(dtm, contour, DEFAULT_MAX_SEGMENT_LENGTH);
-  }
-
-  Mesh tmpMesh;
-  convert_tin_to_surface_mesh(dtm, tmpMesh);
-
-  IO::write_mesh_to_obj("test.obj", tmpMesh);
+  TSR_LOG_TRACE("Vertices: {}", cdt.number_of_vertices());
 
   // Feature Manager Configuration
   TSR_LOG_TRACE("Setting up feature manager");
@@ -124,34 +88,13 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
       std::make_shared<GradientSpeedFeature>("gradient_speed");
   gradientSpeedInfluence->add_dependency(gradientFeature);
 
-  auto terrainTypeDataset =
-      IO::load_gdal_dataset_from_file("../data/benNevis_terrain_types.tiff");
+  auto terrainFeature =
+      std::make_shared<CEHTerrainFeature>("terrain_type", 0.1);
+  terrainFeature->initialize(cdt, boundary);
 
-  std::shared_ptr<CEHTerrainFeature> terrainFeature;
-  try {
-    terrainFeature = std::make_shared<CEHTerrainFeature>("terrain_type", dtm,
-                                                         terrainTypeDataset);
-  } catch (std::exception e) {
-    GDALClose(terrainTypeDataset);
-  }
-  GDALClose(terrainTypeDataset);
+  auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
 
-  auto waterDataset =
-      IO::load_gdal_dataset_from_file("../data/benNevis_water.tiff");
-
-  std::shared_ptr<BoolWaterFeature> waterFeature;
-  try {
-    waterFeature =
-        std::make_shared<BoolWaterFeature>("water", dtm, waterDataset);
-  } catch (std::exception e) {
-    GDALClose(waterDataset);
-    throw e;
-  }
-  GDALClose(waterDataset);
-
-  waterFeature->writeWaterMapToKML();
-
-  auto pathFeature = std::make_shared<PathFeature>("paths", pathsContours);
+  auto pathFeature = std::make_shared<PathFeature>("paths", 0.1);
 
   auto waterSpeedInfluence =
       std::make_shared<InverseFeature<bool, bool>>("water_speed");
@@ -159,12 +102,17 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   auto speedFeature = std::make_shared<MultiplierFeature>("speed");
   speedFeature->add_dependency(waterSpeedInfluence, MultiplierFeature::BOOL);
-  speedFeature->add_dependency(terrainFeature, MultiplierFeature::DOUBLE);
+  speedFeature->add_dependency(terrainFeature, MultiplierFeature::DOUBLE); //
+  // DO NOT MERGE: Not using terrain type
   speedFeature->add_dependency(gradientSpeedInfluence,
                                MultiplierFeature::DOUBLE);
 
+  // DO NOT MEGE : Using constant path speed instead of gradient/terrain based
   auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
   pathSpeed->add_dependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
+
+  // auto pathSpeed =
+  // std::make_shared<ConstantFeature<double>>("path_speed", 1.0);
 
   auto speedWithPathFeature =
       std::make_shared<ConditionalFeature<double>>("speed_with_path");
@@ -182,12 +130,38 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   fm.setOutputFeature(timeFeature);
 
+  TSR_LOG_TRACE("initializing features");
+
+  waterFeature->initialize(cdt, boundary);
+  pathFeature->initialize(cdt, boundary);
+  terrainFeature->initialize(cdt, boundary);
+
+  TSR_LOG_TRACE("final vertex count: {}", cdt.number_of_vertices());
+
+  /// DEBUG: Write mesh to obj
+  Mesh tmpMesh;
+  convert_tin_to_surface_mesh(cdt, tmpMesh);
+  IO::write_mesh_to_obj("test.obj", tmpMesh);
+
+  TSR_LOG_TRACE("tagging features");
+
+  terrainFeature->tag(cdt);
+  waterFeature->tag(cdt);
+  pathFeature->tag(cdt);
+
+  /// DEBUG: Write watermap to KML
+  waterFeature->writeWaterMapToKML();
+
   TSR_LOG_TRACE("Preparing router");
   Router router;
 
   // Calculate the optimal route
   TSR_LOG_TRACE("Calculating Route");
-  auto route = router.calculateRoute(dtm, fm, startPoint, endPoint);
+  TSR_LOG_TRACE("ll: {} {}", boundary.getLLCorner().x(),
+                boundary.getLLCorner().y());
+  TSR_LOG_TRACE("ur: {} {}", boundary.getURCorner().x(),
+                boundary.getURCorner().y());
+  auto route = router.calculateRoute(cdt, fm, boundary, startPoint, endPoint);
 
   // Convert the points to WGS84
   std::vector<Point_3> routeWGS84;

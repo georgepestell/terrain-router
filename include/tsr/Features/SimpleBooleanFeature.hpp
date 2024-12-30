@@ -1,19 +1,15 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
-#include "tsr/Feature.hpp"
+#include "tsr/Features/ConstantFeature.hpp"
+#include <boost/concept_check.hpp>
 
 namespace tsr {
 
-class SimpleBooleanFeature : public Feature<bool> {
+class SimpleBooleanFeature : public ConstantFeature<bool> {
 
 public:
-  using Feature<bool>::Feature;
-
-  bool calculate(Face_handle face, Point_3 &source_point,
-                 Point_3 &target_point) {
-    return false;
-  }
+  SimpleBooleanFeature(const std::string &name, bool value)
+      : ConstantFeature<bool>(name, value) {};
 };
 
 } // namespace tsr

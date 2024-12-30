@@ -1,3 +1,5 @@
+#define OPENTOP_KEY "0f789809fed28dc634c8d75695d0cc5c"
+
 #include <exception>
 #include <gtest/gtest.h>
 
@@ -9,13 +11,15 @@
 
 #include <gdal/gdal.h>
 
-#define OPENTOP_KEY "0f789809fed28dc634c8d75695d0cc5c"
-
 using namespace tsr;
 
 TEST(GDALHandlerTests, TestWarping) {
 
-  GDALDatasetH dataset = API::getChunk(56.338445, -2.798822, OPENTOP_KEY);
+  double minLat, minLng, maxLat, maxLng;
+
+  API::getChunkBoundaries(56.338445, -2.798822, minLat, minLng, maxLat, maxLng);
+
+  GDALDatasetH dataset = API::getChunk(minLat, minLng, maxLat, maxLng);
 
   TSR_LOG_TRACE("Warping to UTM");
   GDALDatasetH warpedDataset;
@@ -26,9 +30,10 @@ TEST(GDALHandlerTests, TestWarping) {
     FAIL();
   }
 
-  TSR_LOG_TRACE("Successfully warped");
+  GDALDataset *d = (GDALDataset *)warpedDataset;
 
-  TSR_LOG_INFO("x size: {}", GDALGetRasterBandXSize(warpedDataset));
+  TSR_LOG_TRACE("Successfully warped");
+  TSR_LOG_INFO("x size: {}", d->GetRasterXSize());
 
   GDALReleaseDataset(dataset);
   GDALReleaseDataset(warpedDataset);

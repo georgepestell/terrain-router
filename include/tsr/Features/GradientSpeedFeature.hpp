@@ -1,8 +1,9 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
-#include "tsr/Point_3.hpp"
+#include "tsr/TSRState.hpp"
+#include <algorithm>
+#include <boost/multiprecision/detail/min_max.hpp>
 #include <cmath>
 #include <memory>
 #include <string>
@@ -44,15 +45,14 @@ public:
     return y;
   }
 
-  double calculate(Face_handle face, Point_3 &source_point,
-                   Point_3 &target_point) override {
+  double calculate(TSRState &state) override {
 
     // Solve the polynomial with the given input
     auto inputFeature = dynamic_pointer_cast<Feature<double>>(
         this->dependencies[DEPENDENCIES::X]);
 
     // Get the dependency value
-    double gradient = inputFeature->calculate(face, source_point, target_point);
+    double gradient = inputFeature->calculate(state);
 
     double speedInfluence;
     if (gradient > 0) {
@@ -61,7 +61,18 @@ public:
       speedInfluence = solvePolynomial(gradient, this->downwards_coefficients);
     }
 
-    return speedInfluence < 0 ? 0 : speedInfluence;
+    // Cap the speedInfluence to a minimum of 0x speed
+    double cappedSpeedInfluence = fmax(0.0, speedInfluence);
+
+    if (cappedSpeedInfluence <= 0) {
+      addWarning(state, "Untraversable gradient", 10);
+    } else if (cappedSpeedInfluence < 0.5) {
+      addWarning(state, "Steep Gradient", 2);
+    } else if (cappedSpeedInfluence < 0.8) {
+      addWarning(state, "Slight Gradient", 1);
+    }
+
+    return cappedSpeedInfluence;
   }
 };
 

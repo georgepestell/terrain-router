@@ -41,14 +41,21 @@ void convert_tin_to_surface_mesh(Delaunay_3 const &source, Mesh &target) {
   CGAL::copy_face_graph(source, target);
 }
 
-Delaunay_3 create_tin_from_points(std::vector<Point_3> &points) {
+Delaunay_3 create_tin_from_points(const std::vector<Point_3> &points) {
   if (points.empty()) {
     TSR_LOG_WARN("empty TIN created");
   }
 
   Delaunay_3 tin;
 
-  tin.insert(points.begin(), points.end());
+  for (auto p : points) {
+    if (p.x() == 0 && p.y() == 0 && p.z() == 0) {
+      TSR_LOG_TRACE("point is zero zero");
+    }
+    tin.insert(p);
+  }
+
+  // tin.insert(points.begin(), points.end());
 
   return tin;
 }
@@ -154,7 +161,7 @@ void simplify_tin(Delaunay_3 const &source_mesh, Delaunay_3 &target_mesh,
   CGAL::Polygon_mesh_processing::remove_degenerate_edges(sourceSurfaceMesh);
   CGAL::Polygon_mesh_processing::triangulate_faces(sourceSurfaceMesh);
 
-  typedef boost::graph_traits<Mesh>::vertex_descriptor vertex_descriptor;
+  // typedef boost::graph_traits<Mesh>::vertex_descriptor vertex_descriptor;
   // typedef boost::graph_traits<Mesh>::halfedge_descriptor halfedge_descriptor;
 
   if (!CGAL::is_valid_polygon_mesh(sourceSurfaceMesh)) {

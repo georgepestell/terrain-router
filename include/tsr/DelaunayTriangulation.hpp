@@ -17,7 +17,7 @@ Delaunay_3 create_tin_from_points(std::vector<Point_3> &points,
                                   Point_3 source_point, Point_3 target_point,
                                   double radii);
 
-Delaunay_3 create_tin_from_points(std::vector<Point_3> &points);
+Delaunay_3 create_tin_from_points(const std::vector<Point_3> &points);
 
 void convert_surface_mesh_to_tin(Mesh const &source, Delaunay_3 &target);
 

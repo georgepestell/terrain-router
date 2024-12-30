@@ -2,9 +2,15 @@
 #include "tsr/API/APICallerConfig.hpp"
 #include "tsr/logging.hpp"
 
+#include <cstddef>
+#include <curl/curl.h>
 #include <curl/easy.h>
+#include <fstream>
+#include <ios>
+#include <memory>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace tsr::API {
 
@@ -18,55 +24,60 @@ namespace tsr::API {
  * @param output String to append contents to
  * @return size_t Size of the response
  */
-size_t APICallbackHelper(void *contents, size_t size, size_t nmemb,
-                         std::string *output) {
-  size_t totalSize = size * nmemb;
-  output->append((char *)contents, totalSize);
-  return totalSize;
+size_t APICallbackHelper(void *buffer, size_t size, size_t nmemb,
+                         void *userdata) {
+
+  std::vector<char> *memory = static_cast<std::vector<char> *>(userdata);
+  memory->insert(memory->end(), static_cast<char *>(buffer),
+                 static_cast<char *>(buffer) + size * nmemb);
+  return size * nmemb;
 }
 
 APICaller::~APICaller() = default;
+APICaller::APICaller() = default;
 
 template <typename dataType> void fetch_DEM_from_opentopography() {}
 
-APICaller::APICaller() { this->config = std::make_unique<APICallerConfig>(); }
-
-APICallerConfig::APICallerConfig() {
-
-  this->curl = curl_easy_init();
-
-  if (!this->curl) {
-    TSR_LOG_ERROR("Failed to initialize CURL");
-    throw std::runtime_error("Failed to initialize CURL");
-  }
-
-  curl_easy_setopt(this->curl, CURLOPT_WRITEFUNCTION, APICallbackHelper);
-}
-
-std::string APICaller::fetchDataFromAPI(const std::string &url) {
+bool APICaller::fetchDataFromAPI(const std::string &url,
+                                 const std::string &filepath) {
   CURLcode response_code;
-  std::string response_string;
+
+  CURL *curl = curl_easy_init();
 
   // Intialize CURL
-  if (!this->config->curl) {
+  if (!curl) {
     TSR_LOG_ERROR("Cannot make API request: curl is not initialized");
     throw std::runtime_error(
         "Cannot make API request: curl is not initialized");
   }
 
+  std::vector<char> buffer;
+
   // Set curl options
-  curl_easy_setopt(this->config->curl, CURLOPT_URL, url.c_str());
-  curl_easy_setopt(this->config->curl, CURLOPT_WRITEDATA, &response_string);
+  curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+  curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, APICallbackHelper);
+  curl_easy_setopt(curl, CURLOPT_WRITEDATA, &buffer);
 
   TSR_LOG_TRACE("Calling API ({})", url);
-  response_code = curl_easy_perform(this->config->curl);
+  response_code = curl_easy_perform(curl);
 
   // Check response code
   if (response_code != CURLE_OK) {
     TSR_LOG_ERROR("CURL Error: {}", curl_easy_strerror(response_code));
+    return 1;
   }
 
-  return response_string;
+  std::ofstream file(filepath.c_str(), std::ios::binary);
+  if (file.is_open()) {
+    file.write(buffer.data(), buffer.size());
+    file.close();
+  } else {
+    TSR_LOG_ERROR("failed to open file for curl write");
+  }
+
+  curl_easy_cleanup(curl);
+
+  return 0;
 }
 
 }; // namespace tsr::API

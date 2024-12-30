@@ -11,7 +11,7 @@ wget "https://lz4.overpass-api.de/api/interpreter?data=
 " -O ../data/benNevis_paths.xml
 
 # Warp
-ogr2ogr -f "GeoJSON" -t_srs '+proj=utm +zone=30 +datum=WGS84 +units=m +no_defs' ../data/benNevis_paths_warped.json ../data/benNevis_paths.xml lines
+ogr2ogr -f "GeoJSON" -t_srs '+proj=utm +zone=30 +datum=WGS84 +units=m +no_defs' ../data/benNevis_paths.json ../data/benNevis_paths.xml lines
 
 # ogr2ogr -f "GeoJSON" ../data/benNevis_paths.json ../data/benNevis_paths_warped.xml
 

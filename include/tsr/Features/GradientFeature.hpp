@@ -3,7 +3,9 @@
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
 #include "tsr/Point_3.hpp"
+#include "tsr/TSRState.hpp"
 #include "tsr/logging.hpp"
+#include <boost/concept_check.hpp>
 
 namespace tsr {
 
@@ -28,9 +30,9 @@ public:
     return dz / distance;
   }
 
-  double calculate(Face_handle face, Point_3 &source_point,
-                   Point_3 &target_point) {
-    return calculate_gradient(source_point, target_point);
+  double calculate(TSRState &state) {
+    return calculate_gradient(state.current_vertex->point(),
+                              state.next_vertex->point());
   }
 };
 

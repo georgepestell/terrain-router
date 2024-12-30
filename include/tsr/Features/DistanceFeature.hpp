@@ -3,8 +3,10 @@
 #include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
 #include "tsr/Point_3.hpp"
+#include "tsr/TSRState.hpp"
 
 #include <CGAL/Distance_3/Point_3_Point_3.h>
+#include <boost/concept_check.hpp>
 #include <cmath>
 
 namespace tsr {
@@ -18,10 +20,10 @@ public:
     return std::sqrt(CGAL::squared_distance(p1, p2));
   }
 
-  double calculate(Face_handle face, Point_3 &source_point,
-                   Point_3 &target_point) override {
+  double calculate(TSRState &state) override {
 
-    return calculateDistance(source_point, target_point);
+    return calculateDistance(state.current_vertex->point(),
+                             state.next_vertex->point());
   }
 };
 

@@ -1,21 +1,27 @@
 #include "tsr/IO/FileIO.hpp"
 
-#include <filesystem>
+#include <boost/filesystem/operations.hpp>
 #include <fstream>
 #include <string>
 
 namespace tsr::IO {
 
 std::string path_to_absolute(std::string filename) {
-  std::filesystem::path path(filename);
+  boost::filesystem::path path(filename);
 
   // Add pwd to relative path
   if (path.is_relative()) {
     // Get the current working directory
-    path = std::filesystem::current_path() / path;
+    path = boost::filesystem::current_path() / path;
   }
 
-  return path;
+  return path.string();
+}
+
+void deleteFile(std::string filepath) {
+  if (boost::filesystem::exists(filepath)) {
+    boost::filesystem::remove(filepath);
+  }
 }
 
 void write_data_to_file(std::string filepath, std::string data) {

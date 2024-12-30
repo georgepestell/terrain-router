@@ -1,6 +1,3 @@
-
-// #include <SageIsAWank.h>
-
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
 #include "tsr/Point_2.hpp"
@@ -32,7 +29,7 @@ cv::Mat load_image_from_file(std::string filepath);
 
 cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image);
 
-std::unique_ptr<std::vector<std::vector<Point_2>>>
+std::vector<std::vector<Point_2>>
 extract_feature_contours(cv::Mat &image, double simplification_factor,
                          double uloffset_x, double uloffset_y,
                          double cellsize_x, double cellsize_y);

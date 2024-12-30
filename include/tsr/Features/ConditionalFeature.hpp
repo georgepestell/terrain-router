@@ -1,4 +1,5 @@
 #include "tsr/Feature.hpp"
+#include "tsr/TSRState.hpp"
 #include <memory>
 
 namespace tsr {
@@ -11,20 +12,19 @@ private:
 public:
   using Feature<DataType>::Feature;
 
-  DataType calculate(Face_handle face, Point_3 &source_point,
-                     Point_3 &target_point) override {
+  DataType calculate(TSRState &state) override {
 
     auto conditionalFeature = std::dynamic_pointer_cast<Feature<bool>>(
         this->dependencies[CONDITIONAL]);
 
-    if (conditionalFeature->calculate(face, source_point, target_point)) {
+    if (conditionalFeature->calculate(state)) {
       auto feature =
           std::dynamic_pointer_cast<Feature<double>>(this->dependencies[A]);
-      return feature->calculate(face, source_point, target_point);
+      return feature->calculate(state);
     } else {
       auto feature =
           std::dynamic_pointer_cast<Feature<double>>(this->dependencies[B]);
-      return feature->calculate(face, source_point, target_point);
+      return feature->calculate(state);
     }
   }
 };
