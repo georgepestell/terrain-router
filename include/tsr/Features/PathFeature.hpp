@@ -31,17 +31,20 @@ private:
 
   inline static std::string URL =
       "https://lz4.overpass-api.de/api/"
-      "interpreter?data=%5Bout%3Axml%5D%5Btimeout%3A25%5D%3B%0A%28%0A%20%20way%"
-      "5B%27highway%27~%27trunk%7Csecondary%7Cunclassified%7Cresidential%"
-      "7Ctertiary%7Ctrunk_link%7Cprimary_link%7Csecondary_link%7Ctertiary_link%"
-      "7Cliving_street%7Csteps%7Croad%7Cfootway%7Cvia_ferrata%7Csidewalk%"
-      "7Ccrossing%7Ccycleway%7Ctraffic_island%7Cpath%7Cpedestrian%7Ctrack%"
-      "7Cservice%27%5D%5B%27foot%27%21~%27no%27%5D%5B%27route%27%21~%27ferry%"
-      "27%5D%28{}%2C%20{}%2C%20{}%2C%20{}%29%3B%0A%20%20way%5B%27foot%27%3D%"
-      "27yes%27%5D%5B%27route%27%21~%27ferry%27%5D%28{}%2C%20{}%2C%20{}%2C%20{}"
-      "%29%3B%0A%20%20way%5B%27bridge%27%3D%27yes%27%5D%5B%27foot%27%3D%27yes%"
-      "27%5D%28{}%2C%20{}%2C%20{}%2C%20{}%29%3B%0A%29%3B%0A%28._%3B%3E%3B%29%"
-      "3Bout+body%3B{}";
+      "interpreter?data=%5Bout%3Axml%5D%5Btimeout%3A25%5D%3B%28way%5B%"
+      "22highway%22~%22footway%7Cpath%7Cpedestrian%7Ctrack%7Ccycleway%22%5D%"
+      "28{},{},{},{}%29%3Bway%5B%22highway%22%5D%5B%22foot%22~%22yes%"
+      "7Cdesignated%"
+      "7Cpermissive%7Cno%22%5D%28{},{},{},{}%29%3Bway%5B%22highway%22%5D%5B%"
+      "22access%"
+      "22~%22yes%7Cdesignated%7Cpermissive%22%5D%28{},{},{},{}%29%3Bway%5B%"
+      "22sidewalk%"
+      "22~%22yes%7Cboth%7Cleft%7Cright%22%5D%28{},{},{},{}%29%3Bway%5B%"
+      "22bridge%22%5D%"
+      "5B%22sidewalk%22~%22yes%7Cboth%7Cleft%7Cright%22%5D%28{},{},{},{}%29%"
+      "3Bway%5B%"
+      "22bridge%22%5D%5B%22passenger_lines%22%5D%28if%3At%5B%22passenger_lines%"
+      "22%5D%20%3E%200%29%28{},{},{},{}%29%3B%29%3Bout+body%3B%0A{}";
 
   std::pair<Point_2, Point_2> normalizeSegment(Point_2 p1, Point_2 p2) {
     if (p1 < p2) {
@@ -53,7 +56,8 @@ private:
 
 public:
   PathFeature(std::string name, double tile_size)
-      : APIFeature(name, URL, tile_size, {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
+      : APIFeature(name, URL, tile_size, {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3,
+                                          0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
   }
 
   void initialize(Delaunay_3 &dtm, const MeshBoundary &boundary) override {
@@ -108,3 +112,5 @@ public:
 };
 
 } // namespace tsr
+
+// TODO: VARIABLE SIMPLIFICATION OF PATHS BY VERTEX COUNT
