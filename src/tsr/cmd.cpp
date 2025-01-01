@@ -49,7 +49,7 @@
 namespace po = boost::program_options;
 
 #define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_DEM.xyz"
-#define RADII_MULTIPLIER 5
+#define RADII_MULTIPLIER 1.5
 #define DEM_API_KEY "0f789809fed28dc634c8d75695d0cc5c"
 
 #include <sys/resource.h>
