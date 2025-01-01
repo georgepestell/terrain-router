@@ -4,11 +4,13 @@ mkdir ../data
 
 wget "https://lz4.overpass-api.de/api/interpreter?data=
 [out:xml][timeout:25];
-(
-nwr[natural='water'](56.761527788889, -5.127361122222, 56.864861122305, -4.96513889987);
-nwr[natural='bay'](56.761527788889, -5.127361122222, 56.864861122305, -4.96513889987);
-);
-(._;>;);out+body;
+(node["natural"="water"]["type"="multipolygon"]({{bbox}});
+way["natural"="water"]["type"="multipolygon"]({{bbox}});
+relation["natural"="water"]["type"="multipolygon"]({{bbox}});
+node["natural"="water"]({{bbox}});
+way["natural"="water"]({{bbox}});
+relation["natural"="water"]({{bbox}}););
+(._;>;);out body;
 " -O ../data/benNevis_water.xml
 
 ### Align
