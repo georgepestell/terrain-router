@@ -103,7 +103,7 @@ public:
         TSR_LOG_TRACE("contour file: {}", data.filename);
 
         // Extract contours usign OpenCV
-        const double SIMPLIFICATION_FACTOR = 0.001;
+        const double SIMPLIFICATION_FACTOR = 0.01;
         contours = API::extract_feature_contours(data.filename, adfGeotransform,
                                                  SIMPLIFICATION_FACTOR);
 
