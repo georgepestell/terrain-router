@@ -1,23 +1,23 @@
 #include "tsr/MeshBoundary.hpp"
-#include "tsr/Point_2.hpp"
-#include "tsr/Point_3.hpp"
+#include "tsr/Point2.hpp"
+#include "tsr/Point3.hpp"
 #include <cmath>
 #include <vector>
 
+#include "tsr/Logging.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/logging.hpp"
 
 namespace tsr {
 
-MeshBoundary::MeshBoundary(const Point_3 &source_point,
-                           const Point_3 &target_point,
+MeshBoundary::MeshBoundary(const Point3 &source_point,
+                           const Point3 &target_point,
                            const double radii_multiplier) {
 
   const double distance = calculate_xy_distance(source_point, target_point);
   const double radius = (distance / 2.0) * radii_multiplier;
 
-  this->midpoint = Point_2((source_point.x() + target_point.x()) / 2.0,
-                           (source_point.y() + target_point.y()) / 2.0);
+  this->midpoint = Point2((source_point.x() + target_point.x()) / 2.0,
+                          (source_point.y() + target_point.y()) / 2.0);
 
   this->angle = calculate_xy_angle(source_point, target_point);
 
@@ -29,14 +29,14 @@ MeshBoundary::MeshBoundary(const Point_3 &source_point,
   double bboxMinY = this->midpoint.y() - this->height / 2;
   double bboxMaxY = this->midpoint.y() + this->height / 2;
 
-  Point_2 p1 =
-      rotatePoint(Point_2(bboxMinX, bboxMinY), this->midpoint, this->angle);
-  Point_2 p2 =
-      rotatePoint(Point_2(bboxMaxX, bboxMinY), this->midpoint, this->angle);
-  Point_2 p3 =
-      rotatePoint(Point_2(bboxMinX, bboxMaxY), this->midpoint, this->angle);
-  Point_2 p4 =
-      rotatePoint(Point_2(bboxMaxX, bboxMaxY), this->midpoint, this->angle);
+  Point2 p1 =
+      rotatePoint(Point2(bboxMinX, bboxMinY), this->midpoint, this->angle);
+  Point2 p2 =
+      rotatePoint(Point2(bboxMaxX, bboxMinY), this->midpoint, this->angle);
+  Point2 p3 =
+      rotatePoint(Point2(bboxMinX, bboxMaxY), this->midpoint, this->angle);
+  Point2 p4 =
+      rotatePoint(Point2(bboxMaxX, bboxMaxY), this->midpoint, this->angle);
 
   double minX = std::min({p1.x(), p2.x(), p3.x(), p4.x()});
   double maxX = std::max({p1.x(), p2.x(), p3.x(), p4.x()});
@@ -48,12 +48,12 @@ MeshBoundary::MeshBoundary(const Point_3 &source_point,
   TSR_LOG_TRACE("b min y: {}", minY);
   TSR_LOG_TRACE("b max y: {}", maxY);
 
-  this->ll = Point_2(minX, maxY);
-  this->ur = Point_2(maxX, minY);
+  this->ll = Point2(minX, maxY);
+  this->ur = Point2(maxX, minY);
 }
 
-Point_2 MeshBoundary::rotatePoint(const Point_2 &p, const Point_2 &midpoint,
-                                  double angle) {
+Point2 MeshBoundary::rotatePoint(const Point2 &p, const Point2 &midpoint,
+                                 double angle) {
   double s = std::sin(angle);
   double c = std::cos(angle);
 
@@ -66,11 +66,11 @@ Point_2 MeshBoundary::rotatePoint(const Point_2 &p, const Point_2 &midpoint,
   double newY = x * s + y * c;
 
   // Translate back
-  return Point_2(newX + midpoint.x(), newY + midpoint.y());
+  return Point2(newX + midpoint.x(), newY + midpoint.y());
 }
 
-Point_3 MeshBoundary::rotatePoint(const Point_3 &p, const Point_2 &midpoint,
-                                  double angle) {
+Point3 MeshBoundary::rotatePoint(const Point3 &p, const Point2 &midpoint,
+                                 double angle) {
   double s = std::sin(angle);
   double c = std::cos(angle);
 
@@ -83,12 +83,12 @@ Point_3 MeshBoundary::rotatePoint(const Point_3 &p, const Point_2 &midpoint,
   double newY = x * s + y * c;
 
   // Translate back
-  return Point_3(newX + midpoint.x(), newY + midpoint.y(), p.z());
+  return Point3(newX + midpoint.x(), newY + midpoint.y(), p.z());
 }
 
-bool MeshBoundary::isBounded(Point_3 p) const {
+bool MeshBoundary::isBounded(Point3 p) const {
   // Rotate the point back (inverse rotation)
-  Point_3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
+  Point3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
 
   // Check if the rotated point is within the axis-aligned rectangle
   double halfWidth = width / 2.0;
@@ -101,9 +101,9 @@ bool MeshBoundary::isBounded(Point_3 p) const {
 
   return withinBounds;
 }
-bool MeshBoundary::isBoundedSafe(Point_3 p) const {
+bool MeshBoundary::isBoundedSafe(Point3 p) const {
   // Rotate the point back (inverse rotation)
-  Point_3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
+  Point3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
 
   // Check if the rotated point is within the axis-aligned rectangle
   double halfWidth = width / 2.0;
@@ -121,10 +121,10 @@ bool MeshBoundary::isBoundedSafe(Point_3 p) const {
 }
 
 void MeshBoundary::filterPointsOutsideBoundary(
-    std::vector<Point_3> points) const {
+    std::vector<Point3> points) const {
   unsigned int initialSize = points.size();
 
-  std::vector<Point_3> filteredPoints;
+  std::vector<Point3> filteredPoints;
   for (auto p : points) {
     if (this->isBounded(p)) {
       filteredPoints.push_back(p);
@@ -138,12 +138,12 @@ void MeshBoundary::filterPointsOutsideBoundary(
   points.swap(filteredPoints);
 }
 
-Point_2 MeshBoundary::getLLCorner() const {
+Point2 MeshBoundary::getLLCorner() const {
   // Calculate the lower left corner
   return this->ll;
 }
 
-Point_2 MeshBoundary::getURCorner() const {
+Point2 MeshBoundary::getURCorner() const {
   // Calculate the upper right corner
   return this->ur;
 }

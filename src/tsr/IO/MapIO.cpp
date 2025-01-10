@@ -1,6 +1,6 @@
 #include "tsr/IO/MapIO.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
 #include <cpl_conv.h>
 #include <cpl_error.h>
 #include <cpl_port.h>
@@ -95,7 +95,7 @@ void writeGDALDatasetToFile(const std::string filename,
   GDALReleaseDataset(copy);
 }
 
-std::vector<std::vector<Point_3>>
+std::vector<std::vector<Point3>>
 extractContoursFromGDALDataset(GDALDataset *dataset, int layerID) {
 
   if (!dataset) {
@@ -104,15 +104,15 @@ extractContoursFromGDALDataset(GDALDataset *dataset, int layerID) {
   }
 
   // Setup the contours vector
-  std::vector<std::vector<Point_3>> contours;
+  std::vector<std::vector<Point3>> contours;
 
   TSR_LOG_ERROR("Not implemented");
 
   return contours;
 }
 
-std::vector<Point_3> extractPointsFromGDALDataset(GDALDatasetH hDataset,
-                                                  int layerID) {
+std::vector<Point3> extractPointsFromGDALDataset(GDALDatasetH hDataset,
+                                                 int layerID) {
 
   GDALDataset *dataset = static_cast<GDALDataset *>(hDataset);
   if (!dataset) {
@@ -138,7 +138,7 @@ std::vector<Point_3> extractPointsFromGDALDataset(GDALDatasetH hDataset,
   double geotransform[6];
   GDALGetGeoTransform(dataset, geotransform);
 
-  std::vector<Point_3> points;
+  std::vector<Point3> points;
   std::vector<float> line(bandXSize);
   for (int row = 0; row < bandYSize; row++) {
     if (band->RasterIO(GF_Read, 0, row, bandXSize, 1, line.data(), bandXSize, 1,

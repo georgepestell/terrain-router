@@ -1,19 +1,19 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/RouterNode.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/RouteNode.hpp"
+#include "tsr/Tin.hpp"
 #include <unordered_map>
 
 namespace tsr {
 
-struct TSRState {
+struct TsrState {
 
   Vertex_handle start_vertex;
   Vertex_handle end_vertex;
 
-  std::unordered_map<Vertex_handle, Node> routes;
+  std::unordered_map<Vertex_handle, RouteNode> routes;
   Vertex_handle current_vertex;
   Vertex_handle next_vertex;
   Face_handle current_face;
@@ -29,7 +29,7 @@ struct TSRState {
   /// warning_priority set
   std::unordered_map<Face_handle, size_t> warnings;
 
-  size_t addWarning(const std::string &warning, const short priority) {
+  size_t AddWarning(const std::string &warning, const short priority) {
     if (!warning_index.contains(warning)) {
       size_t index = warning_messages.size();
       warning_messages.push_back(warning);
@@ -43,9 +43,9 @@ struct TSRState {
     }
   }
 
-  void processWarnings();
+  void ProcessWarnings();
 
-  std::vector<Point_3> fetchRoute() const;
+  std::vector<Point3> fetchRoute() const;
 };
 
 } // namespace tsr

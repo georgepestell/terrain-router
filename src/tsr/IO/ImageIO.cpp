@@ -6,8 +6,8 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/imgproc.hpp>
 
-#include "tsr/Point_2.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point2.hpp"
 
 #include <memory>
 #include <stdexcept>
@@ -33,7 +33,7 @@ cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image) {
   return rgbImage;
 }
 
-std::vector<std::vector<Point_2>>
+std::vector<std::vector<Point2>>
 extract_feature_contours(cv::Mat &image, double simplification_factor,
                          double uloffset_x, double uloffset_y,
                          double cellsize_x, double cellsize_y) {
@@ -58,7 +58,7 @@ extract_feature_contours(cv::Mat &image, double simplification_factor,
                    cv::CHAIN_APPROX_SIMPLE);
 
   // Convert contours to CGAL contours
-  std::vector<std::vector<Point_2>> contours;
+  std::vector<std::vector<Point2>> contours;
 
   for (const auto &cv_contour : cv_contours) {
     std::vector<cv::Point> new_contour;
@@ -73,11 +73,11 @@ extract_feature_contours(cv::Mat &image, double simplification_factor,
     }
 
     // Convert contour to list of points
-    std::vector<Point_2> contour;
+    std::vector<Point2> contour;
     for (const auto &point : new_contour) {
       // Convert OpenCV points to CGAL points
-      Point_2 cgal_point(round(point.x * cellsize_x + uloffset_x),
-                         round(uloffset_y - point.y * cellsize_y));
+      Point2 cgal_point(round(point.x * cellsize_x + uloffset_x),
+                        round(uloffset_y - point.y * cellsize_y));
       contour.push_back(cgal_point);
     }
 

@@ -9,7 +9,7 @@ void FeatureBase::add_dependency(std::shared_ptr<FeatureBase> feature) {
   this->dependencies.push_back(feature);
 }
 
-void FeatureBase::addWarning(TSRState &state, const std::string &warning,
+void FeatureBase::AddWarning(TsrState &state, const std::string &warning,
                              const unsigned short priority) {
 
   auto face = state.current_face;
@@ -25,7 +25,7 @@ void FeatureBase::addWarning(TSRState &state, const std::string &warning,
   }
 
   // Either no warning already exists, or the new priority is higher than old
-  size_t newIndex = state.addWarning(warning, priority);
+  size_t newIndex = state.AddWarning(warning, priority);
 
   state.warnings[face] = newIndex;
 }

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tsr/Point_2.hpp"
-#include "tsr/Point_3.hpp"
+#include "tsr/Point2.hpp"
+#include "tsr/Point3.hpp"
 
 #include <vector>
 
@@ -13,25 +13,25 @@ public:
   double height;
   double angle;
   double radii_multiplier;
-  Point_2 ur;
-  Point_2 ll;
-  Point_2 midpoint;
+  Point2 ur;
+  Point2 ll;
+  Point2 midpoint;
 
-  MeshBoundary(const Point_3 &source_point, const Point_3 &target_point,
+  MeshBoundary(const Point3 &source_point, const Point3 &target_point,
                const double radii_multiplier);
 
-  static Point_3 rotatePoint(const Point_3 &p, const Point_2 &midpoint,
-                             double angle);
-  static Point_2 rotatePoint(const Point_2 &p, const Point_2 &midpoint,
-                             double angle);
+  static Point3 rotatePoint(const Point3 &p, const Point2 &midpoint,
+                            double angle);
+  static Point2 rotatePoint(const Point2 &p, const Point2 &midpoint,
+                            double angle);
 
-  bool isBounded(Point_3 p) const;
-  bool isBoundedSafe(Point_3 p) const;
+  bool isBounded(Point3 p) const;
+  bool isBoundedSafe(Point3 p) const;
 
-  void filterPointsOutsideBoundary(std::vector<Point_3> points) const;
+  void filterPointsOutsideBoundary(std::vector<Point3> points) const;
 
-  Point_2 getLLCorner() const;
-  Point_2 getURCorner() const;
+  Point2 getLLCorner() const;
+  Point2 getURCorner() const;
 };
 
 } // namespace tsr

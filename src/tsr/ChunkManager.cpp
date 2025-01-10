@@ -1,4 +1,4 @@
-#include "tsr/Chunker.hpp"
+#include "tsr/ChunkManager.hpp"
 
 #include "fmt/core.h"
 #include "tsr/API/APICaller.hpp"
@@ -11,10 +11,10 @@
 #include <gdal/gdal.h>
 
 #include "tsr/ChunkInfo.hpp"
+#include "tsr/Logging.hpp"
 #include "tsr/MeshBoundary.hpp"
+#include "tsr/Point2.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/Point_2.hpp"
-#include "tsr/logging.hpp"
 
 #include "tsr/IO/MapIO.hpp"
 
@@ -27,7 +27,7 @@
 
 namespace tsr {
 
-ChunkInfo Chunker::getChunkInfo(double lat, double lng) const {
+ChunkInfo ChunkManager::getChunkInfo(double lat, double lng) const {
   double minLat = std::floor(lat / tile_size) * this->tile_size;
   double minLng = std::floor(lng / tile_size) * this->tile_size;
   double maxLat = minLat + this->tile_size;
@@ -35,11 +35,11 @@ ChunkInfo Chunker::getChunkInfo(double lat, double lng) const {
   return {minLat, minLng, maxLat, maxLng};
 }
 std::vector<ChunkInfo>
-Chunker::getRequiredChunks(const MeshBoundary &boundary) const {
+ChunkManager::getRequiredChunks(const MeshBoundary &boundary) const {
 
   // Convert the boundary to WGS84
-  const Point_2 ur = UTM_point_to_WGS84(boundary.getURCorner(), 30, true);
-  const Point_2 ll = UTM_point_to_WGS84(boundary.getLLCorner(), 30, true);
+  const Point2 ur = UTM_point_to_WGS84(boundary.getURCorner(), 30, true);
+  const Point2 ll = UTM_point_to_WGS84(boundary.getLLCorner(), 30, true);
 
   const double minLat = std::min(ur.x(), ll.x());
   const double maxLat = std::max(ur.x(), ll.x());
@@ -67,7 +67,7 @@ Chunker::getRequiredChunks(const MeshBoundary &boundary) const {
   return chunks;
 }
 
-std::string Chunker::formatURL(const ChunkInfo &chunkInfo) const {
+std::string ChunkManager::formatURL(const ChunkInfo &chunkInfo) const {
 
   auto ds = fmt::dynamic_format_arg_store<fmt::format_context>();
   for (auto i : this->position_order) {
@@ -89,7 +89,7 @@ std::string Chunker::formatURL(const ChunkInfo &chunkInfo) const {
   return formattedURL;
 }
 
-DataFile Chunker::fetchVectorChunk(const ChunkInfo &chunk) const {
+DataFile ChunkManager::fetchVectorChunk(const ChunkInfo &chunk) const {
 
   // Parse the API chunk URL
   std::string chunkURL = this->formatURL(chunk);
@@ -133,8 +133,9 @@ DataFile Chunker::fetchVectorChunk(const ChunkInfo &chunk) const {
   return DataFile(warpedDS, warpedFilepath.string());
 }
 
-DataFile Chunker::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
-                                               double pixel_resolution) const {
+DataFile
+ChunkManager::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
+                                           double pixel_resolution) const {
 
   // Parse the API chunk URL
   std::string chunkURL = this->formatURL(chunk);
@@ -202,7 +203,7 @@ DataFile Chunker::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
   return {warpedDS, warpedFilepath.string()};
 }
 
-DataFile Chunker::fetchRasterChunk(const ChunkInfo &chunk) const {
+DataFile ChunkManager::fetchRasterChunk(const ChunkInfo &chunk) const {
 
   TSR_LOG_TRACE("getting for: {} {} {} {}", chunk.minLat, chunk.minLng,
                 chunk.maxLat, chunk.maxLng);

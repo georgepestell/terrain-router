@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 
 namespace tsr {
 
@@ -14,7 +14,7 @@ class FeatureBase {
 
 public:
   /// Feature unique identifier
-  std::string featureID;
+  std::string feature_id;
 
   /// Stores the feature dependencies
   std::vector<std::shared_ptr<FeatureBase>> dependencies;
@@ -23,9 +23,9 @@ public:
   virtual void add_dependency(std::shared_ptr<FeatureBase> feature);
 
   /// Features can override or re-define with their own initialization functions
-  FeatureBase(const std::string &featureID) : featureID(featureID) {}
+  FeatureBase(const std::string &feature_id) : feature_id(feature_id) {}
 
-  static void addWarning(TSRState &state, const std::string &warning,
+  static void AddWarning(TsrState &state, const std::string &warning,
                          const unsigned short priority);
 
   /// Default destructor. Features with malloced attributes should overrite this
@@ -33,7 +33,7 @@ public:
 
   /// Equality operator to compare Feature objects
   bool operator==(const FeatureBase &other) const {
-    return featureID == other.featureID;
+    return feature_id == other.feature_id;
   }
 };
 
@@ -42,7 +42,7 @@ template <typename DataType> class Feature : public FeatureBase {
 public:
   using FeatureBase::FeatureBase;
 
-  virtual DataType calculate(TSRState &state) = 0;
+  virtual DataType calculate(TsrState &state) = 0;
 };
 
 } // namespace tsr

@@ -1,5 +1,5 @@
 #include "tsr/Feature.hpp"
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 #include <memory>
 
 namespace tsr {
@@ -12,7 +12,7 @@ private:
 public:
   using Feature<DataType>::Feature;
 
-  DataType calculate(TSRState &state) override {
+  DataType calculate(TsrState &state) override {
 
     auto conditionalFeature = std::dynamic_pointer_cast<Feature<bool>>(
         this->dependencies[CONDITIONAL]);

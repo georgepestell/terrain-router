@@ -1,12 +1,12 @@
 #include "tsr/Router.hpp"
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/FeatureManager.hpp"
 #include "tsr/Features/WaterFeature.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/KMLWriter.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/Tin.hpp"
+#include "tsr/TsrState.hpp"
 
 #include <CGAL/circulator.h>
 #include <algorithm>
@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace tsr {
-double calculateXYDistance(Point_3 p1, Point_3 p2) {
+double calculateXYDistance(Point3 p1, Point3 p2) {
 
   double dx = p1.x() - p2.x();
   double dy = p1.y() - p2.y();
@@ -26,7 +26,7 @@ double calculateXYDistance(Point_3 p1, Point_3 p2) {
   return std::hypot(dx, dy);
 }
 
-Vertex_handle Router::nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point) {
+Vertex_handle Router::nearestVertexToPoint(Tin &dtm, Point3 &point) {
   Face_handle face = dtm.locate(point);
 
   if (face == nullptr || !face->is_valid() || dtm.is_infinite(face)) {
@@ -48,10 +48,10 @@ Vertex_handle Router::nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point) {
   return vertex;
 }
 
-std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
-                                            MeshBoundary &boundary,
-                                            Point_3 &start_point,
-                                            Point_3 &end_point) {
+std::vector<Point3> Router::calculateRoute(Tin &dtm, FeatureManager &fm,
+                                           MeshBoundary &boundary,
+                                           Point3 &start_point,
+                                           Point3 &end_point) {
 
   double minX = 100000000;
   double maxX = -100000000;
@@ -61,7 +61,7 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
     if (dtm.is_infinite(v)) {
       continue;
     }
-    Point_3 p = v->point();
+    Point3 p = v->point();
 
     if (p.x() > maxX)
       maxX = p.x();
@@ -87,10 +87,11 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
   this->state.end_vertex = nearestVertexToPoint(dtm, end_point);
 
   // Setup the queue of gCosts to calculate and CLOSED set
-  std::priority_queue<Node, std::vector<Node>, CompareNode> cost_queue;
+  std::priority_queue<RouteNode, std::vector<RouteNode>, CompareNode>
+      cost_queue;
 
   // Initialize the start node
-  Node startNode(this->state.start_vertex, nullptr);
+  RouteNode startNode(this->state.start_vertex, nullptr);
   startNode.gCost = 0;
   cost_queue.push(startNode);
 
@@ -104,7 +105,7 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
   do {
 
     // Select best node from queue
-    Node current_node = cost_queue.top();
+    RouteNode current_node = cost_queue.top();
     cost_queue.pop();
 
     // Check if this route is already beaten
@@ -164,7 +165,7 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
 
           // Calculate the cost
           // TODO: Face_handle neighbourFace = face->neighbor(edgeIndex);
-          Node node(connectedVertex, face);
+          RouteNode node(connectedVertex, face);
           this->state.next_vertex = connectedVertex;
           node.gCost =
               current_node.gCost + calculateTrivialCost(fm, this->state);
@@ -189,7 +190,7 @@ std::vector<Point_3> Router::calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
   return route;
 }
 
-double Router::calculateTrivialCost(const FeatureManager &fm, TSRState &state) {
+double Router::calculateTrivialCost(const FeatureManager &fm, TsrState &state) {
   return fm.calculateCost(state);
 }
 

@@ -3,7 +3,7 @@
 
 namespace tsr::IO {
 
-std::string formatPointsAsGPXRoute(std::vector<Point_3> points) {
+std::string formatPointsAsGPXRoute(std::vector<Point3> points) {
   const std::string GPX_HEADER =
       "<?xml version='1.0' encoding='UTF-8'?>\n <gpx version='1.1' "
       "creator='tsr-route' xmlns='http://www.topografix.com/GPX/1/1'>\n "

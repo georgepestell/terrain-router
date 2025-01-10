@@ -1,6 +1,6 @@
 #include "tsr/Feature.hpp"
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/TsrState.hpp"
 #include <limits>
 #include <memory>
 
@@ -14,16 +14,16 @@ private:
 public:
   using Feature<outDataType>::Feature;
 
-  outDataType calculate(TSRState &state);
+  outDataType calculate(TsrState &state);
 };
 
-template <> inline bool InverseFeature<bool, bool>::calculate(TSRState &state) {
+template <> inline bool InverseFeature<bool, bool>::calculate(TsrState &state) {
   auto feature =
       std::dynamic_pointer_cast<Feature<bool>>(this->dependencies[VALUE]);
   return !feature->calculate(state);
 }
 template <>
-inline double InverseFeature<bool, double>::calculate(TSRState &state) {
+inline double InverseFeature<bool, double>::calculate(TsrState &state) {
   auto feature =
       std::dynamic_pointer_cast<Feature<bool>>(this->dependencies[VALUE]);
   if (!feature->calculate(state)) {
@@ -34,7 +34,7 @@ inline double InverseFeature<bool, double>::calculate(TSRState &state) {
 }
 
 template <>
-inline double InverseFeature<double, double>::calculate(TSRState &state) {
+inline double InverseFeature<double, double>::calculate(TsrState &state) {
 
   auto feature =
       std::dynamic_pointer_cast<Feature<double>>(this->dependencies[VALUE]);

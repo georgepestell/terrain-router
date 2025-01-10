@@ -1,4 +1,4 @@
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
 
 #include <atomic>
 #include <cstdio>
@@ -6,7 +6,7 @@
 namespace tsr {
 
 /** Logging code copied and minimally adapted from tin-terrain
-    https://github.com/heremaps/tin-terrain/blob/master/src/logging.cpp
+    https://github.com/heremaps/tin-terrain/blob/master/src/Logging.cpp
 */
 
 /* BEGIN COPIED CODE */

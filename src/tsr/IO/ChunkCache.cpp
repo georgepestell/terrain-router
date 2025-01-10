@@ -4,15 +4,15 @@
 #include <gdal/gdal_priv.h>
 #include <string>
 
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/IO/ChunkCache.hpp"
-#include "tsr/Point_2.hpp"
+#include "tsr/Point2.hpp"
+#include "tsr/Tin.hpp"
 #include <boost/functional/hash.hpp>
 
 #include "tsr/ChunkInfo.hpp"
 #include "tsr/IO/MapIO.hpp"
 #include "tsr/IO/MeshIO.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
 
 #define CACHE_DIR "./tsrCache"
 
@@ -26,27 +26,27 @@ std::string generateChunkID(const ChunkInfo &chunk) {
   return fmt::format("chunk_{}", positionIDHash);
 }
 
-bool isChunkCached(const std::string featureID, const ChunkInfo &chunk) {
+bool isChunkCached(const std::string feature_id, const ChunkInfo &chunk) {
 
-  std::string filepath = getChunkFilepath(featureID, chunk);
+  std::string filepath = getChunkFilepath(feature_id, chunk);
 
   return std::filesystem::exists(filepath);
 }
 
-void cacheChunk(const std::string featureID, const ChunkInfo &chunk,
-                const Delaunay_3 &cdt) {
+void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
+                const Tin &tin) {
 
-  std::string filepath = getChunkFilepath(featureID, chunk);
+  std::string filepath = getChunkFilepath(feature_id, chunk);
 
   TSR_LOG_TRACE("caching to: {}", filepath.c_str());
-  IO::write_CDT_to_file(filepath, cdt);
+  IO::write_CDT_to_file(filepath, tin);
 }
 
-void cacheChunk(const std::string featureID, const ChunkInfo &chunk,
+void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
                 const GDALDatasetH &dataset) {
 
   TSR_LOG_TRACE("calculating dir");
-  std::filesystem::path dir = std::filesystem::path(CACHE_DIR) / featureID;
+  std::filesystem::path dir = std::filesystem::path(CACHE_DIR) / feature_id;
 
   if (!std::filesystem::exists(dir)) {
     if (!std::filesystem::create_directories(dir)) {
@@ -55,15 +55,15 @@ void cacheChunk(const std::string featureID, const ChunkInfo &chunk,
     }
   }
 
-  auto filepath = getChunkFilepath(featureID, chunk);
+  auto filepath = getChunkFilepath(feature_id, chunk);
   TSR_LOG_TRACE("caching to: {}", filepath.c_str());
 
   IO::writeGDALDatasetToFile(filepath, dataset);
 }
 
-std::string getChunkFilepath(const std::string featureID,
+std::string getChunkFilepath(const std::string feature_id,
                              const ChunkInfo &chunk) {
-  std::filesystem::path dir = std::filesystem::path(CACHE_DIR) / featureID;
+  std::filesystem::path dir = std::filesystem::path(CACHE_DIR) / feature_id;
 
   if (!std::filesystem::exists(dir)) {
     if (!std::filesystem::create_directories(dir)) {
@@ -75,10 +75,10 @@ std::string getChunkFilepath(const std::string featureID,
   return std::filesystem::path(dir) / filename;
 }
 
-void cacheChunk(const std::string featureID, const ChunkInfo &chunk,
-                const std::vector<std::vector<Point_2>> &contours) {
+void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
+                const std::vector<std::vector<Point2>> &contours) {
 
-  auto filepath = getChunkFilepath(featureID, chunk);
+  auto filepath = getChunkFilepath(feature_id, chunk);
 
   TSR_LOG_TRACE("caching contours to: {}", filepath.c_str());
 
@@ -86,35 +86,35 @@ void cacheChunk(const std::string featureID, const ChunkInfo &chunk,
 }
 
 template <>
-void getChunkFromCache<Delaunay_3>(const std::string featureID,
-                                   const ChunkInfo &chunk, Delaunay_3 &dtm) {
+void getChunkFromCache<Tin>(const std::string feature_id, const ChunkInfo &chunk,
+                            Tin &dtm) {
 
-  auto filepath = getChunkFilepath(featureID, chunk);
+  auto filepath = getChunkFilepath(feature_id, chunk);
 
   dtm = loadCDTFromFile(filepath);
 }
 
 template <>
-void getChunkFromCache<GDALDatasetH>(const std::string featureID,
+void getChunkFromCache<GDALDatasetH>(const std::string feature_id,
                                      const ChunkInfo &chunk,
                                      GDALDatasetH &dataset) {
 
-  auto filepath = getChunkFilepath(featureID, chunk);
+  auto filepath = getChunkFilepath(feature_id, chunk);
 
   load_gdal_dataset_from_file(filepath, dataset);
 }
 
 template <>
-void getChunkFromCache<std::vector<std::vector<Point_2>>>(
-    const std::string featureID, const ChunkInfo &chunk,
-    std::vector<std::vector<Point_2>> &contours) {
+void getChunkFromCache<std::vector<std::vector<Point2>>>(
+    const std::string feature_id, const ChunkInfo &chunk,
+    std::vector<std::vector<Point2>> &contours) {
 
-  auto filepath = getChunkFilepath(featureID, chunk);
+  auto filepath = getChunkFilepath(feature_id, chunk);
   load_vector_contours_from_file(filepath, contours);
 }
 
-void deleteCachedChunk(const std::string featureID, const ChunkInfo &chunk) {
-  auto filepath = getChunkFilepath(featureID, chunk);
+void deleteCachedChunk(const std::string feature_id, const ChunkInfo &chunk) {
+  auto filepath = getChunkFilepath(feature_id, chunk);
   if (std::filesystem::exists(filepath)) {
     std::filesystem::remove(filepath);
   }

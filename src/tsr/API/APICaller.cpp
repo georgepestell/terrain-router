@@ -1,6 +1,6 @@
 #include "tsr/API/APICaller.hpp"
 #include "tsr/API/APICallerConfig.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
 
 #include <cstddef>
 #include <curl/curl.h>

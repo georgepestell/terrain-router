@@ -10,20 +10,20 @@
 #include "tsr/Features/MultiplierFeature.hpp"
 #include "tsr/Features/PathFeature.hpp"
 #include "tsr/Features/WaterFeature.hpp"
-#include "tsr/Mesh.hpp"
 #include "tsr/MeshBoundary.hpp"
 #include "tsr/PointProcessor.hpp"
+#include "tsr/SurfaceMesh.hpp"
 
 #include "tsr/IO/ImageIO.hpp"
 #include "tsr/IO/MapIO.hpp"
 
-#include "tsr/Point_3.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
 
+#include "tsr/GeometryUtils.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/GPXFormatter.hpp"
 #include "tsr/IO/MeshIO.hpp"
-#include "tsr/MeshUtils.hpp"
 
 #include "tsr/Router.hpp"
 
@@ -68,15 +68,15 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   log_set_global_loglevel(LogLevel::TRACE);
 
   // Convert points to UTM
-  Point_3 startPoint = WGS84_point_to_UTM(Point_3(sLat, sLon, 0));
-  Point_3 endPoint = WGS84_point_to_UTM(Point_3(eLat, eLon, 0));
+  Point3 startPoint = WGS84_point_to_UTM(Point3(sLat, sLon, 0));
+  Point3 endPoint = WGS84_point_to_UTM(Point3(eLat, eLon, 0));
 
   MeshBoundary boundary(startPoint, endPoint, RADII_MULTIPLIER);
 
   TSR_LOG_TRACE("Initializing mesh");
-  Delaunay_3 cdt = initializeMesh(boundary, DEM_API_KEY);
+  Tin tin = InitializeTinFromBoundary(boundary, DEM_API_KEY);
 
-  TSR_LOG_TRACE("Vertices: {}", cdt.number_of_vertices());
+  TSR_LOG_TRACE("Vertices: {}", tin.number_of_vertices());
 
   // Feature Manager Configuration
   TSR_LOG_TRACE("Setting up feature manager");
@@ -90,7 +90,7 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   auto terrainFeature =
       std::make_shared<CEHTerrainFeature>("terrain_type", 0.1);
-  terrainFeature->initialize(cdt, boundary);
+  terrainFeature->initialize(tin, boundary);
 
   auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
 
@@ -132,22 +132,22 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   TSR_LOG_TRACE("initializing features");
 
-  waterFeature->initialize(cdt, boundary);
-  pathFeature->initialize(cdt, boundary);
-  terrainFeature->initialize(cdt, boundary);
+  waterFeature->initialize(tin, boundary);
+  pathFeature->initialize(tin, boundary);
+  terrainFeature->initialize(tin, boundary);
 
-  TSR_LOG_TRACE("final vertex count: {}", cdt.number_of_vertices());
+  TSR_LOG_TRACE("final vertex count: {}", tin.number_of_vertices());
 
   /// DEBUG: Write mesh to obj
-  Mesh tmpMesh;
-  convert_tin_to_surface_mesh(cdt, tmpMesh);
+  SurfaceMesh tmpMesh;
+  convertTINToMesh(tin, tmpMesh);
   IO::write_mesh_to_obj("test.obj", tmpMesh);
 
   TSR_LOG_TRACE("tagging features");
 
-  terrainFeature->tag(cdt);
-  waterFeature->tag(cdt);
-  pathFeature->tag(cdt);
+  terrainFeature->tag(tin);
+  waterFeature->tag(tin);
+  pathFeature->tag(tin);
 
   /// DEBUG: Write watermap to KML
   waterFeature->writeWaterMapToKML();
@@ -161,12 +161,12 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
                 boundary.getLLCorner().y());
   TSR_LOG_TRACE("ur: {} {}", boundary.getURCorner().x(),
                 boundary.getURCorner().y());
-  auto route = router.calculateRoute(cdt, fm, boundary, startPoint, endPoint);
+  auto route = router.calculateRoute(tin, fm, boundary, startPoint, endPoint);
 
   // Convert the points to WGS84
-  std::vector<Point_3> routeWGS84;
+  std::vector<Point3> routeWGS84;
   for (auto &point : route) {
-    Point_3 pointWGS84 = UTM_point_to_WGS84(point, 30, true);
+    Point3 pointWGS84 = UTM_point_to_WGS84(point, 30, true);
     routeWGS84.push_back(pointWGS84);
   }
 

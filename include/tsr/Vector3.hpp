@@ -5,5 +5,5 @@
 
 namespace tsr {
 typedef CGAL::Vector_3<CGAL::Exact_predicates_inexact_constructions_kernel>
-    Vector_3;
+    Vector3;
 }

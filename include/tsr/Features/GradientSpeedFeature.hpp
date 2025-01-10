@@ -1,7 +1,7 @@
 #pragma once
 
 #include "tsr/Feature.hpp"
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 #include <algorithm>
 #include <boost/multiprecision/detail/min_max.hpp>
 #include <cmath>
@@ -45,7 +45,7 @@ public:
     return y;
   }
 
-  double calculate(TSRState &state) override {
+  double calculate(TsrState &state) override {
 
     // Solve the polynomial with the given input
     auto inputFeature = dynamic_pointer_cast<Feature<double>>(
@@ -65,11 +65,11 @@ public:
     double cappedSpeedInfluence = fmax(0.0, speedInfluence);
 
     if (cappedSpeedInfluence <= 0) {
-      addWarning(state, "Untraversable gradient", 10);
+      AddWarning(state, "Untraversable gradient", 10);
     } else if (cappedSpeedInfluence < 0.5) {
-      addWarning(state, "Steep Gradient", 2);
+      AddWarning(state, "Steep Gradient", 2);
     } else if (cappedSpeedInfluence < 0.8) {
-      addWarning(state, "Slight Gradient", 1);
+      AddWarning(state, "Slight Gradient", 1);
     }
 
     return cappedSpeedInfluence;

@@ -1,9 +1,9 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/Tin.hpp"
 #include <boost/concept_check.hpp>
 #include <limits>
 #include <memory>
@@ -21,11 +21,11 @@ public:
 
   using Feature<double>::Feature;
 
-  double calculate(TSRState &state) override {
+  double calculate(TsrState &state) override {
 
     double total = 1;
     for (auto f : this->dependencies) {
-      switch (this->dependency_types[f->featureID]) {
+      switch (this->dependency_types[f->feature_id]) {
       case INT: {
         auto feature = std::dynamic_pointer_cast<Feature<int>>(f);
         int value = feature->calculate(state);
@@ -86,7 +86,7 @@ public:
   void add_dependency(std::shared_ptr<FeatureBase> feature,
                       DEPENDENCY_TYPE type) {
     this->dependencies.push_back(feature);
-    this->dependency_types[feature->featureID] = type;
+    this->dependency_types[feature->feature_id] = type;
   }
 };
 

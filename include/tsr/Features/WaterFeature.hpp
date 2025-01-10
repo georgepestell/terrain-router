@@ -1,17 +1,17 @@
 #pragma once
 
 #include "tsr/DelaunayTriangulation.hpp"
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Features/APIFeature.hpp"
 #include "tsr/IO/ChunkCache.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/MapIO.hpp"
 #include "tsr/MeshBoundary.hpp"
+#include "tsr/Point3.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/Point_3.hpp"
+#include "tsr/Tin.hpp"
 
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/TsrState.hpp"
 
 #include <CGAL/Kernel/global_functions_3.h>
 #include <boost/concept_check.hpp>
@@ -61,12 +61,12 @@ public:
                                           0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
         };
 
-  void initialize(Delaunay_3 &cdt, const MeshBoundary &boundary) override {
+  void initialize(Tin &tin, const MeshBoundary &boundary) override {
     // TODO: get datasets from cache/api
     auto chunks = chunker.getRequiredChunks(boundary);
 
-    std::string dataFeatureID = this->featureID + "/data";
-    std::string contourFeatureID = this->featureID + "/contour";
+    std::string dataFeatureID = this->feature_id + "/data";
+    std::string contourFeatureID = this->feature_id + "/contour";
 
     const double MAX_SEGMENT_LENGTH = 22;
 
@@ -74,12 +74,12 @@ public:
     unsigned int total = 0;
     for (auto chunk : chunks) {
 
-      std::vector<std::vector<Point_2>> contours;
+      std::vector<std::vector<Point2>> contours;
       if (IO::isChunkCached(contourFeatureID, chunk)) {
         TSR_LOG_TRACE("reading cached contours");
 
         // TODO: Fetch contours from cache
-        IO::getChunkFromCache<std::vector<std::vector<Point_2>>>(
+        IO::getChunkFromCache<std::vector<std::vector<Point2>>>(
             contourFeatureID, chunk, contours);
 
         TSR_LOG_TRACE("cache chunk contours: {}", contours.size());
@@ -116,26 +116,26 @@ public:
       // add contours to mesh
       total += contours.size();
       for (auto contour : contours) {
-        add_contour_constraint(cdt, contour, MAX_SEGMENT_LENGTH);
+        add_contour_constraint(tin, contour, MAX_SEGMENT_LENGTH);
       }
     }
     TSR_LOG_TRACE("contours: {}", total);
   }
 
-  void tag(const Delaunay_3 &cdt) override {
+  void tag(const Tin &tin) override {
     TSR_LOG_TRACE("Tagging water feature");
 
     // TODO: Get dataset from cache or API
-    const std::string dataFeatureID = this->featureID + "/data";
+    const std::string dataFeatureID = this->feature_id + "/data";
 
     // Mark whether a face is water or not
     int waterCount = 0;
     int landCount = 0;
     int noDataCount = 0;
     std::unordered_map<ChunkInfo, GDALDatasetH> datasets;
-    for (Face_handle face : cdt.all_face_handles()) {
+    for (Face_handle face : tin.all_face_handles()) {
 
-      if (cdt.is_infinite(face)) {
+      if (tin.is_infinite(face)) {
         continue;
       }
 
@@ -144,9 +144,9 @@ public:
       auto p1 = face->vertex(1)->point();
       auto p2 = face->vertex(2)->point();
 
-      Point_3 center = CGAL::circumcenter(p0, p1, p2);
+      Point3 center = CGAL::circumcenter(p0, p1, p2);
 
-      Point_3 centerWGS84;
+      Point3 centerWGS84;
       try {
         centerWGS84 = UTM_point_to_WGS84(center, 30, true);
       } catch (std::exception e) {
@@ -251,10 +251,10 @@ public:
     IO::write_data_to_file("water.kml", kml);
   }
 
-  bool calculate(TSRState &state) override {
+  bool calculate(TsrState &state) override {
 
     if (!waterMap.contains(state.current_face)) {
-      addWarning(state, "water data unavailable", 11);
+      AddWarning(state, "water data unavailable", 11);
       return true;
     }
 
@@ -267,10 +267,10 @@ public:
     auto waterStatus = this->waterMap[state.current_face];
 
     if (waterStatus == WATER) {
-      addWarning(state, "Water", 11);
+      AddWarning(state, "Water", 11);
       return true;
     } else if (waterStatus == NODATA) {
-      addWarning(state, "water data unavailable", 11);
+      AddWarning(state, "water data unavailable", 11);
       return true;
     } else {
       return false;

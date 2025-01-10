@@ -7,7 +7,7 @@
 #include "tsr/API/GDALHandler.hpp"
 #include "tsr/IO/MapIO.hpp"
 
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
 
 #include <gdal/gdal.h>
 

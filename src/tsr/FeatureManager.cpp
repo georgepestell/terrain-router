@@ -1,9 +1,9 @@
 #include "tsr/FeatureManager.hpp"
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Feature.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/Tin.hpp"
+#include "tsr/TsrState.hpp"
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -13,7 +13,7 @@ namespace tsr {
 
 bool FeatureManager::has_dependency_cycle() const {
   std::unordered_set<std::string> existingFeatures = {
-      this->outputFeature->featureID};
+      this->outputFeature->feature_id};
 
   return this->has_dependency_cycle(this->outputFeature, existingFeatures);
 }
@@ -31,13 +31,13 @@ bool FeatureManager::has_dependency_cycle(
 
   for (auto dep : current_feature->dependencies) {
 
-    if (preexisting_features.find(dep->featureID) !=
+    if (preexisting_features.find(dep->feature_id) !=
         preexisting_features.end()) {
       return true;
     }
 
     std::unordered_set<std::string> childFeatures = preexisting_features;
-    childFeatures.insert(dep->featureID);
+    childFeatures.insert(dep->feature_id);
 
     if (this->has_dependency_cycle(dep, childFeatures)) {
       return true;
@@ -58,7 +58,7 @@ void FeatureManager::setOutputFeature(
   }
 }
 
-double FeatureManager::calculateCost(TSRState &state) const {
+double FeatureManager::calculateCost(TsrState &state) const {
 
   // const auto Pc = state.current_vertex->point();
   // const auto Pn = state.next_vertex->point();

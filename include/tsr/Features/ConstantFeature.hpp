@@ -1,5 +1,5 @@
 #include "tsr/Feature.hpp"
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 #include <boost/concept_check.hpp>
 
 namespace tsr {
@@ -13,7 +13,7 @@ public:
   ConstantFeature(std::string name, DataType constant)
       : Feature<DataType>(name), constant(constant) {}
 
-  DataType calculate(TSRState &state) override {
+  DataType calculate(TsrState &state) override {
 
     // Ignore compiler unused variable warnings. Keeps the template for
     // calculate the same as other features

@@ -1,6 +1,6 @@
 #pragma once
 #include "tsr/Feature.hpp"
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 
 #include <memory>
 
@@ -20,7 +20,7 @@ public:
 
   bool has_dependency_cycle() const;
 
-  double calculateCost(TSRState &state) const;
+  double calculateCost(TsrState &state) const;
 };
 
 } // namespace tsr

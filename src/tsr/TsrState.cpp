@@ -1,15 +1,15 @@
 
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 
 namespace tsr {
 
-void TSRState::processWarnings() {
+void TsrState::ProcessWarnings() {
 
   TSR_LOG_TRACE("processing warnings");
 
   std::unordered_map<Face_handle, size_t> processedWarnings;
 
-  Node currentNode = this->routes.at(end_vertex);
+  RouteNode currentNode = this->routes.at(end_vertex);
   while (currentNode.vertex != start_vertex) {
     currentNode = this->routes.at(currentNode.parent);
 
@@ -53,11 +53,11 @@ void TSRState::processWarnings() {
   this->warnings.swap(processedWarnings);
 }
 
-std::vector<Point_3> TSRState::fetchRoute() const {
+std::vector<Point3> TsrState::fetchRoute() const {
 
   // Get the end node point
-  std::vector<Point_3> route;
-  Node current_node = this->routes.at(this->end_vertex);
+  std::vector<Point3> route;
+  RouteNode current_node = this->routes.at(this->end_vertex);
   TSR_LOG_TRACE("cost: {}", current_node.gCost);
   route.push_back(this->end_vertex->point());
 

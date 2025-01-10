@@ -1,12 +1,12 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
+#include "tsr/Tin.hpp"
 #include <functional>
 #include <limits>
 
 namespace tsr {
 
-class Node {
+class RouteNode {
 public:
   double gCost;
   bool closed;
@@ -14,24 +14,24 @@ public:
   Face_handle face;
   Vertex_handle parent;
 
-  Node() = default;
-  Node(Vertex_handle vertex, Face_handle face)
+  RouteNode() = default;
+  RouteNode(Vertex_handle vertex, Face_handle face)
       : gCost(std::numeric_limits<double>::infinity()), closed(false),
         vertex(vertex), face(face), parent(nullptr) {}
 
-  bool operator==(const Node &other) const {
+  bool operator==(const RouteNode &other) const {
     return this->vertex == other.vertex;
   }
 };
 
 struct CompareNode {
-  bool operator()(const Node &node1, const Node &node2) {
+  bool operator()(const RouteNode &node1, const RouteNode &node2) {
     return node1.gCost > node2.gCost;
   }
 };
 
 struct HashNode {
-  bool operator()(const Node &node1) {
+  bool operator()(const RouteNode &node1) {
     return std::hash<Vertex_handle>()(node1.vertex);
   }
 };

@@ -1,16 +1,16 @@
 #include "tsr/API/GDALHandler.hpp"
 #include "tsr/ChunkInfo.hpp"
 #include "tsr/DelaunayTriangulation.hpp"
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Features/APIFeature.hpp"
 #include "tsr/IO/ChunkCache.hpp"
+#include "tsr/Logging.hpp"
 #include "tsr/MeshBoundary.hpp"
+#include "tsr/Point2.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/Point_2.hpp"
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Tin.hpp"
+#include "tsr/TsrState.hpp"
 
-#include "tsr/Point_3.hpp"
+#include "tsr/Point3.hpp"
 
 #include <CGAL/Kernel/global_functions_3.h>
 #include <boost/concept_check.hpp>
@@ -127,26 +127,26 @@ public:
   CEHTerrainFeature(std::string name, double tile_size)
       : APIFeature(name, URL, tile_size, {1, 0, 3, 2}) {};
 
-  void initialize(Delaunay_3 &cdt, const MeshBoundary &boundary) override {
-    TSR_LOG_TRACE("initializing {}", this->featureID);
+  void initialize(Tin &tin, const MeshBoundary &boundary) override {
+    TSR_LOG_TRACE("initializing {}", this->feature_id);
 
     // Fetch the data from the api
     auto chunks = chunker.getRequiredChunks(boundary);
 
-    std::string dataCacheID = this->featureID + "/data";
-    std::string contourCacheID = this->featureID + "/contours";
+    std::string dataCacheID = this->feature_id + "/data";
+    std::string contourCacheID = this->feature_id + "/contours";
 
     TSR_LOG_TRACE("fetching contours");
-    std::vector<std::vector<Point_2>> contours;
+    std::vector<std::vector<Point2>> contours;
 
     const double MAX_SEGMENT_SIZE = 22.0;
 
     for (auto chunk : chunks) {
 
-      std::vector<std::vector<Point_2>> contours;
+      std::vector<std::vector<Point2>> contours;
       if (IO::isChunkCached(contourCacheID, chunk)) {
         // TODO: Add contours from cache
-        IO::getChunkFromCache<std::vector<std::vector<Point_2>>>(
+        IO::getChunkFromCache<std::vector<std::vector<Point2>>>(
             contourCacheID, chunk, contours);
       } else {
 
@@ -193,15 +193,15 @@ public:
 
       // Add contours to the mesh
       for (auto contour : contours) {
-        add_contour_constraint(cdt, contour, MAX_SEGMENT_SIZE);
+        add_contour_constraint(tin, contour, MAX_SEGMENT_SIZE);
       }
     }
   };
 
-  void tag(const Delaunay_3 &dtm) override {
+  void tag(const Tin &dtm) override {
     TSR_LOG_TRACE("Tagging CEH terrain type feature");
 
-    std::string dataCacheID = this->featureID + "/data";
+    std::string dataCacheID = this->feature_id + "/data";
     std::unordered_map<ChunkInfo, GDALDatasetH> datasets;
     for (Face_handle face : dtm.all_face_handles()) {
 
@@ -213,9 +213,9 @@ public:
       auto p1 = face->vertex(1)->point();
       auto p2 = face->vertex(2)->point();
 
-      Point_3 center = CGAL::circumcenter(p0, p1, p2);
+      Point3 center = CGAL::circumcenter(p0, p1, p2);
 
-      Point_3 centerWGS84;
+      Point3 centerWGS84;
       try {
         centerWGS84 = UTM_point_to_WGS84(center, 30, true);
       } catch (std::exception e) {
@@ -268,7 +268,7 @@ public:
     }
   }
 
-  double calculate(TSRState &state) override {
+  double calculate(TsrState &state) override {
 
     CEH_TERRAIN_TYPE type;
 
@@ -281,7 +281,7 @@ public:
     switch (type) {
     case BROADLEAVED_MIXED_AND_YEW_WOODLAND:
     case CONIFEROUS_WOODLAND:
-      addWarning(state, "Woodland", 3);
+      AddWarning(state, "Woodland", 3);
       return 0.4;
     case ARABLE_AND_HORTICULTURE:
       return 0.7;
@@ -292,17 +292,17 @@ public:
     case CALCAREOUS_GRASSLAND:
       return 0.85;
     case HEATHER:
-      addWarning(state, "Heather", 10);
+      AddWarning(state, "Heather", 10);
       return 0;
     case HEATHER_GRASSLAND:
-      addWarning(state, "Potential heather", 7);
+      AddWarning(state, "Potential heather", 7);
       return 0.35;
     case SALTMARSH:
     case FEN_MARSH_AND_SWAMP:
-      addWarning(state, "Saltmarsh / Fen / Marsh / Swamp", 10);
+      AddWarning(state, "Saltmarsh / Fen / Marsh / Swamp", 10);
       return 0;
     case BOG:
-      addWarning(state, "Bog", 10);
+      AddWarning(state, "Bog", 10);
       return 0;
     case URBAN:
     case SUBURBAN:

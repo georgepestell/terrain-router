@@ -1,7 +1,7 @@
 #include "gtest/gtest.h"
 
 #include "tsr/API/APICaller.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
 
 using namespace tsr;
 

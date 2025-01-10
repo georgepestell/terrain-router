@@ -1,11 +1,11 @@
 #pragma once
 
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/FeatureManager.hpp"
 #include "tsr/MeshBoundary.hpp"
-#include "tsr/Point_3.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/Tin.hpp"
 
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 
 namespace tsr {
 
@@ -16,15 +16,15 @@ namespace tsr {
  */
 class Router {
 private:
-  TSRState state;
-  double calculateTrivialCost(const FeatureManager &fm, TSRState &state);
+  TsrState state;
+  double calculateTrivialCost(const FeatureManager &fm, TsrState &state);
 
 public:
-  Vertex_handle nearestVertexToPoint(Delaunay_3 &dtm, Point_3 &point);
+  Vertex_handle nearestVertexToPoint(Tin &dtm, Point3 &point);
 
-  std::vector<Point_3> calculateRoute(Delaunay_3 &dtm, FeatureManager &fm,
-                                      MeshBoundary &boundary,
-                                      Point_3 &start_point, Point_3 &end_point);
+  std::vector<Point3> calculateRoute(Tin &dtm, FeatureManager &fm,
+                                     MeshBoundary &boundary,
+                                     Point3 &start_point, Point3 &end_point);
 };
 
 } // namespace tsr

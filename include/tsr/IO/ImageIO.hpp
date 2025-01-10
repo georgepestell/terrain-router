@@ -1,6 +1,6 @@
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 
-#include "tsr/Point_2.hpp"
+#include "tsr/Point2.hpp"
 
 /**
  * Ignore _Atomic warning from opencv2.
@@ -11,11 +11,7 @@
 #include <opencv2/core/mat.hpp>
 #pragma clang diagnostic pop
 
-#include <memory>
 #include <vector>
-
-typedef CGAL::Exact_predicates_inexact_constructions_kernel Kernel;
-typedef CGAL::Point_3<Kernel> Point_3;
 
 namespace tsr::IO {
 
@@ -29,7 +25,7 @@ cv::Mat load_image_from_file(std::string filepath);
 
 cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image);
 
-std::vector<std::vector<Point_2>>
+std::vector<std::vector<Point2>>
 extract_feature_contours(cv::Mat &image, double simplification_factor,
                          double uloffset_x, double uloffset_y,
                          double cellsize_x, double cellsize_y);

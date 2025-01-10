@@ -27,8 +27,8 @@
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/ImageIO.hpp"
 
+#include "tsr/Logging.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/logging.hpp"
 
 #include <gdal/ogr_spatialref.h>
 #include <vector>
@@ -333,7 +333,7 @@ GDALDatasetH rasterizeDataset(const GDALDatasetH &source_dataset,
   return outputDataset;
 }
 
-std::vector<std::vector<Point_2>>
+std::vector<std::vector<Point2>>
 extract_feature_contours(const std::string &filepath,
                          double adf_geotransform[6],
                          double simplification_factor) {

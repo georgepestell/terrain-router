@@ -4,10 +4,10 @@
 #include "tsr/Features/APIFeature.hpp"
 #include "tsr/IO/ChunkCache.hpp"
 #include "tsr/IO/JSONParser.hpp"
-#include "tsr/Point_2.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point2.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/TsrState.hpp"
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <boost/concept_check.hpp>
 #include <boost/functional/hash.hpp>
@@ -17,7 +17,7 @@
 namespace tsr {
 
 struct EdgeHash {
-  std::size_t operator()(const std::pair<Point_2, Point_2> &edge) const {
+  std::size_t operator()(const std::pair<Point2, Point2> &edge) const {
     std::size_t seed = 0;
     boost::hash_combine(seed, edge.first);
     boost::hash_combine(seed, edge.second);
@@ -27,7 +27,7 @@ struct EdgeHash {
 
 class PathFeature : public APIFeature<bool> {
 private:
-  std::unordered_set<std::pair<Point_2, Point_2>, EdgeHash> paths;
+  std::unordered_set<std::pair<Point2, Point2>, EdgeHash> paths;
 
   inline static std::string URL =
       "https://lz4.overpass-api.de/api/"
@@ -46,7 +46,7 @@ private:
       "22bridge%22%5D%5B%22passenger_lines%22%5D%28if%3At%5B%22passenger_lines%"
       "22%5D%20%3E%200%29%28{},{},{},{}%29%3B%29%3Bout+body%3B%0A{}";
 
-  std::pair<Point_2, Point_2> normalizeSegment(Point_2 p1, Point_2 p2) {
+  std::pair<Point2, Point2> normalizeSegment(Point2 p1, Point2 p2) {
     if (p1 < p2) {
       return {p2, p1};
     } else {
@@ -60,19 +60,19 @@ public:
                                           0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
   }
 
-  void initialize(Delaunay_3 &dtm, const MeshBoundary &boundary) override {
+  void initialize(Tin &dtm, const MeshBoundary &boundary) override {
 
     auto chunks = chunker.getRequiredChunks(boundary);
     const double MAX_SEGMENT_SIZE = 22;
 
     // Check if the paths are cached
-    std::vector<std::vector<Point_2>> contours;
+    std::vector<std::vector<Point2>> contours;
     for (auto chunk : chunks) {
 
-      if (IO::isChunkCached(this->featureID, chunk)) {
+      if (IO::isChunkCached(this->feature_id, chunk)) {
         // Contours are cached
-        IO::getChunkFromCache<std::vector<std::vector<Point_2>>>(
-            this->featureID, chunk, contours);
+        IO::getChunkFromCache<std::vector<std::vector<Point2>>>(
+            this->feature_id, chunk, contours);
       } else {
         // Download from API
         auto data = chunker.fetchVectorChunk(chunk);
@@ -82,7 +82,7 @@ public:
 
         // Cache Contours
         try {
-          IO::cacheChunk(this->featureID, chunk, contours);
+          IO::cacheChunk(this->feature_id, chunk, contours);
         } catch (std::exception e) {
           TSR_LOG_WARN("failed to cache path contours");
         }
@@ -98,14 +98,14 @@ public:
     }
   }
 
-  bool calculate(TSRState &state) override {
+  bool calculate(TsrState &state) override {
 
-    const Point_3 source_point = state.current_vertex->point();
-    const Point_3 target_point = state.next_vertex->point();
+    const Point3 source_point = state.current_vertex->point();
+    const Point3 target_point = state.next_vertex->point();
 
-    const std::pair<Point_2, Point_2> segment =
-        normalizeSegment(Point_2(source_point.x(), source_point.y()),
-                         Point_2(target_point.x(), target_point.y()));
+    const std::pair<Point2, Point2> segment =
+        normalizeSegment(Point2(source_point.x(), source_point.y()),
+                         Point2(target_point.x(), target_point.y()));
 
     return this->paths.contains(segment);
   }

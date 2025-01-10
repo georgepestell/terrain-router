@@ -1,4 +1,4 @@
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
 
 #include "gtest/gtest.h"
 

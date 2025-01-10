@@ -1,21 +1,21 @@
 #include "tsr/DelaunayTriangulation.hpp"
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Features/CEHTerrainFeature.hpp"
 #include "tsr/Features/PathFeature.hpp"
 #include "tsr/Features/SimpleBooleanFeature.hpp"
 #include "tsr/Features/SimpleBooleanToDoubleFeature.hpp"
 #include "tsr/Features/WaterFeature.hpp"
+#include "tsr/GeometryUtils.hpp"
 #include "tsr/IO/MeshIO.hpp"
 #include "tsr/MeshBoundary.hpp"
-#include "tsr/MeshUtils.hpp"
+#include "tsr/Point3.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/Point_3.hpp"
+#include "tsr/Tin.hpp"
 #include <gdal/gdal.h>
 #include <gtest/gtest.h>
 
 // DEBUG
 #include "tsr/IO/MapIO.hpp"
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 
 #include <memory>
 
@@ -43,7 +43,7 @@ TEST(testFeature, testSimpleBooleanFeature) {
       std::make_shared<SimpleBooleanFeature>("SimpleBoolFeature", false);
 
   Face_handle tmpFace;
-  TSRState state;
+  TsrState state;
   ASSERT_FALSE(boolFeature->calculate(state));
 }
 
@@ -59,33 +59,34 @@ TEST(testFeature, testSimpleBoolToIntegerFeature) {
 
   boolToIntFeature->add_dependency(boolFeature);
 
-  TSRState state;
+  TsrState state;
   ASSERT_EQ(boolToIntFeature->calculate(state), neg_value);
 }
 
 TEST(TestFeature, testCEHFeatureInitialization) {
 
-  Point_3 src(56.317649, -2.816415, 0);
-  Point_3 tgt(56.329492, -2.782974, 0);
+  Point3 src(56.317649, -2.816415, 0);
+  Point3 tgt(56.329492, -2.782974, 0);
 
   auto srcUTM = WGS84_point_to_UTM(src);
   auto tgtUTM = WGS84_point_to_UTM(tgt);
 
   MeshBoundary boundary(srcUTM, tgtUTM, 1);
 
-  Delaunay_3 cdt = initializeMesh(boundary, "0f789809fed28dc634c8d75695d0cc5c");
+  Tin tin =
+      InitializeTinFromBoundary(boundary, "0f789809fed28dc634c8d75695d0cc5c");
 
   CEHTerrainFeature ceh = CEHTerrainFeature("CEH", 0.1);
-  ceh.initialize(cdt, boundary);
+  ceh.initialize(tin, boundary);
 
   BoolWaterFeature waterFeature = BoolWaterFeature("WATER", 0.1);
-  waterFeature.initialize(cdt, boundary);
+  waterFeature.initialize(tin, boundary);
 
   PathFeature pathFeature = PathFeature("paths", 0.1);
-  pathFeature.initialize(cdt, boundary);
+  pathFeature.initialize(tin, boundary);
 
-  Mesh mesh;
-  convert_tin_to_surface_mesh(cdt, mesh);
+  SurfaceMesh mesh;
+  convertTINToMesh(tin, mesh);
 
   IO::write_mesh_to_obj("test_featureMesh.obj", mesh);
 

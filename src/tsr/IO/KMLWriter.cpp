@@ -1,19 +1,21 @@
 #include "tsr/IO/KMLWriter.hpp"
-#include "tsr/Delaunay_3.hpp"
+#include "tsr/Features/GradientSpeedFeature.hpp"
 #include "tsr/IO/FileIO.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
 #include "tsr/PointProcessor.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/TSRState.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Tin.hpp"
+#include "tsr/TsrState.hpp"
 #include <CGAL/Kernel/global_functions_3.h>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 
+#include "tsr/Features/GradientFeature.hpp"
+
 namespace tsr::IO {
 
-void writeSuccessStateToKML(const std::string &filepath, TSRState &state) {
+void writeSuccessStateToKML(const std::string &filepath, TsrState &state) {
 
-  // TODO: Draw the route
-  state.processWarnings();
+  state.ProcessWarnings();
 
   auto route = state.fetchRoute();
 
@@ -26,7 +28,7 @@ void writeSuccessStateToKML(const std::string &filepath, TSRState &state) {
   IO::write_data_to_file(filepath, kml);
 }
 
-void writeFailureStateToKML(const std::string &filepath, TSRState &state) {
+void writeFailureStateToKML(const std::string &filepath, TsrState &state) {
   // TODO: Draw all routes
   auto routesKML = generateKMLForAllRoutes(state);
 
@@ -60,9 +62,9 @@ std::string generateKMLFaces(std::vector<Face_handle> &faces) {
   for (uint f = 0; f < faces.size(); f++) {
 
     Face_handle face = faces[f];
-    Point_3 p1_UTM = face->vertex(0)->point();
-    Point_3 p2_UTM = face->vertex(1)->point();
-    Point_3 p3_UTM = face->vertex(2)->point();
+    Point3 p1_UTM = face->vertex(0)->point();
+    Point3 p2_UTM = face->vertex(1)->point();
+    Point3 p3_UTM = face->vertex(2)->point();
 
     auto p1 = UTM_point_to_WGS84(p1_UTM, 30, true);
     auto p2 = UTM_point_to_WGS84(p2_UTM, 30, true);
@@ -99,7 +101,7 @@ std::string generateKMLFaces(std::vector<Face_handle> &faces) {
   return kml;
 }
 
-std::string generateKMLWarnings(const TSRState &state) {
+std::string generateKMLWarnings(const TsrState &state) {
 
   TSR_LOG_TRACE("generate warnings KML");
   TSR_LOG_TRACE("warning count: {}", state.warnings.size());
@@ -126,7 +128,7 @@ std::string generateKMLWarnings(const TSRState &state) {
     auto center = CGAL::circumcenter(p1, p2, p3);
 
     // Convert the center to WGS84
-    Point_3 centerWGS84;
+    Point3 centerWGS84;
     try {
       centerWGS84 = UTM_point_to_WGS84(center, 30, true);
     } catch (std::exception e) {
@@ -151,7 +153,10 @@ std::string generateKMLWarnings(const TSRState &state) {
   return kml;
 }
 
-std::string generateKMLRoute(const std::vector<Point_3> &route) {
+std::string generateKMLRoute(const std::vector<Point3> &route) {
+
+  // Used to show gradient
+  GradientSpeedFeature Fg("gradient");
 
   if (route.empty()) {
     TSR_LOG_WARN("Route empty");
@@ -172,6 +177,15 @@ std::string generateKMLRoute(const std::vector<Point_3> &route) {
          "blu-blank.png</href></Icon>";
   kml += "</"
          "IconStyle><LineStyle><color>#ff61ffb8</color><width>4</width></"
+         "LineStyle></Style>";
+
+  kml += "<Style "
+         "id=\"slightGradientWarning\"><LineStyle><color>#ffffa500</"
+         "color><width>4</width></"
+         "LineStyle></Style>";
+  kml += "<Style "
+         "id=\"steepGradientWarning\"><LineStyle><color>#ffff4500</"
+         "color><width>4</width></"
          "LineStyle></Style>";
 
   // Add the waypoints for start and end point
@@ -200,30 +214,51 @@ std::string generateKMLRoute(const std::vector<Point_3> &route) {
   kml += "</Placemark>\n";
 
   // Add the route
-  kml += "<Placemark>\n";
-  kml += "<name>route</name>\n";
-  kml += "<styleUrl>routeStyle</styleUrl>\n";
-  kml += "<LineString>\n";
-  kml += "<altitudeMode>clampToGround</altitudeMode>\n";
-  kml += "<coordinates>\n";
+  for (unsigned int i = 0; i < route.size() - 1; i++) {
 
-  for (const auto &point : route) {
+    // Get the gradient from current point to next point
+    auto sourcePoint = route.at(i);
+    auto targetPoint = route.at(i + 1);
 
-    auto pointWGS84 = UTM_point_to_WGS84(point, 30, true);
+    double gradient =
+        GradientFeature::calculate_gradient(sourcePoint, targetPoint);
 
-    kml += std::to_string(pointWGS84.y()) + "," +
-           std::to_string(pointWGS84.x()) + "," + "0\n";
+    kml += "<Placemark>\n";
+    kml += "<name>route segment</name>\n";
+
+    if (gradient < -0.2 || gradient > 0.2) {
+      if (gradient < -0.3 || gradient > 0.3) {
+        kml += "<styleUrl>steepGradientWarning</styleUrl>\n";
+      } else {
+        kml += "<styleUrl>slightGradientWarning</styleUrl>\n";
+      }
+    } else {
+      kml += "<styleUrl>routeStyle</styleUrl>\n";
+    }
+
+    kml += "<LineString>\n";
+    kml += "<altitudeMode>clampToGround</altitudeMode>\n";
+    kml += "<coordinates>\n";
+
+    auto sourcePointWGS84 = UTM_point_to_WGS84(sourcePoint, 30, true);
+    auto targetPointWGS84 = UTM_point_to_WGS84(targetPoint, 30, true);
+
+    kml += std::to_string(sourcePointWGS84.y()) + "," +
+           std::to_string(sourcePointWGS84.x()) + "," + "0\n";
+    kml += std::to_string(targetPointWGS84.y()) + "," +
+           std::to_string(targetPointWGS84.x()) + "," + "0\n";
+
+    kml += "</coordinates>\n";
+    kml += "</LineString>\n";
+    kml += "</Placemark>\n";
   }
 
-  kml += "</coordinates>\n";
-  kml += "</LineString>\n";
-  kml += "</Placemark>\n";
   kml += "</Folder>\n";
 
   return kml;
 }
 
-std::string generateKMLForAllRoutes(const TSRState &state) {
+std::string generateKMLForAllRoutes(const TsrState &state) {
 
   // TODO: generate KML route mesh
   return "";

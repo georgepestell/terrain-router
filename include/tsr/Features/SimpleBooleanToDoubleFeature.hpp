@@ -3,7 +3,7 @@
 #include "tsr/Feature.hpp"
 
 #include "tsr/Features/SimpleBooleanFeature.hpp"
-#include "tsr/TSRState.hpp"
+#include "tsr/TsrState.hpp"
 #include <memory>
 
 namespace tsr {
@@ -20,7 +20,7 @@ public:
 
   enum DEPENDENCIES { SIMPLE_BOOLEAN };
 
-  double calculate(TSRState &state) override {
+  double calculate(TsrState &state) override {
 
     auto boolFeature = std::dynamic_pointer_cast<SimpleBooleanFeature>(
         this->dependencies.at(DEPENDENCIES::SIMPLE_BOOLEAN));

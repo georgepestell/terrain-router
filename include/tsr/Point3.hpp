@@ -6,5 +6,5 @@
 
 namespace tsr {
 typedef CGAL::Point_3<CGAL::Exact_predicates_inexact_constructions_kernel>
-    Point_3;
+    Point3;
 }

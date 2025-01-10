@@ -1,5 +1,5 @@
-#include "tsr/Point_2.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point2.hpp"
 #include <string>
 #include <vector>
 
@@ -11,8 +11,8 @@
 
 namespace tsr::IO {
 
-std::vector<std::vector<Point_2>> load_contours_from_file(std::string filepath,
-                                                          std::string layerID) {
+std::vector<std::vector<Point2>> load_contours_from_file(std::string filepath,
+                                                         std::string layerID) {
 
   // Open file
   simdjson::ondemand::parser parser;
@@ -25,18 +25,18 @@ std::vector<std::vector<Point_2>> load_contours_from_file(std::string filepath,
 
   auto layerArray = doc.find_field(layerID).get_array();
 
-  std::vector<std::vector<Point_2>> contours;
+  std::vector<std::vector<Point2>> contours;
   for (auto feature : layerArray) {
 
     auto coordinates =
         feature.find_field("geometry").find_field("coordinates").get_array();
 
-    std::vector<Point_2> coordVector;
+    std::vector<Point2> coordVector;
     for (auto coord : coordinates) {
 
       auto coordIt = coord.begin();
 
-      Point_2 p((double)*coordIt.value(), (double)*++coordIt.value());
+      Point2 p((double)*coordIt.value(), (double)*++coordIt.value());
 
       coordVector.push_back(p);
     }

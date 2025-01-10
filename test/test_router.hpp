@@ -2,11 +2,11 @@
 
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/FeatureManager.hpp"
-#include "tsr/Point_3.hpp"
-#include "tsr/logging.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
 
-#include "tsr/Delaunay_3.hpp"
 #include "tsr/Router.hpp"
+#include "tsr/Tin.hpp"
 
 #include "tsr/Features/DistanceFeature.hpp"
 #include "tsr/Features/GradientFeature.hpp"
@@ -29,17 +29,17 @@ TEST(TestRouter, routerInitiailizeTest) {
    *
    */
 
-  std::vector<Point_3> points;
+  std::vector<Point3> points;
 
-  points.push_back(Point_3(0, 5, 0));
-  points.push_back(Point_3(5, 0, 0));
-  points.push_back(Point_3(10, 5, 0));
-  points.push_back(Point_3(15, 0, 0));
-  points.push_back(Point_3(20, 5, 0));
-  points.push_back(Point_3(25, 0, 0));
+  points.push_back(Point3(0, 5, 0));
+  points.push_back(Point3(5, 0, 0));
+  points.push_back(Point3(10, 5, 0));
+  points.push_back(Point3(15, 0, 0));
+  points.push_back(Point3(20, 5, 0));
+  points.push_back(Point3(25, 0, 0));
 
-  TSR_LOG_TRACE("Initializing TIN");
-  auto tin = create_tin_from_points(points);
+  TSR_LOG_TRACE("Initializing Tin");
+  auto tin = create_tin_from_pointset(points);
 
   FeatureManager fm;
   fm.setOutputFeature(std::make_shared<GradientFeature>("GRADIENT"));
@@ -57,18 +57,18 @@ TEST(TestRouter, routerDistanceCheck) {
    *
    */
 
-  std::vector<Point_3> points;
+  std::vector<Point3> points;
 
-  points.push_back(Point_3(0, 5, 0));
-  points.push_back(Point_3(5, 0, 0));
-  points.push_back(Point_3(10, 5, 0));
-  points.push_back(Point_3(15, 0, 0));
-  points.push_back(Point_3(20, 5, 0));
-  points.push_back(Point_3(25, 0, 0));
+  points.push_back(Point3(0, 5, 0));
+  points.push_back(Point3(5, 0, 0));
+  points.push_back(Point3(10, 5, 0));
+  points.push_back(Point3(15, 0, 0));
+  points.push_back(Point3(20, 5, 0));
+  points.push_back(Point3(25, 0, 0));
 
-  auto tin = create_tin_from_points(points);
+  auto tin = create_tin_from_pointset(points);
 
-  TSR_LOG_TRACE("Initializing TIN");
+  TSR_LOG_TRACE("Initializing Tin");
 
   FeatureManager featureManager;
   auto distanceFeature = std::make_shared<DistanceFeature>("DISTANCE_FEATURE");
@@ -78,8 +78,8 @@ TEST(TestRouter, routerDistanceCheck) {
   Router router;
 
   // Get the vertex handle of a point
-  Point_3 start_point(0, 5, 0);
-  Point_3 end_point(25, 0, 0);
+  Point3 start_point(0, 5, 0);
+  Point3 end_point(25, 0, 0);
 
   TSR_LOG_TRACE("Calculating route");
   auto route =
@@ -106,18 +106,18 @@ TEST(TestRouter, routerGradientCheck) {
    *
    */
 
-  std::vector<Point_3> points;
+  std::vector<Point3> points;
 
-  points.push_back(Point_3(0, 5, 0));
-  points.push_back(Point_3(5, 0, 0));
-  points.push_back(Point_3(10, 5, 200));
-  points.push_back(Point_3(15, 0, 0));
-  points.push_back(Point_3(20, 5, 0));
-  points.push_back(Point_3(25, 0, 0));
+  points.push_back(Point3(0, 5, 0));
+  points.push_back(Point3(5, 0, 0));
+  points.push_back(Point3(10, 5, 200));
+  points.push_back(Point3(15, 0, 0));
+  points.push_back(Point3(20, 5, 0));
+  points.push_back(Point3(25, 0, 0));
 
-  TSR_LOG_TRACE("Initializing TIN");
+  TSR_LOG_TRACE("Initializing Tin");
 
-  auto tin = create_tin_from_points(points);
+  auto tin = create_tin_from_pointset(points);
 
   TSR_LOG_TRACE("Initializing feature manager");
 
@@ -142,8 +142,8 @@ TEST(TestRouter, routerGradientCheck) {
   Router router;
 
   // Get the vertex handle of a point
-  Point_3 start_point(0, 5, 0);
-  Point_3 end_point(25, 0, 0);
+  Point3 start_point(0, 5, 0);
+  Point3 end_point(25, 0, 0);
 
   TSR_LOG_TRACE("Calculating route");
   auto route =

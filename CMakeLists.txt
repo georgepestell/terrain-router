@@ -75,8 +75,8 @@ FetchContent_Declare(
 
 set(TSR_SOURCE_FILES
   src/tsr/DelaunayTriangulation.cpp
-  src/tsr/MeshUtils.cpp
-  src/tsr/logging.cpp
+  src/tsr/GeometryUtils.cpp
+  src/tsr/Logging.cpp
   src/tsr/IO/FileIO.cpp
   src/tsr/IO/ImageIO.cpp
   src/tsr/IO/GPXFormatter.cpp
@@ -86,8 +86,7 @@ set(TSR_SOURCE_FILES
   src/tsr/API/APICaller.cpp
   src/tsr/Router.cpp
   src/tsr/PointProcessor.cpp
-  src/tsr/Mesh.cpp
-  src/tsr/TSRState.cpp
+  src/tsr/TsrState.cpp
   src/tsr/MeshBoundary.cpp
   src/tsr/Feature.cpp
   src/tsr/Features/APIFeature.cpp
@@ -95,7 +94,7 @@ set(TSR_SOURCE_FILES
   src/tsr/IO/KMLWriter.cpp
   src/tsr/IO/JSONParser.cpp
   src/tsr/MapUtils.cpp
-  src/tsr/Chunker.cpp
+  src/tsr/ChunkManager.cpp
   src/tsr/API/GDALHandler.cpp
   src/tsr/API/APICaller.cpp
 )
@@ -106,9 +105,8 @@ add_library(tsr
   ${TSR_SOURCE_FILES}
 )
 
-target_sources(tsr PRIVATE
-  include/tsr/DefaultFeatures.hpp
-)
+# target_sources(tsr PRIVATE
+# )
 
 find_package(TBB)
 find_package (Eigen3 3.3 REQUIRED NO_MODULE)

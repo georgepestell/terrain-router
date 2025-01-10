@@ -12,7 +12,7 @@
 
 namespace tsr {
 
-class Chunker {
+class ChunkManager {
 
   /// The API url format that will be inserted with the lat,lng and API key
   std::string url;
@@ -27,14 +27,15 @@ class Chunker {
 
 public:
   /// Base constructor
-  Chunker(std::string url, double tile_size, std::vector<int> position_order,
-          std::string api_key)
+  ChunkManager(std::string url, double tile_size,
+               std::vector<int> position_order, std::string api_key)
       : url(url), tile_size(tile_size), api_key(api_key),
         position_order(position_order) {}
 
   /// Constuctor enabling APIs with no API key to be initialized
-  Chunker(std::string url, double tile_size, std::vector<int> position_order)
-      : Chunker(url, tile_size, position_order, NULL) {}
+  ChunkManager(std::string url, double tile_size,
+               std::vector<int> position_order)
+      : ChunkManager(url, tile_size, position_order, NULL) {}
 
   /// Fetch vector data from the API and automatically warp it to UTM
   DataFile fetchVectorChunk(const ChunkInfo &chunk) const;
