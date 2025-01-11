@@ -1,1 +1,0 @@
-Allowing interaction as a QGIS plugin would simplify the data-management of the different GIS layers.
