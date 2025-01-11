@@ -18,6 +18,15 @@ bool FeatureManager::has_dependency_cycle() const {
   return this->has_dependency_cycle(this->outputFeature, existingFeatures);
 }
 
+
+/**
+* @brief Recursively determines if a dependency cycle exists, by keeping a set of preexisting features, and following each branch fully.
+* 
+* @param current_feature 
+* @param preexisting_features 
+* @return true A dependency cycle exists. The DAG is invalid.
+* @return false No dependency cycles exist. The DAG is valid.
+*/
 bool FeatureManager::has_dependency_cycle(
     std::shared_ptr<FeatureBase> current_feature,
     std::unordered_set<std::string> &preexisting_features) const {

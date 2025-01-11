@@ -6,13 +6,16 @@
 
 namespace tsr {
 
+/**
+ * @brief Represents the cost function. Setup through defining the output feature. Calls the output feature's Feature.Calculate function, which then manages it's own dependencies.
+ * 
+ */
 class FeatureManager {
-private:
+public:
   bool has_dependency_cycle(
       std::shared_ptr<FeatureBase> current_feature,
       std::unordered_set<std::string> &preexisting_features) const;
 
-public:
   // Final cost output feature
   std::shared_ptr<Feature<double>> outputFeature;
 

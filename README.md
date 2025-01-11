@@ -29,7 +29,6 @@ ninja tsr
 # Build the cmd executable
 ninja tsr-route
 ```
-
 ## Development / Debug
 
 ### Testing
@@ -50,13 +49,11 @@ To configure cmake with these settings, run:
 ```bash
 cmake -DCMAKE_BUILD_TYPE=Debug -DTSR_Test=ON ..
 ```
-
 To run all of the tests generated, run:
 
 ```bash
 ./test-tsr
 ```
-
 Specific tests can be specified using the `--gtest_filter` option. This does a REGEX match with tests named `<test_suite>.<test_case>`.
 
 ```bash
@@ -69,5 +66,4 @@ Specific tests can be specified using the `--gtest_filter` option. This does a R
 # Run all tests beginning with testRead under the IOTests suite
 ./test-tsr --gtest_filter="IOTests.testRead*"
 ```
-
 Run `./test-tsr --help` for more options.

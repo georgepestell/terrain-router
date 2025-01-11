@@ -11,7 +11,7 @@ namespace tsr {
 
 /**
  * @brief Accepts a DTM and two points, returns the optimal route between them
- * using the D* algorithm.
+ * using Dijkstra's shortest path search algorithm with a custom cost function defined in FeatureManager.
  *
  */
 class Router {
