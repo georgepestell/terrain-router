@@ -8,8 +8,8 @@ option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
 find_package(Doxygen)
 option(BUILD_DOCS "Generate doxygen documentation" ${DOXYGEN_FOUND})
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math -ffp-model=strict")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math -ffp-model=strict")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
 
 set(CGAL_DISABLE_ROUNDING_MATH_CHECK ON)
 
@@ -216,15 +216,14 @@ endif()
 
 if (DOXYGEN_FOUND)
     # set input and output files
-    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/../Doxyfile)
-    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/../Doxyfile)
+    set(DOXYGEN_IN ${CMAKE_SOURCE_DIR}/Doxyfile)
+    set(DOXYGEN_OUT ${CMAKE_SOURCE_DIR}/Doxyfile)
 
     # request to configure the file
     configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
     message("Doxygen build started")
 
-    # note the option ALL which allows to build the docs together with the application
-    add_custom_target( ALL
+    add_custom_target(docs ALL
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen"
@@ -232,3 +231,4 @@ if (DOXYGEN_FOUND)
 else (DOXYGEN_FOUND)
   message("Doxygen need to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
+
