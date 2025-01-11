@@ -97,7 +97,6 @@ set(TSR_SOURCE_FILES
   src/tsr/ChunkManager.cpp
   src/tsr/API/GDALHandler.cpp
   src/tsr/API/APICaller.cpp
-  src/tsr/Presets.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)
@@ -157,6 +156,7 @@ target_link_libraries(tsr
 
 add_executable(tsr-route
   src/tsr/cmd.cpp
+  src/tsr/Presets.cpp
 )
 
 target_compile_definitions(tsr-route 
