@@ -14,19 +14,19 @@ private:
 public:
   using Feature<outDataType>::Feature;
 
-  outDataType calculate(TsrState &state);
+  outDataType Calculate(TsrState &state);
 };
 
-template <> inline bool InverseFeature<bool, bool>::calculate(TsrState &state) {
+template <> inline bool InverseFeature<bool, bool>::Calculate(TsrState &state) {
   auto feature =
       std::dynamic_pointer_cast<Feature<bool>>(this->dependencies[VALUE]);
-  return !feature->calculate(state);
+  return !feature->Calculate(state);
 }
 template <>
-inline double InverseFeature<bool, double>::calculate(TsrState &state) {
+inline double InverseFeature<bool, double>::Calculate(TsrState &state) {
   auto feature =
       std::dynamic_pointer_cast<Feature<bool>>(this->dependencies[VALUE]);
-  if (!feature->calculate(state)) {
+  if (!feature->Calculate(state)) {
     return 1;
   } else {
     return std::numeric_limits<double>::infinity();
@@ -34,12 +34,12 @@ inline double InverseFeature<bool, double>::calculate(TsrState &state) {
 }
 
 template <>
-inline double InverseFeature<double, double>::calculate(TsrState &state) {
+inline double InverseFeature<double, double>::Calculate(TsrState &state) {
 
   auto feature =
       std::dynamic_pointer_cast<Feature<double>>(this->dependencies[VALUE]);
 
-  double value = feature->calculate(state);
+  double value = feature->Calculate(state);
 
   if (value == 0) {
     return std::numeric_limits<double>::infinity();

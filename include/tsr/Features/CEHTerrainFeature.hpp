@@ -127,11 +127,11 @@ public:
   CEHTerrainFeature(std::string name, double tile_size)
       : APIFeature(name, URL, tile_size, {1, 0, 3, 2}) {};
 
-  void initialize(Tin &tin, const MeshBoundary &boundary) override {
+  void Initialize(Tin &tin, const MeshBoundary &boundary) override {
     TSR_LOG_TRACE("initializing {}", this->feature_id);
 
     // Fetch the data from the api
-    auto chunks = chunker.getRequiredChunks(boundary);
+    auto chunks = chunkManager.getRequiredChunks(boundary);
 
     std::string dataCacheID = this->feature_id + "/data";
     std::string contourCacheID = this->feature_id + "/contours";
@@ -144,7 +144,7 @@ public:
     for (auto chunk : chunks) {
 
       std::vector<std::vector<Point2>> contours;
-      if (IO::isChunkCached(contourCacheID, chunk)) {
+      if (chunkManager.IsAvailableInCache(contourCacheID, chunk)) {
         // TODO: Add contours from cache
         IO::getChunkFromCache<std::vector<std::vector<Point2>>>(
             contourCacheID, chunk, contours);
@@ -161,7 +161,7 @@ public:
 
           // Fech chunk from API
           TSR_LOG_TRACE("fetching chunk from API");
-          data = chunker.fetchRasterChunk(chunk);
+          data = chunkManager.fetchRasterChunk(chunk);
 
           // Cache dataset
           TSR_LOG_TRACE("caching chunk");
@@ -198,14 +198,14 @@ public:
     }
   };
 
-  void tag(const Tin &dtm) override {
+  void Tag(const Tin &tin) override {
     TSR_LOG_TRACE("Tagging CEH terrain type feature");
 
     std::string dataCacheID = this->feature_id + "/data";
     std::unordered_map<ChunkInfo, GDALDatasetH> datasets;
-    for (Face_handle face : dtm.all_face_handles()) {
+    for (Face_handle face : tin.all_face_handles()) {
 
-      if (dtm.is_infinite(face)) {
+      if (tin.is_infinite(face)) {
         continue;
       }
 
@@ -222,7 +222,8 @@ public:
         continue;
       }
 
-      ChunkInfo chunk = chunker.getChunkInfo(centerWGS84.x(), centerWGS84.y());
+      ChunkInfo chunk =
+          chunkManager.getChunkInfo(centerWGS84.x(), centerWGS84.y());
 
       GDALDatasetH dataset = nullptr;
       if (datasets.contains(chunk)) {
@@ -268,7 +269,7 @@ public:
     }
   }
 
-  double calculate(TsrState &state) override {
+  double Calculate(TsrState &state) override {
 
     CEH_TERRAIN_TYPE type;
 

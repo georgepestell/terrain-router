@@ -13,7 +13,7 @@ public:
   ConstantFeature(std::string name, DataType constant)
       : Feature<DataType>(name), constant(constant) {}
 
-  DataType calculate(TsrState &state) override {
+  DataType Calculate(TsrState &state) override {
 
     // Ignore compiler unused variable warnings. Keeps the template for
     // calculate the same as other features

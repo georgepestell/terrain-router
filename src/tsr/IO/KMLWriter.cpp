@@ -221,7 +221,7 @@ std::string generateKMLRoute(const std::vector<Point3> &route) {
     auto targetPoint = route.at(i + 1);
 
     double gradient =
-        GradientFeature::calculate_gradient(sourcePoint, targetPoint);
+        GradientFeature::CalculateGradient(sourcePoint, targetPoint);
 
     kml += "<Placemark>\n";
     kml += "<name>route segment</name>\n";

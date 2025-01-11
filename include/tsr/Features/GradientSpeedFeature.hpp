@@ -45,14 +45,14 @@ public:
     return y;
   }
 
-  double calculate(TsrState &state) override {
+  double Calculate(TsrState &state) override {
 
     // Solve the polynomial with the given input
     auto inputFeature = dynamic_pointer_cast<Feature<double>>(
         this->dependencies[DEPENDENCIES::X]);
 
     // Get the dependency value
-    double gradient = inputFeature->calculate(state);
+    double gradient = inputFeature->Calculate(state);
 
     double speedInfluence;
     if (gradient > 0) {

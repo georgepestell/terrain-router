@@ -37,7 +37,7 @@ private:
 
   std::unordered_map<Face_handle, WATER_STATUS> waterMap;
 
-  double max_traversable_distance = 0;
+  // double max_traversable_distance = 0;
 
   enum DEPENDENCIES { DISTANCE };
 
@@ -61,9 +61,9 @@ public:
                                           0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
         };
 
-  void initialize(Tin &tin, const MeshBoundary &boundary) override {
+  void Initialize(Tin &tin, const MeshBoundary &boundary) override {
     // TODO: get datasets from cache/api
-    auto chunks = chunker.getRequiredChunks(boundary);
+    auto chunks = chunkManager.getRequiredChunks(boundary);
 
     std::string dataFeatureID = this->feature_id + "/data";
     std::string contourFeatureID = this->feature_id + "/contour";
@@ -71,7 +71,6 @@ public:
     const double MAX_SEGMENT_LENGTH = 22;
 
     // For each chunk, either fetch from the API or cache
-    unsigned int total = 0;
     for (auto chunk : chunks) {
 
       std::vector<std::vector<Point2>> contours;
@@ -88,7 +87,7 @@ public:
         TSR_LOG_TRACE("fetching contours from API");
 
         // Fetch data from api
-        auto data = chunker.fetchVectorChunkAndRasterize(chunk, 0.00001);
+        auto data = chunkManager.fetchVectorChunkAndRasterize(chunk, 0.00001);
 
         // Cache data
         IO::cacheChunk(dataFeatureID, chunk, data.dataset);
@@ -114,24 +113,19 @@ public:
       }
 
       // add contours to mesh
-      total += contours.size();
       for (auto contour : contours) {
         add_contour_constraint(tin, contour, MAX_SEGMENT_LENGTH);
       }
     }
-    TSR_LOG_TRACE("contours: {}", total);
   }
 
-  void tag(const Tin &tin) override {
+  void Tag(const Tin &tin) override {
     TSR_LOG_TRACE("Tagging water feature");
 
     // TODO: Get dataset from cache or API
     const std::string dataFeatureID = this->feature_id + "/data";
 
     // Mark whether a face is water or not
-    int waterCount = 0;
-    int landCount = 0;
-    int noDataCount = 0;
     std::unordered_map<ChunkInfo, GDALDatasetH> datasets;
     for (Face_handle face : tin.all_face_handles()) {
 
@@ -154,18 +148,18 @@ public:
       }
 
       // Get the required chunk
-      ChunkInfo chunk = chunker.getChunkInfo(centerWGS84.x(), centerWGS84.y());
+      ChunkInfo chunk =
+          chunkManager.getChunkInfo(centerWGS84.x(), centerWGS84.y());
 
       GDALDatasetH dataset = nullptr;
 
       if (datasets.contains(chunk)) {
         dataset = datasets[chunk];
-      } else if (IO::isChunkCached(dataFeatureID, chunk)) {
+      } else if (chunkManager.IsAvailableInCache(dataFeatureID, chunk)) {
         IO::getChunkFromCache<GDALDatasetH>(dataFeatureID, chunk, dataset);
         datasets[chunk] = dataset;
       } else {
         this->waterMap[face] = NODATA;
-        noDataCount++;
         continue;
       }
 
@@ -205,7 +199,6 @@ public:
         TSR_LOG_WARN("Point outside water dataset bounds {} {}", center.x(),
                      center.y());
         this->waterMap[face] = NODATA;
-        noDataCount++;
         continue;
       }
 
@@ -220,19 +213,12 @@ public:
 
       if (value == NODATA_VALUE) {
         this->waterMap[face] = NODATA;
-        noDataCount++;
       } else if (value == 0) {
         this->waterMap[face] = LAND;
-        landCount++;
       } else {
         this->waterMap[face] = WATER;
-        waterCount++;
       }
     }
-
-    TSR_LOG_TRACE("faces with water: {}", waterCount);
-    TSR_LOG_TRACE("faces with land: {}", landCount);
-    TSR_LOG_TRACE("faces with no data: {}", noDataCount);
   }
 
   void writeWaterMapToKML() {
@@ -251,18 +237,12 @@ public:
     IO::write_data_to_file("water.kml", kml);
   }
 
-  bool calculate(TsrState &state) override {
+  bool Calculate(TsrState &state) override {
 
     if (!waterMap.contains(state.current_face)) {
       AddWarning(state, "water data unavailable", 11);
       return true;
     }
-
-    // auto distanceFeature = std::dynamic_pointer_cast<Feature<double>>(
-    //     this->dependencies[DEPENDENCIES::DISTANCE]);
-
-    // double distance =
-    //     distanceFeature->calculate(face, source_point, target_point);
 
     auto waterStatus = this->waterMap[state.current_face];
 

@@ -20,11 +20,11 @@ public:
 
   enum DEPENDENCIES { SIMPLE_BOOLEAN };
 
-  double calculate(TsrState &state) override {
+  double Calculate(TsrState &state) override {
 
     auto boolFeature = std::dynamic_pointer_cast<SimpleBooleanFeature>(
         this->dependencies.at(DEPENDENCIES::SIMPLE_BOOLEAN));
-    bool boolValue = boolFeature->calculate(state);
+    bool boolValue = boolFeature->Calculate(state);
 
     return boolValue ? this->pos_value : this->neg_value;
   }

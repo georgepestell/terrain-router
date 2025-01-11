@@ -97,6 +97,7 @@ set(TSR_SOURCE_FILES
   src/tsr/ChunkManager.cpp
   src/tsr/API/GDALHandler.cpp
   src/tsr/API/APICaller.cpp
+  src/tsr/Presets.cpp
 )
 
 configure_file(src/tsr/version_info.cpp version_info.cpp)

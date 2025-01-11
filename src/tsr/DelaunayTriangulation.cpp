@@ -276,10 +276,10 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
   const double TILE_SIZE = 0.1;
 
   TSR_LOG_TRACE("initializing DEM ChunkManager");
-  ChunkManager chunker(url_format, TILE_SIZE, {0, 1, 2, 3}, api_key);
+  ChunkManager chunkManager(url_format, TILE_SIZE, {0, 1, 2, 3}, api_key);
 
   TSR_LOG_TRACE("getting required DEM chunks");
-  auto chunks = chunker.getRequiredChunks(boundary);
+  auto chunks = chunkManager.getRequiredChunks(boundary);
 
   // Loop over the x chunks
   TSR_LOG_TRACE("checking chunk cache");
@@ -358,10 +358,10 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
 
   tbb::flow::function_node<ParallelChunkData, ParallelChunkData> api_node(
       flowGraph, tbb::flow::unlimited,
-      [&chunker](ParallelChunkData data) -> ParallelChunkData {
+      [&chunkManager](ParallelChunkData data) -> ParallelChunkData {
         // TSR_LOG_TRACE("API node");
         try {
-          auto response = chunker.fetchRasterChunk(data.chunkInfo);
+          auto response = chunkManager.fetchRasterChunk(data.chunkInfo);
           data.dataset = response.dataset;
           boost::filesystem::remove(response.filename);
         } catch (std::exception e) {

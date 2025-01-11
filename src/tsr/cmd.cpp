@@ -1,18 +1,11 @@
+#include "tsr/ChunkManager.hpp"
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/FeatureManager.hpp"
-#include "tsr/Features/CEHTerrainFeature.hpp"
-#include "tsr/Features/ConditionalFeature.hpp"
-#include "tsr/Features/ConstantFeature.hpp"
-#include "tsr/Features/DistanceFeature.hpp"
-#include "tsr/Features/GradientFeature.hpp"
-#include "tsr/Features/GradientSpeedFeature.hpp"
-#include "tsr/Features/InverseFeature.hpp"
-#include "tsr/Features/MultiplierFeature.hpp"
-#include "tsr/Features/PathFeature.hpp"
-#include "tsr/Features/WaterFeature.hpp"
 #include "tsr/MeshBoundary.hpp"
 #include "tsr/PointProcessor.hpp"
 #include "tsr/SurfaceMesh.hpp"
+
+#include "tsr/Presets.hpp"
 
 #include "tsr/IO/ImageIO.hpp"
 #include "tsr/IO/MapIO.hpp"
@@ -78,79 +71,14 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   TSR_LOG_TRACE("Vertices: {}", tin.number_of_vertices());
 
-  // Feature Manager Configuration
-  TSR_LOG_TRACE("Setting up feature manager");
-  FeatureManager fm;
-
-  auto gradientFeature = std::make_shared<GradientFeature>("gradient");
-  auto distance = std::make_shared<DistanceFeature>("distance");
-  auto gradientSpeedInfluence =
-      std::make_shared<GradientSpeedFeature>("gradient_speed");
-  gradientSpeedInfluence->add_dependency(gradientFeature);
-
-  auto terrainFeature =
-      std::make_shared<CEHTerrainFeature>("terrain_type", 0.1);
-  terrainFeature->initialize(tin, boundary);
-
-  auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
-
-  auto pathFeature = std::make_shared<PathFeature>("paths", 0.1);
-
-  auto waterSpeedInfluence =
-      std::make_shared<InverseFeature<bool, bool>>("water_speed");
-  waterSpeedInfluence->add_dependency(waterFeature);
-
-  auto speedFeature = std::make_shared<MultiplierFeature>("speed");
-  speedFeature->add_dependency(waterSpeedInfluence, MultiplierFeature::BOOL);
-  speedFeature->add_dependency(terrainFeature, MultiplierFeature::DOUBLE); //
-  // DO NOT MERGE: Not using terrain type
-  speedFeature->add_dependency(gradientSpeedInfluence,
-                               MultiplierFeature::DOUBLE);
-
-  // DO NOT MEGE : Using constant path speed instead of gradient/terrain based
-  auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
-  pathSpeed->add_dependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
-
-  // auto pathSpeed =
-  // std::make_shared<ConstantFeature<double>>("path_speed", 1.0);
-
-  auto speedWithPathFeature =
-      std::make_shared<ConditionalFeature<double>>("speed_with_path");
-  speedWithPathFeature->add_dependency(pathFeature);
-  speedWithPathFeature->add_dependency(pathSpeed);
-  speedWithPathFeature->add_dependency(speedFeature);
-
-  auto inverseSpeedFeature =
-      std::make_shared<InverseFeature<double, double>>("inverse_speed");
-  inverseSpeedFeature->add_dependency(speedWithPathFeature);
-
-  auto timeFeature = std::make_shared<MultiplierFeature>("time");
-  timeFeature->add_dependency(distance, MultiplierFeature::DOUBLE);
-  timeFeature->add_dependency(inverseSpeedFeature, MultiplierFeature::DOUBLE);
-
-  fm.setOutputFeature(timeFeature);
-
-  TSR_LOG_TRACE("initializing features");
-
-  waterFeature->initialize(tin, boundary);
-  pathFeature->initialize(tin, boundary);
-  terrainFeature->initialize(tin, boundary);
+  FeatureManager fm = SetupTimePreset(tin, boundary);
 
   TSR_LOG_TRACE("final vertex count: {}", tin.number_of_vertices());
 
-  /// DEBUG: Write mesh to obj
-  SurfaceMesh tmpMesh;
-  convertTINToMesh(tin, tmpMesh);
-  IO::write_mesh_to_obj("test.obj", tmpMesh);
-
-  TSR_LOG_TRACE("tagging features");
-
-  terrainFeature->tag(tin);
-  waterFeature->tag(tin);
-  pathFeature->tag(tin);
-
-  /// DEBUG: Write watermap to KML
-  waterFeature->writeWaterMapToKML();
+  // /// DEBUG: Write mesh to obj
+  // SurfaceMesh tmpMesh;
+  // convertTINToMesh(tin, tmpMesh);
+  // IO::write_mesh_to_obj("test.obj", tmpMesh);
 
   TSR_LOG_TRACE("Preparing router");
   Router router;
@@ -176,6 +104,13 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   return EXIT_SUCCESS;
 }
 
+void PrintUsage() {
+  std::cout
+      << "Usage: ./tsr-route <start-lat> <start-lon> <end-lat> <end-lon>\n"
+      << "Example: ./tsr-route 56.777800 -5.024737 56.809481 -5.025113"
+      << std::endl;
+}
+
 } // namespace tsr
 
 int main(int argc, char **argv) {
@@ -184,17 +119,18 @@ int main(int argc, char **argv) {
     po::options_description desc("Allowed options");
     desc.add_options()("help,h", "Print help message")(
         "example", "Run an example with hardcoded coordinates")(
-        "start_lat", po::value<double>(), "Starting latitude")(
-        "start_lon", po::value<double>(), "Starting longitude")(
-        "end_lat", po::value<double>(),
-        "Ending latitude")("end_lon", po::value<double>(), "Ending longitude");
+        "disable-cache", "Disables data cache")(
+        "start-lat", po::value<double>(), "Starting latitude")(
+        "start-lon", po::value<double>(), "Starting longitude")(
+        "end-lat", po::value<double>(),
+        "Ending latitude")("end-lon", po::value<double>(), "Ending longitude");
 
     // Map positional arguments to options
     po::positional_options_description positionalArgs;
-    positionalArgs.add("start_lat", 1)
-        .add("start_lon", 1)
-        .add("end_lat", 1)
-        .add("end_lon", 1);
+    positionalArgs.add("start-lat", 1)
+        .add("start-lon", 1)
+        .add("end-lat", 1)
+        .add("end-lon", 1);
 
     po::variables_map vm;
 
@@ -211,46 +147,29 @@ int main(int argc, char **argv) {
     po::notify(vm);
 
     if (vm.count("help")) {
-      std::cout
-          << "Usage: ./tsr-route <start_lat> <start_lon> <end_lat> <end_lon>\n"
-          << "Example: ./tsr-route 56.777800 -5.024737 56.809481 -5.025113"
-          << std::endl;
-      return 0;
+      tsr::PrintUsage();
+      return 1;
+    }
+
+    if (vm.count("disable-cache")) {
+      tsr::cache_set_enabled(false);
     }
 
     if (vm.count("example")) {
       return tsr::tsr_run(56.777800, -5.024737, 56.809481, -5.025113);
     }
-
     // Validate positional arguments
-    if (!vm.count("start_lat") || !vm.count("start_lon") ||
-        !vm.count("end_lat") || !vm.count("end_lon")) {
-      std::cerr << "Parsed values:" << std::endl;
-      if (!vm.count("start_lat"))
-        std::cerr << "  Missing: start_lat" << std::endl;
-      if (!vm.count("start_lon"))
-        std::cerr << "  Missing: start_lon" << std::endl;
-      if (!vm.count("end_lat"))
-        std::cerr << "  Missing: end_lat" << std::endl;
-      if (!vm.count("end_lon"))
-        std::cerr << "  Missing: end_lon" << std::endl;
-      throw std::runtime_error(
-          "Must provide all four positional arguments: start_lat, start_lon, "
-          "end_lat, end_lon");
+    if (!vm.count("start-lat") || !vm.count("start-lon") ||
+        !vm.count("end-lat") || !vm.count("end-lon")) {
+      tsr::PrintUsage();
+      return 1;
     }
 
     // Parse arguments
-    double start_lat = vm["start_lat"].as<double>();
-    double start_lon = vm["start_lon"].as<double>();
-    double end_lat = vm["end_lat"].as<double>();
-    double end_lon = vm["end_lon"].as<double>();
-
-    // Debugging: Print parsed values
-    std::cout << "Parsed values:" << std::endl;
-    std::cout << "  start_lat=" << start_lat << std::endl;
-    std::cout << "  start_lon=" << start_lon << std::endl;
-    std::cout << "  end_lat=" << end_lat << std::endl;
-    std::cout << "  end_lon=" << end_lon << std::endl;
+    double start_lat = vm["start-lat"].as<double>();
+    double start_lon = vm["start-lon"].as<double>();
+    double end_lat = vm["end-lat"].as<double>();
+    double end_lon = vm["end-lon"].as<double>();
 
     return tsr::tsr_run(start_lat, start_lon, end_lat, end_lon);
 

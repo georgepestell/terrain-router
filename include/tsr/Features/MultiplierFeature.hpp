@@ -21,14 +21,14 @@ public:
 
   using Feature<double>::Feature;
 
-  double calculate(TsrState &state) override {
+  double Calculate(TsrState &state) override {
 
     double total = 1;
     for (auto f : this->dependencies) {
       switch (this->dependency_types[f->feature_id]) {
       case INT: {
         auto feature = std::dynamic_pointer_cast<Feature<int>>(f);
-        int value = feature->calculate(state);
+        int value = feature->Calculate(state);
 
         if (total == std::numeric_limits<double>::infinity() ||
             ((double)value) == std::numeric_limits<double>::infinity()) {
@@ -41,7 +41,7 @@ public:
       }
       case DOUBLE: {
         auto feature = std::dynamic_pointer_cast<Feature<double>>(f);
-        double value = feature->calculate(state);
+        double value = feature->Calculate(state);
 
         if (total == std::numeric_limits<double>::infinity() ||
             value == std::numeric_limits<double>::infinity()) {
@@ -54,7 +54,7 @@ public:
       }
       case BOOL: {
         auto feature = std::dynamic_pointer_cast<Feature<bool>>(f);
-        bool value = feature->calculate(state);
+        bool value = feature->Calculate(state);
         if (value) {
           break;
         } else {
@@ -75,16 +75,16 @@ public:
     return total;
   }
 
-  void add_dependency(std::shared_ptr<FeatureBase> feature) override {
+  void AddDependency(std::shared_ptr<FeatureBase> feature) override {
     boost::ignore_unused_variable_warning(feature);
     TSR_LOG_ERROR(
-        "Multiplier add_dependency requires specifying the feature type");
+        "Multiplier AddDependency requires specifying the feature type");
     throw std::runtime_error(
-        "Multiplier add_dependency requires specifying the feature type");
+        "Multiplier AddDependency requires specifying the feature type");
   }
 
-  void add_dependency(std::shared_ptr<FeatureBase> feature,
-                      DEPENDENCY_TYPE type) {
+  void AddDependency(std::shared_ptr<FeatureBase> feature,
+                     DEPENDENCY_TYPE type) {
     this->dependencies.push_back(feature);
     this->dependency_types[feature->feature_id] = type;
   }

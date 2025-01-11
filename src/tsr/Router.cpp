@@ -1,6 +1,6 @@
 #include "tsr/Router.hpp"
 #include "tsr/FeatureManager.hpp"
-#include "tsr/Features/WaterFeature.hpp"
+#include "tsr/Features/BoolWaterFeature.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/KMLWriter.hpp"
 #include "tsr/Logging.hpp"

@@ -16,6 +16,7 @@
 #include "tsr/Point2.hpp"
 #include "tsr/PointProcessor.hpp"
 
+#include "tsr/IO/ChunkCache.hpp"
 #include "tsr/IO/MapIO.hpp"
 
 #include <cmath>
@@ -26,6 +27,10 @@
 #include <vector>
 
 namespace tsr {
+
+bool g_cache_enabled = true;
+
+void cache_set_enabled(bool isEnabled) { g_cache_enabled = isEnabled; }
 
 ChunkInfo ChunkManager::getChunkInfo(double lat, double lng) const {
   double minLat = std::floor(lat / tile_size) * this->tile_size;
@@ -268,6 +273,16 @@ DataFile ChunkManager::fetchRasterChunk(const ChunkInfo &chunk) const {
   GDALReleaseDataset(dataset);
   boost::filesystem::remove(filepath);
   return {warpedDS, warpedFilepath.string()};
+}
+
+bool ChunkManager::IsAvailableInCache(const std::string &feature_id,
+                                      const ChunkInfo &chunk) {
+  // check if caching is disabled
+  if (!g_cache_enabled) {
+    return false;
+  }
+
+  return IO::isChunkCached(feature_id, chunk);
 }
 
 } // namespace tsr

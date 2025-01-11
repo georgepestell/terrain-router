@@ -14,7 +14,7 @@ class GradientFeature : public Feature<double> {
 public:
   using Feature<double>::Feature;
 
-  static double calculate_gradient(const Point3 &p1, const Point3 &p2) {
+  static double CalculateGradient(const Point3 &p1, const Point3 &p2) {
 
     double dx = p2.x() - p1.x();
     double dy = p2.y() - p1.y();
@@ -30,9 +30,9 @@ public:
     return dz / distance;
   }
 
-  double calculate(TsrState &state) {
-    return calculate_gradient(state.current_vertex->point(),
-                              state.next_vertex->point());
+  double Calculate(TsrState &state) {
+    return CalculateGradient(state.current_vertex->point(),
+                             state.next_vertex->point());
   }
 };
 

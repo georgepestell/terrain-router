@@ -20,7 +20,7 @@ public:
     return std::sqrt(CGAL::squared_distance(p1, p2));
   }
 
-  double calculate(TsrState &state) override {
+  double Calculate(TsrState &state) override {
 
     return calculateDistance(state.current_vertex->point(),
                              state.next_vertex->point());

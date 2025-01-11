@@ -12,19 +12,19 @@ private:
 public:
   using Feature<DataType>::Feature;
 
-  DataType calculate(TsrState &state) override {
+  DataType Calculate(TsrState &state) override {
 
     auto conditionalFeature = std::dynamic_pointer_cast<Feature<bool>>(
         this->dependencies[CONDITIONAL]);
 
-    if (conditionalFeature->calculate(state)) {
+    if (conditionalFeature->Calculate(state)) {
       auto feature =
           std::dynamic_pointer_cast<Feature<double>>(this->dependencies[A]);
-      return feature->calculate(state);
+      return feature->Calculate(state);
     } else {
       auto feature =
           std::dynamic_pointer_cast<Feature<double>>(this->dependencies[B]);
-      return feature->calculate(state);
+      return feature->Calculate(state);
     }
   }
 };

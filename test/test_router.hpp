@@ -128,12 +128,12 @@ TEST(TestRouter, routerGradientCheck) {
   auto gradientSpeedFeature =
       std::make_shared<GradientSpeedFeature>("GRADIENT_SPEED");
 
-  gradientSpeedFeature->add_dependency(gradientFeature);
+  gradientSpeedFeature->AddDependency(gradientFeature);
 
   auto speedFeature = std::make_shared<MultiplierFeature>("SPEED");
 
-  speedFeature->add_dependency(distanceFeature, MultiplierFeature::DOUBLE);
-  speedFeature->add_dependency(gradientSpeedFeature, MultiplierFeature::DOUBLE);
+  speedFeature->AddDependency(distanceFeature, MultiplierFeature::DOUBLE);
+  speedFeature->AddDependency(gradientSpeedFeature, MultiplierFeature::DOUBLE);
 
   feature_manager.setOutputFeature(speedFeature);
 

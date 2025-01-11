@@ -18,14 +18,14 @@ TEST(testFeatureManager, testSimpleDAG) {
   auto boolToDoubleFeature = std::make_shared<SimpleBooleanToDoubleFeature>(
       "SimpleBooleanToDoubleFeature");
 
-  boolToDoubleFeature->add_dependency(boolFeature);
-  boolToDoubleFeature->add_dependency(unusedDependency);
+  boolToDoubleFeature->AddDependency(boolFeature);
+  boolToDoubleFeature->AddDependency(unusedDependency);
 
   auto sharedChildDependency =
       std::make_shared<SimpleBooleanFeature>("Shared Child Dep");
 
-  boolFeature->add_dependency(sharedChildDependency);
-  unusedDependency->add_dependency(sharedChildDependency);
+  boolFeature->AddDependency(sharedChildDependency);
+  unusedDependency->AddDependency(sharedChildDependency);
 
   FeatureManager fm;
 
@@ -44,16 +44,16 @@ TEST(testFeatureManager, testMoreComplexDAG) {
   auto boolToDoubleFeature = std::make_shared<SimpleBooleanToDoubleFeature>(
       "SimpleBooleanToDoubleFeature");
 
-  boolToDoubleFeature->add_dependency(boolFeature);
-  boolToDoubleFeature->add_dependency(unusedDependency);
+  boolToDoubleFeature->AddDependency(boolFeature);
+  boolToDoubleFeature->AddDependency(unusedDependency);
 
   auto childDependency1 = std::make_shared<SimpleBooleanFeature>("Child Dep 1");
   auto childDependency2 = std::make_shared<SimpleBooleanFeature>("Child Dep 2");
 
-  boolFeature->add_dependency(childDependency1);
-  unusedDependency->add_dependency(childDependency2);
+  boolFeature->AddDependency(childDependency1);
+  unusedDependency->AddDependency(childDependency2);
 
-  childDependency1->add_dependency(unusedDependency);
+  childDependency1->AddDependency(unusedDependency);
 
   FeatureManager fm;
 
@@ -72,16 +72,16 @@ TEST(testFeatureManager, testSimpleCycle) {
   auto boolToDoubleFeature = std::make_shared<SimpleBooleanToDoubleFeature>(
       "SimpleBooleanToDoubleFeature");
 
-  boolToDoubleFeature->add_dependency(boolFeature);
-  boolToDoubleFeature->add_dependency(unusedDependency);
+  boolToDoubleFeature->AddDependency(boolFeature);
+  boolToDoubleFeature->AddDependency(unusedDependency);
 
   auto childDependency1 = std::make_shared<SimpleBooleanFeature>("Child Dep 1");
   auto childDependency2 = std::make_shared<SimpleBooleanFeature>("Child Dep 2");
 
-  boolFeature->add_dependency(childDependency1);
-  childDependency1->add_dependency(childDependency2);
+  boolFeature->AddDependency(childDependency1);
+  childDependency1->AddDependency(childDependency2);
 
-  childDependency2->add_dependency(boolFeature);
+  childDependency2->AddDependency(boolFeature);
 
   FeatureManager fm;
 

@@ -60,22 +60,22 @@ public:
                                           0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
   }
 
-  void initialize(Tin &dtm, const MeshBoundary &boundary) override {
+  void Initialize(Tin &dtm, const MeshBoundary &boundary) override {
 
-    auto chunks = chunker.getRequiredChunks(boundary);
+    auto chunks = chunkManager.getRequiredChunks(boundary);
     const double MAX_SEGMENT_SIZE = 22;
 
     // Check if the paths are cached
     std::vector<std::vector<Point2>> contours;
     for (auto chunk : chunks) {
 
-      if (IO::isChunkCached(this->feature_id, chunk)) {
+      if (chunkManager.IsAvailableInCache(this->feature_id, chunk)) {
         // Contours are cached
         IO::getChunkFromCache<std::vector<std::vector<Point2>>>(
             this->feature_id, chunk, contours);
       } else {
         // Download from API
-        auto data = chunker.fetchVectorChunk(chunk);
+        auto data = chunkManager.fetchVectorChunk(chunk);
         GDALReleaseDataset(data.dataset);
 
         contours = IO::load_contours_from_file(data.filename, "features");
@@ -98,7 +98,7 @@ public:
     }
   }
 
-  bool calculate(TsrState &state) override {
+  bool Calculate(TsrState &state) override {
 
     const Point3 source_point = state.current_vertex->point();
     const Point3 target_point = state.next_vertex->point();

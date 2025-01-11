@@ -1,9 +1,9 @@
 #include "tsr/DelaunayTriangulation.hpp"
+#include "tsr/Features/BoolWaterFeature.hpp"
 #include "tsr/Features/CEHTerrainFeature.hpp"
 #include "tsr/Features/PathFeature.hpp"
 #include "tsr/Features/SimpleBooleanFeature.hpp"
 #include "tsr/Features/SimpleBooleanToDoubleFeature.hpp"
-#include "tsr/Features/WaterFeature.hpp"
 #include "tsr/GeometryUtils.hpp"
 #include "tsr/IO/MeshIO.hpp"
 #include "tsr/MeshBoundary.hpp"
@@ -44,7 +44,7 @@ TEST(testFeature, testSimpleBooleanFeature) {
 
   Face_handle tmpFace;
   TsrState state;
-  ASSERT_FALSE(boolFeature->calculate(state));
+  ASSERT_FALSE(boolFeature->Calculate(state));
 }
 
 TEST(testFeature, testSimpleBoolToIntegerFeature) {
@@ -57,10 +57,10 @@ TEST(testFeature, testSimpleBoolToIntegerFeature) {
   auto boolToIntFeature = std::make_shared<SimpleBooleanToDoubleFeature>(
       "BOOL_TO_DOUBLE", pos_value, neg_value);
 
-  boolToIntFeature->add_dependency(boolFeature);
+  boolToIntFeature->AddDependency(boolFeature);
 
   TsrState state;
-  ASSERT_EQ(boolToIntFeature->calculate(state), neg_value);
+  ASSERT_EQ(boolToIntFeature->Calculate(state), neg_value);
 }
 
 TEST(TestFeature, testCEHFeatureInitialization) {
@@ -77,18 +77,18 @@ TEST(TestFeature, testCEHFeatureInitialization) {
       InitializeTinFromBoundary(boundary, "0f789809fed28dc634c8d75695d0cc5c");
 
   CEHTerrainFeature ceh = CEHTerrainFeature("CEH", 0.1);
-  ceh.initialize(tin, boundary);
+  ceh.Initialize(tin, boundary);
 
   BoolWaterFeature waterFeature = BoolWaterFeature("WATER", 0.1);
-  waterFeature.initialize(tin, boundary);
+  waterFeature.Initialize(tin, boundary);
 
   PathFeature pathFeature = PathFeature("paths", 0.1);
-  pathFeature.initialize(tin, boundary);
+  pathFeature.Initialize(tin, boundary);
 
   SurfaceMesh mesh;
   convertTINToMesh(tin, mesh);
 
   IO::write_mesh_to_obj("test_featureMesh.obj", mesh);
 
-  // ceh.tag(dtm);
+  // ceh.Tag(dtm);
 }

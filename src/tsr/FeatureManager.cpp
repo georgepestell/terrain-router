@@ -67,7 +67,7 @@ double FeatureManager::calculateCost(TsrState &state) const {
   // TSR_LOG_TRACE("next position: {} {} {}", Pn.x(), Pn.y(), Pn.z());
   // TSR_LOG_TRACE("face id: {}", (void *)&state.current_face);
 
-  return this->outputFeature->calculate(state);
+  return this->outputFeature->Calculate(state);
 
   // TSR_LOG_TRACE("cost: {}\n", cost);
   // return cost;

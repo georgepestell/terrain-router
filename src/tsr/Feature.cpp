@@ -1,11 +1,15 @@
 #include "tsr/Feature.hpp"
 #include "tsr/PointProcessor.hpp"
+#include "tsr/Presets.hpp"
+#include "tsr/TsrState.hpp"
 
+#include <cstddef>
 #include <memory>
+#include <string>
 
 namespace tsr {
 
-void FeatureBase::add_dependency(std::shared_ptr<FeatureBase> feature) {
+void FeatureBase::AddDependency(std::shared_ptr<FeatureBase> feature) {
   this->dependencies.push_back(feature);
 }
 

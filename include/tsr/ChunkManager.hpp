@@ -54,6 +54,11 @@ public:
 
   // Gets the list of chunks required to cover an area
   std::vector<ChunkInfo> getRequiredChunks(const MeshBoundary &boundary) const;
+
+  bool IsAvailableInCache(const std::string &feature_id,
+                          const ChunkInfo &chunk);
 };
+
+void cache_set_enabled(bool isEnabled);
 
 } // namespace tsr
