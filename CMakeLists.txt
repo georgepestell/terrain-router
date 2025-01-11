@@ -5,6 +5,9 @@ project(terrin_senstive_routing)
 option(TSR_TEST "include test targets in build system" OFF)
 option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
 
+find_package(Doxygen)
+option(BUILD_DOCS "Generate doxygen documentation" ${DOXYGEN_FOUND})
+
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math -ffp-model=strict")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math -ffp-model=strict")
 
@@ -209,3 +212,23 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(tsr PRIVATE -Wall -Wextra -pedantic -frounding-math)
   target_compile_options(tsr-route PRIVATE -Wall -Wextra -pedantic -frounding-math)
 endif()
+
+
+if (DOXYGEN_FOUND)
+    # set input and output files
+    set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/../Doxyfile)
+    set(DOXYGEN_OUT ${CMAKE_CURRENT_SOURCE_DIR}/../Doxyfile)
+
+    # request to configure the file
+    configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
+    message("Doxygen build started")
+
+    # note the option ALL which allows to build the docs together with the application
+    add_custom_target( ALL
+        COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+        COMMENT "Generating API documentation with Doxygen"
+        VERBATIM )
+else (DOXYGEN_FOUND)
+  message("Doxygen need to be installed to generate the doxygen documentation")
+endif (DOXYGEN_FOUND)
