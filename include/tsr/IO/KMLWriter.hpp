@@ -7,12 +7,12 @@ namespace tsr::IO {
 void writeSuccessStateToKML(const std::string &filepath, TsrState &state);
 void writeFailureStateToKML(const std::string &filepath, TsrState &state);
 
-std::string generateKMLFaces(std::vector<Face_handle> &faces);
+std::string GenerateKmlFaces(std::vector<Face_handle> &faces);
 
-std::string generateKMLWarnings(const TsrState &state);
+std::string GenerateKmlWarnings(const TsrState &state);
 
-std::string generateKMLRoute(const std::vector<Point3> &route);
+std::string GenerateKmlRoute(const std::vector<Point3> &route);
 
-std::string generateKMLDocument(const std::string &inner_kml);
+std::string GenerateKmlDocument(const std::string &inner_kml);
 
 } // namespace tsr::IO

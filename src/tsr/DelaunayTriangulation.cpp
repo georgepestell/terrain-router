@@ -45,17 +45,17 @@ namespace tsr {
 
 #define TIN_FEATURE_ID "topography"
 
-void convert_mesh_to_tin(SurfaceMesh const &source, Tin &target) {
+void ConvertSurfaceMeshToTin(SurfaceMesh const &source, Tin &target) {
   for (auto v : source.vertices()) {
     target.insert(source.point(v));
   }
 }
 
-void convertTINToMesh(Tin const &source, SurfaceMesh &target) {
+void ConvertTinToSurfaceMesh(Tin const &source, SurfaceMesh &target) {
   CGAL::copy_face_graph(source, target);
 }
 
-Tin create_tin_from_pointset(const std::vector<Point3> &points) {
+Tin CreateTinFromPoints(const std::vector<Point3> &points) {
   if (points.empty()) {
     TSR_LOG_WARN("empty Tin created");
   }
@@ -74,7 +74,7 @@ Tin create_tin_from_pointset(const std::vector<Point3> &points) {
   return tin;
 }
 
-void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
+void AddContourConstraint(Tin &tin, std::vector<Point2> contour,
                             double max_segment_length) {
 
   for (auto vertexIt = contour.begin(); vertexIt != contour.end(); ++vertexIt) {
@@ -92,7 +92,7 @@ void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
       continue;
     }
 
-    double z = interpolate_z(vertexFace->vertex(0)->point(),
+    double z = InterpolateZ(vertexFace->vertex(0)->point(),
                              vertexFace->vertex(1)->point(),
                              vertexFace->vertex(2)->point(), x, y);
 
@@ -108,7 +108,7 @@ void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
       continue;
     }
 
-    double next_z = interpolate_z(
+    double next_z = InterpolateZ(
         vertexNextFace->vertex(0)->point(), vertexNextFace->vertex(1)->point(),
         vertexNextFace->vertex(2)->point(), next_x, next_y);
 
@@ -138,7 +138,7 @@ void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
           return;
         }
 
-        double split_z = interpolate_z(vertexSplitFace->vertex(0)->point(),
+        double split_z = InterpolateZ(vertexSplitFace->vertex(0)->point(),
                                        vertexSplitFace->vertex(1)->point(),
                                        vertexSplitFace->vertex(2)->point(),
                                        split_x, split_y);
@@ -160,13 +160,13 @@ void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
   }
 }
 
-void simplifyTIN(Tin const &source_mesh, Tin &target_mesh,
+void SimplifyTin(Tin const &source_mesh, Tin &target_mesh,
                  float cosine_max_angle_regions, float max_distance_regions,
                  float cosine_max_angle_corners, float max_distance_corners) {
 
   // Convert the mesh to a Surface_Mesh
   SurfaceMesh sourceSurfaceMesh;
-  convertTINToMesh(source_mesh, sourceSurfaceMesh);
+  ConvertTinToSurfaceMesh(source_mesh, sourceSurfaceMesh);
 
   CGAL::Polygon_mesh_processing::remove_degenerate_faces(sourceSurfaceMesh);
   CGAL::Polygon_mesh_processing::remove_almost_degenerate_faces(
@@ -251,16 +251,16 @@ void simplifyTIN(Tin const &source_mesh, Tin &target_mesh,
   try {
     TSR_LOG_TRACE("writing to target mesh");
     target_mesh.clear();
-    convert_mesh_to_tin(sourceSurfaceMesh, target_mesh);
+    ConvertSurfaceMeshToTin(sourceSurfaceMesh, target_mesh);
   } catch (std::exception &e) {
     TSR_LOG_FATAL("copying simplified mesh to target mesh failed");
     throw e;
   }
 }
 
-void simplifyTIN(Tin const &source_mesh, Tin &target_mesh) {
+void SimplifyTin(Tin const &source_mesh, Tin &target_mesh) {
   TSR_LOG_TRACE("calling simplify mesh with defaults");
-  return simplifyTIN(source_mesh, target_mesh, DEFAULT_COSINE_MAX_ANGLE_REGIONS,
+  return SimplifyTin(source_mesh, target_mesh, DEFAULT_COSINE_MAX_ANGLE_REGIONS,
                      DEFAULT_MAX_DISTANCE_REGIONS,
                      DEFAULT_COSINE_MAX_ANGLE_CORNERS,
                      DEFAULT_MAX_DISTANCE_CORNERS);
@@ -279,12 +279,12 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
   ChunkManager chunkManager(url_format, TILE_SIZE, {0, 1, 2, 3}, api_key);
 
   TSR_LOG_TRACE("getting required DEM chunks");
-  auto chunks = chunkManager.getRequiredChunks(boundary);
+  auto chunks = chunkManager.GetRequiredChunks(boundary);
 
   // Loop over the x chunks
   TSR_LOG_TRACE("checking chunk cache");
   for (auto chunk : chunks) {
-    if (IO::isChunkCached(TIN_FEATURE_ID, chunk)) {
+    if (IO::IsChunkCached(TIN_FEATURE_ID, chunk)) {
       cachedTilesRequired.push_back(chunk);
     } else {
       apiTilesRequired.push_back(chunk);
@@ -305,17 +305,17 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
     // Add mesh points in domain to master mesh
     try {
       Tin chunkMesh;
-      IO::getChunkFromCache<Tin>(TIN_FEATURE_ID, chunk, chunkMesh);
+      IO::GetChunkFromCache<Tin>(TIN_FEATURE_ID, chunk, chunkMesh);
 
       TSR_LOG_TRACE("merging chunk {} {} {} {}", chunk.minLat, chunk.minLng,
                     chunk.maxLat, chunk.maxLng);
-      mergeBoundedPointsFromTIN(boundary, chunkMesh, masterTIN);
+      MergeTinPointsInBoundary(boundary, chunkMesh, masterTIN);
     } catch (std::exception e) {
       TSR_LOG_ERROR("Cached chunk corrupted");
       TSR_LOG_ERROR("{}", e.what());
 
       // Delete the corrupted file
-      IO::deleteCachedChunk(TIN_FEATURE_ID, chunk);
+      IO::DeleteChunkFromCache(TIN_FEATURE_ID, chunk);
 
       // Add the chunk to the API required tiles
       apiTilesRequired.push_back(chunk);
@@ -361,7 +361,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
       [&chunkManager](ParallelChunkData data) -> ParallelChunkData {
         // TSR_LOG_TRACE("API node");
         try {
-          auto response = chunkManager.fetchRasterChunk(data.chunkInfo);
+          auto response = chunkManager.FetchRasterChunk(data.chunkInfo);
           data.dataset = response.dataset;
           boost::filesystem::remove(response.filename);
         } catch (std::exception e) {
@@ -378,7 +378,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
           [](ParallelChunkData data) -> ParallelChunkData {
             //  TSR_LOG_TRACE("Point Extractor node");
             try {
-              data.points = IO::extractPointsFromGDALDataset(data.dataset, 1);
+              data.points = IO::ExtractGdalDatasetPoints(data.dataset, 1);
             } catch (std::exception e) {
               TSR_LOG_ERROR("failed extracting DTM points from dataset");
               TSR_LOG_TRACE("{}", e.what());
@@ -389,7 +389,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
             GDALReleaseDataset(data.dataset);
 
             try {
-              simplify_points(data.points);
+              SimplifyPoints(data.points);
             } catch (std::exception e) {
               TSR_LOG_ERROR("failed to simplify points");
               TSR_LOG_TRACE("{}", e.what());
@@ -406,7 +406,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
             // TSR_LOG_TRACE("TIN node");
             try {
               data.tin =
-                  std::make_shared<Tin>(create_tin_from_pointset(data.points));
+                  std::make_shared<Tin>(CreateTinFromPoints(data.points));
             } catch (std::exception e) {
               TSR_LOG_ERROR("{}", e.what());
               throw e;
@@ -419,7 +419,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
       flowGraph, tbb::flow::unlimited,
       [](ParallelChunkData data) -> ParallelChunkData {
         try {
-          simplifyTIN(*data.tin, *data.tin);
+          SimplifyTin(*data.tin, *data.tin);
         } catch (std::exception e) {
           TSR_LOG_ERROR("failed to simplify mesh");
           TSR_LOG_TRACE("{}", e.what());
@@ -433,7 +433,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
       [](ParallelChunkData data) -> ParallelChunkData {
         // TSR_LOG_TRACE("Cache node");
         try {
-          IO::cacheChunk(TIN_FEATURE_ID, data.chunkInfo, *data.tin);
+          IO::CacheChunk(TIN_FEATURE_ID, data.chunkInfo, *data.tin);
         } catch (std::exception e) {
           TSR_LOG_ERROR("caching chunk failed");
           TSR_LOG_TRACE("{}", e.what());
@@ -445,7 +445,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
       flowGraph, tbb::flow::serial,
       [&boundary, &masterTIN](ParallelChunkData data) {
         // TSR_LOG_TRACE("Collector node");
-        mergeBoundedPointsFromTIN(boundary, *data.tin, masterTIN);
+        MergeTinPointsInBoundary(boundary, *data.tin, masterTIN);
       });
 
   tbb::flow::make_edge(input_node, api_node);
@@ -471,7 +471,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
   return masterTIN;
 }
 
-void mergeBoundedPointsFromTIN(MeshBoundary &boundary, const Tin &srcTIN,
+void MergeTinPointsInBoundary(MeshBoundary &boundary, const Tin &srcTIN,
                                Tin &dstTIN) {
   for (auto vertex = srcTIN.all_vertices_begin();
        vertex != srcTIN.all_vertices_end(); ++vertex) {
@@ -482,7 +482,7 @@ void mergeBoundedPointsFromTIN(MeshBoundary &boundary, const Tin &srcTIN,
     }
 
     Point3 point = vertex->point();
-    if (boundary.isBounded(point)) {
+    if (boundary.IsBounded(point)) {
       dstTIN.insert(point);
     }
   }

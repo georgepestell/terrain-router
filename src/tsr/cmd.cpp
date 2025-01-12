@@ -66,8 +66,8 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   log_set_global_loglevel(LogLevel::TRACE);
 
   // Convert points to UTM
-  Point3 startPoint = WGS84_point_to_UTM(Point3(sLat, sLon, 0));
-  Point3 endPoint = WGS84_point_to_UTM(Point3(eLat, eLon, 0));
+  Point3 startPoint = TranslateWgs84PointToUtm(Point3(sLat, sLon, 0));
+  Point3 endPoint = TranslateWgs84PointToUtm(Point3(eLat, eLon, 0));
 
   MeshBoundary boundary(startPoint, endPoint, RADII_MULTIPLIER);
 
@@ -101,19 +101,19 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   // /// DEBUG: Write mesh to obj
   // SurfaceMesh tmpMesh;
-  // convertTINToMesh(tin, tmpMesh);
-  // IO::write_mesh_to_obj("test.obj", tmpMesh);
+  // ConvertTinToSurfaceMesh(tin, tmpMesh);
+  // IO::WriteMeshToObj("test.obj", tmpMesh);
 
   TSR_LOG_TRACE("Preparing router");
   Router router;
 
   // Calculate the optimal route
   TSR_LOG_TRACE("Calculating Route");
-  TSR_LOG_TRACE("ll: {} {}", boundary.getLLCorner().x(),
-                boundary.getLLCorner().y());
-  TSR_LOG_TRACE("ur: {} {}", boundary.getURCorner().x(),
-                boundary.getURCorner().y());
-  auto route = router.calculateRoute(tin, fm, boundary, startPoint, endPoint);
+  TSR_LOG_TRACE("ll: {} {}", boundary.GetLowerLeftPoint().x(),
+                boundary.GetLowerLeftPoint().y());
+  TSR_LOG_TRACE("ur: {} {}", boundary.GetUpperRightPoint().x(),
+                boundary.GetUpperRightPoint().y());
+  auto route = router.Route(tin, fm, boundary, startPoint, endPoint);
 
 #ifdef DEBUG_TIME
   auto timer_routing_end = high_resolution_clock::now();
@@ -122,12 +122,12 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   // Convert the points to WGS84
   std::vector<Point3> routeWGS84;
   for (auto &point : route) {
-    Point3 pointWGS84 = UTM_point_to_WGS84(point, 30, true);
+    Point3 pointWGS84 = TranslateUtmPointToWgs84(point, 30, true);
     routeWGS84.push_back(pointWGS84);
   }
 
   // Output the route as a gpx file
-  IO::write_data_to_file("route.gpx", IO::formatPointsAsGPXRoute(routeWGS84));
+  IO::WriteDataToFile("route.gpx", IO::FormatRouteAsGpx(routeWGS84));
 
 // Output the timing information
 #ifdef DEBUG_TIME
@@ -195,7 +195,7 @@ int main(int argc, char **argv) {
     }
 
     if (vm.count("disable-cache")) {
-      tsr::cache_set_enabled(false);
+      tsr::CacheSetEnabled(false);
     }
 
     if (vm.count("example")) {

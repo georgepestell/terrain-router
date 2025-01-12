@@ -35,7 +35,7 @@
 
 namespace tsr::API {
 
-GDALDatasetH parseGDALDatasetFromString(std::string data,
+GDALDatasetH ParseGdalDatasetFromString(std::string data,
                                         std::string filepath) {
 
   CPLSetConfigOption("GDAL_CACHEMAX", "512"); // Limit cache size to 512 MB
@@ -48,7 +48,7 @@ GDALDatasetH parseGDALDatasetFromString(std::string data,
   }
 
   TSR_LOG_TRACE("writing response to file");
-  IO::write_data_to_file(filepath, data);
+  IO::WriteDataToFile(filepath, data);
 
   file.close();
 
@@ -56,7 +56,7 @@ GDALDatasetH parseGDALDatasetFromString(std::string data,
   TSR_LOG_TRACE("file: {}", filepath);
   GDALDatasetH dataset;
 
-  IO::load_gdal_dataset_from_file(filepath, dataset);
+  IO::LoadGdalDatasetFromFile(filepath, dataset);
 
   if (!dataset) {
     TSR_LOG_ERROR("Could not parse gdal dataset from string");
@@ -93,7 +93,7 @@ std::vector<double> getDatasetCenter(GDALDataset *dataset) {
   return {centerLatitude, centerLongitude};
 }
 
-GDALDatasetH warpVectorDatasetToUTM(GDALDatasetH hDataset,
+GDALDatasetH WarpVectorDatasetToUtm(GDALDatasetH hDataset,
                                     std::string filepath) {
 
   GDALDataset *dataset = static_cast<GDALDataset *>(hDataset);
@@ -154,7 +154,7 @@ GDALDatasetH warpVectorDatasetToUTM(GDALDatasetH hDataset,
   return warpedDataset;
 }
 
-GDALDatasetH warpRasterDatasetToUTM(GDALDatasetH hDataset,
+GDALDatasetH WarpRasterDatasetToUtm(GDALDatasetH hDataset,
                                     std::string filepath) {
 
   GDALDataset *dataset = static_cast<GDALDataset *>(hDataset);
@@ -255,7 +255,7 @@ GDALDatasetH warpRasterDatasetToUTM(GDALDatasetH hDataset,
   return warpedDataset;
 }
 
-GDALDatasetH rasterizeDataset(const GDALDatasetH &source_dataset,
+GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
                               std::string filepath, const ChunkInfo &chunk,
                               double pixel_resolution) {
 
@@ -334,14 +334,14 @@ GDALDatasetH rasterizeDataset(const GDALDatasetH &source_dataset,
 }
 
 std::vector<std::vector<Point2>>
-extract_feature_contours(const std::string &filepath,
+ExtractFeatureContours(const std::string &filepath,
                          double adf_geotransform[6],
                          double simplification_factor) {
 
   // TODO: Open the file as a MAT img
-  auto image = IO::load_image_from_file(filepath);
+  auto image = IO::LoadImageFromFile(filepath);
 
-  auto contours = IO::extract_feature_contours(
+  auto contours = IO::ExtractFeatureContours(
       image, simplification_factor, adf_geotransform[0], adf_geotransform[3],
       adf_geotransform[1], adf_geotransform[5]);
 

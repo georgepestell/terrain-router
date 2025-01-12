@@ -31,7 +31,7 @@ public:
       : GradientSpeedFeature(name, DEFAULT_UPWARDS_COEFFS,
                              DEFAULT_DOWNWARDS_COEFFS) {}
 
-  static double solvePolynomial(double x, std::vector<double> &coefficients);
+  static double SolvePolynomial(double x, std::vector<double> &coefficients);
 
   double Calculate(TsrState &state) override;
 };

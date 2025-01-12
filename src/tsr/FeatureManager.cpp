@@ -11,11 +11,11 @@
 
 namespace tsr {
 
-bool FeatureManager::has_dependency_cycle() const {
+bool FeatureManager::HasDependencyCycle() const {
   std::unordered_set<std::string> existingFeatures = {
       this->outputFeature->feature_id};
 
-  return this->has_dependency_cycle(this->outputFeature, existingFeatures);
+  return this->HasDependencyCycle(this->outputFeature, existingFeatures);
 }
 
 
@@ -27,7 +27,7 @@ bool FeatureManager::has_dependency_cycle() const {
 * @return true A dependency cycle exists. The DAG is invalid.
 * @return false No dependency cycles exist. The DAG is valid.
 */
-bool FeatureManager::has_dependency_cycle(
+bool FeatureManager::HasDependencyCycle(
     std::shared_ptr<FeatureBase> current_feature,
     std::unordered_set<std::string> &preexisting_features) const {
 
@@ -48,7 +48,7 @@ bool FeatureManager::has_dependency_cycle(
     std::unordered_set<std::string> childFeatures = preexisting_features;
     childFeatures.insert(dep->feature_id);
 
-    if (this->has_dependency_cycle(dep, childFeatures)) {
+    if (this->HasDependencyCycle(dep, childFeatures)) {
       return true;
     }
   }
@@ -56,18 +56,18 @@ bool FeatureManager::has_dependency_cycle(
   return false;
 }
 
-void FeatureManager::setOutputFeature(
+void FeatureManager::SetOutputFeature(
     std::shared_ptr<Feature<double>> feature) {
   this->outputFeature = feature;
 
-  if (has_dependency_cycle()) {
+  if (HasDependencyCycle()) {
     this->outputFeature = nullptr;
     TSR_LOG_ERROR("Feature graph has dependency cycle");
     throw std::runtime_error("Feature graph has dependency cycle");
   }
 }
 
-double FeatureManager::calculateCost(TsrState &state) const {
+double FeatureManager::Calculate(TsrState &state) const {
 
   // const auto Pc = state.current_vertex->point();
   // const auto Pn = state.next_vertex->point();

@@ -19,27 +19,27 @@ void writeSuccessStateToKML(const std::string &filepath, TsrState &state) {
 
   auto route = state.fetchRoute();
 
-  auto routeKML = generateKMLRoute(route);
+  auto routeKML = GenerateKmlRoute(route);
 
-  auto warningsKML = generateKMLWarnings(state);
+  auto warningsKML = GenerateKmlWarnings(state);
 
-  auto kml = generateKMLDocument(routeKML + warningsKML);
+  auto kml = GenerateKmlDocument(routeKML + warningsKML);
 
-  IO::write_data_to_file(filepath, kml);
+  IO::WriteDataToFile(filepath, kml);
 }
 
 void writeFailureStateToKML(const std::string &filepath, TsrState &state) {
   // TODO: Draw all routes
   // auto routesKML = generateKMLForAllRoutes(state);
 
-  auto warningsKML = generateKMLWarnings(state);
+  auto warningsKML = GenerateKmlWarnings(state);
 
-  auto kml = generateKMLDocument(warningsKML);
+  auto kml = GenerateKmlDocument(warningsKML);
 
-  IO::write_data_to_file(filepath, kml);
+  IO::WriteDataToFile(filepath, kml);
 }
 
-std::string generateKMLDocument(const std::string &inner_kml) {
+std::string GenerateKmlDocument(const std::string &inner_kml) {
 
   std::string kml;
 
@@ -56,7 +56,7 @@ std::string generateKMLDocument(const std::string &inner_kml) {
   return kml;
 }
 
-std::string generateKMLFaces(std::vector<Face_handle> &faces) {
+std::string GenerateKmlFaces(std::vector<Face_handle> &faces) {
   std::string kml;
 
   for (uint f = 0; f < faces.size(); f++) {
@@ -66,9 +66,9 @@ std::string generateKMLFaces(std::vector<Face_handle> &faces) {
     Point3 p2_UTM = face->vertex(1)->point();
     Point3 p3_UTM = face->vertex(2)->point();
 
-    auto p1 = UTM_point_to_WGS84(p1_UTM, 30, true);
-    auto p2 = UTM_point_to_WGS84(p2_UTM, 30, true);
-    auto p3 = UTM_point_to_WGS84(p3_UTM, 30, true);
+    auto p1 = TranslateUtmPointToWgs84(p1_UTM, 30, true);
+    auto p2 = TranslateUtmPointToWgs84(p2_UTM, 30, true);
+    auto p3 = TranslateUtmPointToWgs84(p3_UTM, 30, true);
 
     kml += "<Placemark>\n";
     kml += "  <name>Triangle " + std::to_string(f) + "</name>\n";
@@ -101,7 +101,7 @@ std::string generateKMLFaces(std::vector<Face_handle> &faces) {
   return kml;
 }
 
-std::string generateKMLWarnings(const TsrState &state) {
+std::string GenerateKmlWarnings(const TsrState &state) {
 
   TSR_LOG_TRACE("generate warnings KML");
   TSR_LOG_TRACE("warning count: {}", state.warnings.size());
@@ -130,7 +130,7 @@ std::string generateKMLWarnings(const TsrState &state) {
     // Convert the center to WGS84
     Point3 centerWGS84;
     try {
-      centerWGS84 = UTM_point_to_WGS84(center, 30, true);
+      centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
     } catch (std::exception e) {
       continue;
     }
@@ -153,7 +153,7 @@ std::string generateKMLWarnings(const TsrState &state) {
   return kml;
 }
 
-std::string generateKMLRoute(const std::vector<Point3> &route) {
+std::string GenerateKmlRoute(const std::vector<Point3> &route) {
 
   // Used to show gradient
   GradientSpeedFeature Fg("gradient");
@@ -165,8 +165,8 @@ std::string generateKMLRoute(const std::vector<Point3> &route) {
 
   std::string kml;
 
-  auto startPointWGS84 = UTM_point_to_WGS84(route[0], 30, true);
-  auto endPointWGS84 = UTM_point_to_WGS84(route[route.size() - 1], 30, true);
+  auto startPointWGS84 = TranslateUtmPointToWgs84(route[0], 30, true);
+  auto endPointWGS84 = TranslateUtmPointToWgs84(route[route.size() - 1], 30, true);
 
   kml += "<Folder>\n";
   kml += "<name>Route</name>\n";
@@ -240,8 +240,8 @@ std::string generateKMLRoute(const std::vector<Point3> &route) {
     kml += "<altitudeMode>clampToGround</altitudeMode>\n";
     kml += "<coordinates>\n";
 
-    auto sourcePointWGS84 = UTM_point_to_WGS84(sourcePoint, 30, true);
-    auto targetPointWGS84 = UTM_point_to_WGS84(targetPoint, 30, true);
+    auto sourcePointWGS84 = TranslateUtmPointToWgs84(sourcePoint, 30, true);
+    auto targetPointWGS84 = TranslateUtmPointToWgs84(targetPoint, 30, true);
 
     kml += std::to_string(sourcePointWGS84.y()) + "," +
            std::to_string(sourcePointWGS84.x()) + "," + "0\n";

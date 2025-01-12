@@ -34,7 +34,7 @@ public:
 
   bool Calculate(TsrState &state) override;
 
-  void writeWaterMapToKML();
+  void WriteWaterToKml();
 };
 
 } // namespace tsr

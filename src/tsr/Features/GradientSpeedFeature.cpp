@@ -9,7 +9,7 @@
 namespace tsr {
 
 double
-GradientSpeedFeature::solvePolynomial(double x,
+GradientSpeedFeature::SolvePolynomial(double x,
                                       std::vector<double> &coefficients) {
 
   double y = 0;
@@ -30,9 +30,9 @@ double GradientSpeedFeature::Calculate(TsrState &state) {
 
   double speedInfluence;
   if (gradient > 0) {
-    speedInfluence = solvePolynomial(gradient, this->upwards_coefficients);
+    speedInfluence = SolvePolynomial(gradient, this->upwards_coefficients);
   } else {
-    speedInfluence = solvePolynomial(gradient, this->downwards_coefficients);
+    speedInfluence = SolvePolynomial(gradient, this->downwards_coefficients);
   }
 
   // Cap the speedInfluence to a minimum of 0x speed

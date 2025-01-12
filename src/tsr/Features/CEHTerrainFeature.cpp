@@ -67,7 +67,7 @@ CEHTerrainFeature::interpretCEHTerrainColour(std::vector<double> colourValues) {
   }
 }
 
-std::vector<double> CEHTerrainFeature::getColourAtPoint(GDALDatasetH dataset,
+std::vector<double> CEHTerrainFeature::GetPixelColour(GDALDatasetH dataset,
                                                         int x, int y) {
   int rasterXSize = GDALGetRasterXSize(dataset);
   int rasterYSize = GDALGetRasterYSize(dataset);
@@ -100,7 +100,7 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
   TSR_LOG_TRACE("initializing {}", this->feature_id);
 
   // Fetch the data from the api
-  auto chunks = chunkManager.getRequiredChunks(boundary);
+  auto chunks = chunkManager.GetRequiredChunks(boundary);
 
   std::string dataCacheID = this->feature_id + "/data";
   std::string contourCacheID = this->feature_id + "/contours";
@@ -115,27 +115,27 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
     std::vector<std::vector<Point2>> contours;
     if (chunkManager.IsAvailableInCache(contourCacheID, chunk)) {
       // TODO: Add contours from cache
-      IO::getChunkFromCache<std::vector<std::vector<Point2>>>(contourCacheID,
+      IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(contourCacheID,
                                                               chunk, contours);
     } else {
 
       // Fetch the dataset from either the cache or API
       DataFile data(nullptr, "");
-      if (IO::isChunkCached(dataCacheID, chunk)) {
+      if (IO::IsChunkCached(dataCacheID, chunk)) {
 
-        data.filename = IO::getChunkFilepath(dataCacheID, chunk);
-        IO::getChunkFromCache<GDALDatasetH>(dataCacheID, chunk, data.dataset);
+        data.filename = IO::GetChunkFilepath(dataCacheID, chunk);
+        IO::GetChunkFromCache<GDALDatasetH>(dataCacheID, chunk, data.dataset);
 
       } else {
 
         // Fech chunk from API
         TSR_LOG_TRACE("fetching chunk from API");
-        data = chunkManager.fetchRasterChunk(chunk);
+        data = chunkManager.FetchRasterChunk(chunk);
 
         // Cache dataset
         TSR_LOG_TRACE("caching chunk");
         try {
-          IO::cacheChunk(dataCacheID, chunk, data.dataset);
+          IO::CacheChunk(dataCacheID, chunk, data.dataset);
         } catch (std::exception e) {
           TSR_LOG_ERROR("failed to cache data");
           throw e;
@@ -149,12 +149,12 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       GDALReleaseDataset(data.dataset);
 
       contours =
-          API::extract_feature_contours(data.filename, adfGeotransform, 0.001);
+          API::ExtractFeatureContours(data.filename, adfGeotransform, 0.001);
 
       // TODO: Cache contours
       TSR_LOG_TRACE("Caching contours");
       try {
-        IO::cacheChunk(contourCacheID, chunk, contours);
+        IO::CacheChunk(contourCacheID, chunk, contours);
       } catch (std::exception e) {
         TSR_LOG_WARN("failed to cache CEH contours");
       }
@@ -162,7 +162,7 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 
     // Add contours to the mesh
     for (auto contour : contours) {
-      add_contour_constraint(tin, contour, MAX_SEGMENT_SIZE);
+      AddContourConstraint(tin, contour, MAX_SEGMENT_SIZE);
     }
   }
 };
@@ -186,19 +186,19 @@ void CEHTerrainFeature::Tag(const Tin &tin) {
 
     Point3 centerWGS84;
     try {
-      centerWGS84 = UTM_point_to_WGS84(center, 30, true);
+      centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
     } catch (std::exception e) {
       continue;
     }
 
     ChunkInfo chunk =
-        chunkManager.getChunkInfo(centerWGS84.x(), centerWGS84.y());
+        chunkManager.GetChunkInfo(centerWGS84.x(), centerWGS84.y());
 
     GDALDatasetH dataset = nullptr;
     if (datasets.contains(chunk)) {
       dataset = datasets.at(chunk);
-    } else if (IO::isChunkCached(dataCacheID, chunk)) {
-      IO::getChunkFromCache<GDALDatasetH>(dataCacheID, chunk, dataset);
+    } else if (IO::IsChunkCached(dataCacheID, chunk)) {
+      IO::GetChunkFromCache<GDALDatasetH>(dataCacheID, chunk, dataset);
     } else {
       continue;
     }
@@ -231,7 +231,7 @@ void CEHTerrainFeature::Tag(const Tin &tin) {
         static_cast<int>((center.y() - geotransform[3]) / geotransform[5]);
 
     // TSR_LOG_TRACE("getting colour value");
-    auto colourValues = getColourAtPoint(dataset, pixel_x, pixel_y);
+    auto colourValues = GetPixelColour(dataset, pixel_x, pixel_y);
 
     // TSR_LOG_TRACE("interpreting and setting colour value");
     this->terrain_map[face] = interpretCEHTerrainColour(colourValues);

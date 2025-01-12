@@ -26,7 +26,7 @@ double calculateXYDistance(const Point3 p1, const Point3 p2) {
   return std::hypot(dx, dy);
 }
 
-Vertex_handle Router::nearestVertexToPoint(const Tin &dtm,
+Vertex_handle Router::CalculateNearestVertexToPoint(const Tin &dtm,
                                            const Point3 &point) {
   Face_handle face = dtm.locate(point);
 
@@ -49,7 +49,7 @@ Vertex_handle Router::nearestVertexToPoint(const Tin &dtm,
   return vertex;
 }
 
-std::vector<Point3> Router::calculateRoute(const Tin &dtm, FeatureManager &fm,
+std::vector<Point3> Router::Route(const Tin &dtm, FeatureManager &fm,
                                            const MeshBoundary &boundary,
                                            const Point3 &start_point,
                                            const Point3 &end_point) {
@@ -57,8 +57,8 @@ std::vector<Point3> Router::calculateRoute(const Tin &dtm, FeatureManager &fm,
   TSR_LOG_TRACE("Routing");
 
   // Fetch the nearest search node to the given points
-  this->state.start_vertex = nearestVertexToPoint(dtm, start_point);
-  this->state.end_vertex = nearestVertexToPoint(dtm, end_point);
+  this->state.start_vertex = CalculateNearestVertexToPoint(dtm, start_point);
+  this->state.end_vertex = CalculateNearestVertexToPoint(dtm, end_point);
 
   // Setup the queue of gCosts to calculate and CLOSED set
   std::priority_queue<RouteNode, std::vector<RouteNode>, CompareNode>
@@ -133,7 +133,7 @@ std::vector<Point3> Router::calculateRoute(const Tin &dtm, FeatureManager &fm,
           }
 
           // Check the point is bounded
-          if (!boundary.isBoundedSafe(connectedVertex->point())) {
+          if (!boundary.IsBoundedSafe(connectedVertex->point())) {
             continue;
           }
 
@@ -142,7 +142,7 @@ std::vector<Point3> Router::calculateRoute(const Tin &dtm, FeatureManager &fm,
           RouteNode node(connectedVertex, face);
           this->state.next_vertex = connectedVertex;
           node.gCost =
-              current_node.gCost + calculateTrivialCost(fm, this->state);
+              current_node.gCost + CalculateTrivialCost(fm, this->state);
           node.parent = current_node.vertex;
 
           // Add the node to the priority queue
@@ -164,8 +164,8 @@ std::vector<Point3> Router::calculateRoute(const Tin &dtm, FeatureManager &fm,
   return route;
 }
 
-double Router::calculateTrivialCost(const FeatureManager &fm, TsrState &state) {
-  return fm.calculateCost(state);
+double Router::CalculateTrivialCost(const FeatureManager &fm, TsrState &state) {
+  return fm.Calculate(state);
 }
 
 } // namespace tsr

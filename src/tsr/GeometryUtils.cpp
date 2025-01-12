@@ -12,7 +12,7 @@ namespace tsr {
   "globaldem?demtype=COP30&south={}&west={}&north="                            \
   "{}&east={}&outputFormat=GeoTiff&API_Key={}"
 
-double interpolate_z(const Point3 &p1, const Point3 &p2, const Point3 &p3,
+double InterpolateZ(const Point3 &p1, const Point3 &p2, const Point3 &p3,
                      const double x, const double y) {
   // Compute two edge vectors
 

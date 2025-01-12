@@ -25,13 +25,13 @@ public:
   static Point2 rotatePoint(const Point2 &p, const Point2 &midpoint,
                             double angle);
 
-  bool isBounded(Point3 p) const;
-  bool isBoundedSafe(Point3 p) const;
+  bool IsBounded(Point3 p) const;
+  bool IsBoundedSafe(Point3 p) const;
 
-  void filterPointsOutsideBoundary(std::vector<Point3> points) const;
+  void FilterPointsOutsideBoundary(std::vector<Point3> points) const;
 
-  Point2 getLLCorner() const;
-  Point2 getURCorner() const;
+  Point2 GetLowerLeftPoint() const;
+  Point2 GetUpperRightPoint() const;
 };
 
 } // namespace tsr

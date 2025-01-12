@@ -12,18 +12,18 @@ namespace tsr {
  */
 class FeatureManager {
 public:
-  bool has_dependency_cycle(
+  bool HasDependencyCycle(
       std::shared_ptr<FeatureBase> current_feature,
       std::unordered_set<std::string> &preexisting_features) const;
 
   // Final cost output feature
   std::shared_ptr<Feature<double>> outputFeature;
 
-  void setOutputFeature(std::shared_ptr<Feature<double>> feature);
+  void SetOutputFeature(std::shared_ptr<Feature<double>> feature);
 
-  bool has_dependency_cycle() const;
+  bool HasDependencyCycle() const;
 
-  double calculateCost(TsrState &state) const;
+  double Calculate(TsrState &state) const;
 };
 
 } // namespace tsr

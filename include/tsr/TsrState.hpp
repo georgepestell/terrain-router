@@ -1,9 +1,6 @@
 #pragma once
 
-#include "tsr/Logging.hpp"
-#include "tsr/Point3.hpp"
 #include "tsr/RouteNode.hpp"
-#include "tsr/Tin.hpp"
 #include <unordered_map>
 
 namespace tsr {
@@ -29,19 +26,7 @@ struct TsrState {
   /// warning_priority set
   std::unordered_map<Face_handle, size_t> warnings;
 
-  size_t AddWarning(const std::string &warning, const short priority) {
-    if (!warning_index.contains(warning)) {
-      size_t index = warning_messages.size();
-      warning_messages.push_back(warning);
-
-      warning_index[warning] = index;
-      warning_priorities[index] = priority;
-
-      return index;
-    } else {
-      return warning_index[warning];
-    }
-  }
+  size_t AddWarning(const std::string &warning, const short priority);
 
   void ProcessWarnings();
 

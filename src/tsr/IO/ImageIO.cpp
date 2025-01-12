@@ -16,7 +16,7 @@
 
 namespace tsr::IO {
 
-cv::Mat load_image_from_file(std::string filepath) {
+cv::Mat LoadImageFromFile(std::string filepath) {
   auto img = cv::imread(filepath, cv::IMREAD_GRAYSCALE);
 
   if (img.empty()) {
@@ -27,14 +27,14 @@ cv::Mat load_image_from_file(std::string filepath) {
   return img;
 }
 
-cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image) {
+cv::Mat ConvertGrayscaleToRgb(cv::Mat &image) {
   cv::Mat rgbImage;
   cv::cvtColor(image, rgbImage, cv::COLOR_GRAY2RGB);
   return rgbImage;
 }
 
 std::vector<std::vector<Point2>>
-extract_feature_contours(cv::Mat &image, double simplification_factor,
+ExtractFeatureContours(cv::Mat &image, double simplification_factor,
                          double uloffset_x, double uloffset_y,
                          double cellsize_x, double cellsize_y) {
 

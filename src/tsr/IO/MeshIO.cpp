@@ -19,7 +19,7 @@
 
 namespace tsr::IO {
 
-void write_mesh_to_obj(std::string filepath, SurfaceMesh mesh) {
+void WriteMeshToObj(std::string filepath, SurfaceMesh mesh) {
   std::ofstream ofile(filepath, std::ios_base::binary);
   CGAL::IO::set_binary_mode(ofile);
 
@@ -41,7 +41,7 @@ Tin loadCDTFromFile(std::string filepath) {
   return tin;
 }
 
-bool write_CDT_to_file(std::string filepath, const Tin &tin) {
+bool WriteTinToFile(std::string filepath, const Tin &tin) {
   std::ofstream file(filepath, std::ios::binary);
 
   if (!file) {
@@ -61,7 +61,7 @@ bool write_CDT_to_file(std::string filepath, const Tin &tin) {
 }
 
 // TODO: Delete direct access of DEM from file
-std::vector<Point3> load_dem_from_file(std::string filepath) {
+std::vector<Point3> LoadPointsFromXYZFile(std::string filepath) {
 
   // TODO: error checking
 
@@ -79,7 +79,7 @@ std::vector<Point3> load_dem_from_file(std::string filepath) {
   return points;
 }
 
-void load_vector_contours_from_file(
+void LoadContoursFromFile(
     std::string filepath, std::vector<std::vector<Point2>> &contours) {
 
   std::ifstream iFile(filepath, std::ios_base::binary);
@@ -104,7 +104,7 @@ void load_vector_contours_from_file(
   contours.swap(loadedContours);
 }
 
-void write_vector_contours_to_file(
+void WriteContoursToFile(
     std::string filepath, const std::vector<std::vector<Point2>> &contours) {
 
   std::ofstream oFile(filepath);

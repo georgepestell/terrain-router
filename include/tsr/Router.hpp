@@ -18,12 +18,12 @@ namespace tsr {
 class Router {
 private:
   TsrState state;
-  double calculateTrivialCost(const FeatureManager &fm, TsrState &state);
+  double CalculateTrivialCost(const FeatureManager &fm, TsrState &state);
 
 public:
-  Vertex_handle nearestVertexToPoint(const Tin &tin, const Point3 &point);
+  Vertex_handle CalculateNearestVertexToPoint(const Tin &tin, const Point3 &point);
 
-  std::vector<Point3> calculateRoute(const Tin &tin, FeatureManager &fm,
+  std::vector<Point3> Route(const Tin &tin, FeatureManager &fm,
                                      const MeshBoundary &boundary,
                                      const Point3 &start_point,
                                      const Point3 &end_point);

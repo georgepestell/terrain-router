@@ -39,10 +39,10 @@ TEST(TestRouter, routerInitiailizeTest) {
   points.push_back(Point3(25, 0, 0));
 
   TSR_LOG_TRACE("Initializing Tin");
-  auto tin = create_tin_from_pointset(points);
+  auto tin = CreateTinFromPoints(points);
 
   FeatureManager fm;
-  fm.setOutputFeature(std::make_shared<GradientFeature>("GRADIENT"));
+  fm.SetOutputFeature(std::make_shared<GradientFeature>("GRADIENT"));
 
   ASSERT_NO_THROW(Router router);
 }
@@ -66,14 +66,14 @@ TEST(TestRouter, routerDistanceCheck) {
   points.push_back(Point3(20, 5, 0));
   points.push_back(Point3(25, 0, 0));
 
-  auto tin = create_tin_from_pointset(points);
+  auto tin = CreateTinFromPoints(points);
 
   TSR_LOG_TRACE("Initializing Tin");
 
   FeatureManager featureManager;
   auto distanceFeature = std::make_shared<DistanceFeature>("DISTANCE_FEATURE");
 
-  featureManager.setOutputFeature(distanceFeature);
+  featureManager.SetOutputFeature(distanceFeature);
 
   Router router;
 
@@ -83,7 +83,7 @@ TEST(TestRouter, routerDistanceCheck) {
 
   TSR_LOG_TRACE("Calculating route");
   auto route =
-      router.calculateRoute(tin, featureManager, start_point, end_point);
+      router.Route(tin, featureManager, start_point, end_point);
 
   for (auto &point : route) {
     TSR_LOG_INFO("Point: ({}, {}, {})", point.x(), point.y(), point.z());
@@ -117,7 +117,7 @@ TEST(TestRouter, routerGradientCheck) {
 
   TSR_LOG_TRACE("Initializing Tin");
 
-  auto tin = create_tin_from_pointset(points);
+  auto tin = CreateTinFromPoints(points);
 
   TSR_LOG_TRACE("Initializing feature manager");
 
@@ -135,7 +135,7 @@ TEST(TestRouter, routerGradientCheck) {
   speedFeature->AddDependency(distanceFeature, MultiplierFeature::DOUBLE);
   speedFeature->AddDependency(gradientSpeedFeature, MultiplierFeature::DOUBLE);
 
-  feature_manager.setOutputFeature(speedFeature);
+  feature_manager.SetOutputFeature(speedFeature);
 
   TSR_LOG_TRACE("Initializing router");
 
@@ -147,7 +147,7 @@ TEST(TestRouter, routerGradientCheck) {
 
   TSR_LOG_TRACE("Calculating route");
   auto route =
-      router.calculateRoute(tin, feature_manager, start_point, end_point);
+      router.Route(tin, feature_manager, start_point, end_point);
 
   for (auto &point : route) {
     TSR_LOG_INFO("Point: ({}, {}, {})", point.x(), point.y(), point.z());

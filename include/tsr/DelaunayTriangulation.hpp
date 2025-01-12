@@ -18,25 +18,25 @@ Tin InitializeTinFromBoundary(
                              "globaldem?demtype=COP30&south={}&west={}&north={}"
                              "&east={}&outputFormat=GeoTiff&API_Key={}");
 
-void mergeBoundedPointsFromTIN(MeshBoundary &boundary, const Tin &srcTIN,
+void MergeTinPointsInBoundary(MeshBoundary &boundary, const Tin &srcTIN,
                                Tin &dstTIN);
 
-Tin create_tin_from_pointset(std::vector<Point3> &points, Point3 source_point,
+Tin CreateTinFromPoints(std::vector<Point3> &points, Point3 source_point,
                              Point3 target_point, double radii);
 
-Tin create_tin_from_pointset(const std::vector<Point3> &points);
+Tin CreateTinFromPoints(const std::vector<Point3> &points);
 
-void convert_mesh_to_tin(SurfaceMesh const &source, Tin &target);
+void ConvertSurfaceMeshToTin(SurfaceMesh const &source, Tin &target);
 
-void convertTINToMesh(Tin const &source, SurfaceMesh &target);
+void ConvertTinToSurfaceMesh(Tin const &source, SurfaceMesh &target);
 
-void simplifyTIN(Tin const &source_mesh, Tin &target_mesh,
+void SimplifyTin(Tin const &source_mesh, Tin &target_mesh,
                  float cosine_max_angle_regions, float max_distance_regions,
                  float cosine_max_angle_corners, float max_distance_corners);
 
-void simplifyTIN(Tin const &source_mesh, Tin &target_mesh);
+void SimplifyTin(Tin const &source_mesh, Tin &target_mesh);
 
-void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
+void AddContourConstraint(Tin &tin, std::vector<Point2> contour,
                             double max_segment_length);
 
 } // namespace tsr

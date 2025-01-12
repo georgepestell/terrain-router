@@ -30,9 +30,9 @@ namespace tsr {
 
 bool g_cache_enabled = true;
 
-void cache_set_enabled(bool isEnabled) { g_cache_enabled = isEnabled; }
+void CacheSetEnabled(bool isEnabled) { g_cache_enabled = isEnabled; }
 
-ChunkInfo ChunkManager::getChunkInfo(double lat, double lng) const {
+ChunkInfo ChunkManager::GetChunkInfo(double lat, double lng) const {
   double minLat = std::floor(lat / tile_size) * this->tile_size;
   double minLng = std::floor(lng / tile_size) * this->tile_size;
   double maxLat = minLat + this->tile_size;
@@ -40,11 +40,11 @@ ChunkInfo ChunkManager::getChunkInfo(double lat, double lng) const {
   return {minLat, minLng, maxLat, maxLng};
 }
 std::vector<ChunkInfo>
-ChunkManager::getRequiredChunks(const MeshBoundary &boundary) const {
+ChunkManager::GetRequiredChunks(const MeshBoundary &boundary) const {
 
   // Convert the boundary to WGS84
-  const Point2 ur = UTM_point_to_WGS84(boundary.getURCorner(), 30, true);
-  const Point2 ll = UTM_point_to_WGS84(boundary.getLLCorner(), 30, true);
+  const Point2 ur = TranslateUtmPointToWgs84(boundary.GetUpperRightPoint(), 30, true);
+  const Point2 ll = TranslateUtmPointToWgs84(boundary.GetLowerLeftPoint(), 30, true);
 
   const double minLat = std::min(ur.x(), ll.x());
   const double maxLat = std::max(ur.x(), ll.x());
@@ -62,7 +62,7 @@ ChunkManager::getRequiredChunks(const MeshBoundary &boundary) const {
     for (double lng = minLng; lng < maxLng + this->tile_size;
          lng += this->tile_size) {
 
-      ChunkInfo chunk = this->getChunkInfo(lat, lng);
+      ChunkInfo chunk = this->GetChunkInfo(lat, lng);
       chunks.push_back(chunk);
     }
   }
@@ -72,7 +72,7 @@ ChunkManager::getRequiredChunks(const MeshBoundary &boundary) const {
   return chunks;
 }
 
-std::string ChunkManager::formatURL(const ChunkInfo &chunkInfo) const {
+std::string ChunkManager::FormatUrl(const ChunkInfo &chunkInfo) const {
 
   auto ds = fmt::dynamic_format_arg_store<fmt::format_context>();
   for (auto i : this->position_order) {
@@ -94,10 +94,10 @@ std::string ChunkManager::formatURL(const ChunkInfo &chunkInfo) const {
   return formattedURL;
 }
 
-DataFile ChunkManager::fetchVectorChunk(const ChunkInfo &chunk) const {
+DataFile ChunkManager::FetchVectorChunk(const ChunkInfo &chunk) const {
 
   // Parse the API chunk URL
-  std::string chunkURL = this->formatURL(chunk);
+  std::string chunkURL = this->FormatUrl(chunk);
 
   // Create a temporary file name
   boost::filesystem::path dir = boost::filesystem::temp_directory_path();
@@ -108,8 +108,8 @@ DataFile ChunkManager::fetchVectorChunk(const ChunkInfo &chunk) const {
   GDALDatasetH dataset;
   try {
     API::APICaller caller;
-    caller.fetchDataFromAPI(chunkURL, filepath.string());
-    IO::load_vector_gdal_dataset_from_file(filepath.string(), dataset);
+    caller.FetchDataFromAPI(chunkURL, filepath.string());
+    IO::LoadVectorGdalDatasetFromFile(filepath.string(), dataset);
   } catch (std::exception e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("No response from API");
@@ -123,7 +123,7 @@ DataFile ChunkManager::fetchVectorChunk(const ChunkInfo &chunk) const {
       boost::filesystem::unique_path(dir / "tempfile-%%%%%.tmp");
 
   try {
-    warpedDS = API::warpVectorDatasetToUTM(dataset, warpedFilepath.string());
+    warpedDS = API::WarpVectorDatasetToUtm(dataset, warpedFilepath.string());
   } catch (std::exception e) {
     TSR_LOG_ERROR("failed to warp dataset");
     TSR_LOG_TRACE("{}", e.what());
@@ -139,11 +139,11 @@ DataFile ChunkManager::fetchVectorChunk(const ChunkInfo &chunk) const {
 }
 
 DataFile
-ChunkManager::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
+ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
                                            double pixel_resolution) const {
 
   // Parse the API chunk URL
-  std::string chunkURL = this->formatURL(chunk);
+  std::string chunkURL = this->FormatUrl(chunk);
 
   // Create a temporary file name
   boost::filesystem::path dir = boost::filesystem::temp_directory_path();
@@ -154,8 +154,8 @@ ChunkManager::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
   GDALDatasetH dataset;
   try {
     API::APICaller caller;
-    caller.fetchDataFromAPI(chunkURL, filepath.string());
-    IO::load_vector_gdal_dataset_from_file(filepath.string(), dataset);
+    caller.FetchDataFromAPI(chunkURL, filepath.string());
+    IO::LoadVectorGdalDatasetFromFile(filepath.string(), dataset);
   } catch (std::exception e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("No response from API");
@@ -170,7 +170,7 @@ ChunkManager::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
   // Rasterize dataset
   GDALDatasetH rasterDataset;
   try {
-    rasterDataset = API::rasterizeDataset(dataset, raster_filepath.string(),
+    rasterDataset = API::RasterizeDataset(dataset, raster_filepath.string(),
                                           chunk, pixel_resolution);
   } catch (std::exception e) {
     TSR_LOG_TRACE("{}", e.what());
@@ -193,7 +193,7 @@ ChunkManager::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
   TSR_LOG_TRACE("warping dataset");
   try {
     warpedDS =
-        API::warpRasterDatasetToUTM(rasterDataset, warpedFilepath.string());
+        API::WarpRasterDatasetToUtm(rasterDataset, warpedFilepath.string());
   } catch (std::exception e) {
     TSR_LOG_ERROR("failed to warp dataset");
     TSR_LOG_TRACE("{}", e.what());
@@ -208,14 +208,14 @@ ChunkManager::fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
   return {warpedDS, warpedFilepath.string()};
 }
 
-DataFile ChunkManager::fetchRasterChunk(const ChunkInfo &chunk) const {
+DataFile ChunkManager::FetchRasterChunk(const ChunkInfo &chunk) const {
 
   TSR_LOG_TRACE("getting for: {} {} {} {}", chunk.minLat, chunk.minLng,
                 chunk.maxLat, chunk.maxLng);
 
   // Parse the API chunk URL
   TSR_LOG_TRACE("formatting url");
-  std::string chunkURL = this->formatURL(chunk);
+  std::string chunkURL = this->FormatUrl(chunk);
 
   TSR_LOG_TRACE("creating temporary filename");
 
@@ -230,7 +230,7 @@ DataFile ChunkManager::fetchRasterChunk(const ChunkInfo &chunk) const {
     API::APICaller caller;
 
     TSR_LOG_TRACE("calling API");
-    caller.fetchDataFromAPI(chunkURL, filepath.string());
+    caller.FetchDataFromAPI(chunkURL, filepath.string());
 
     TSR_LOG_TRACE("parsing response");
   } catch (std::exception e) {
@@ -242,7 +242,7 @@ DataFile ChunkManager::fetchRasterChunk(const ChunkInfo &chunk) const {
   TSR_LOG_TRACE("parsing raster chunk");
   GDALDatasetH dataset;
   try {
-    IO::load_gdal_dataset_from_file(filepath.string(), dataset);
+    IO::LoadGdalDatasetFromFile(filepath.string(), dataset);
   } catch (std::exception e) {
     TSR_LOG_ERROR("failed to open GDAL dataset");
     TSR_LOG_TRACE("{}", e.what());
@@ -258,7 +258,7 @@ DataFile ChunkManager::fetchRasterChunk(const ChunkInfo &chunk) const {
       boost::filesystem::unique_path(dir / "tempfile-%%%%%.tmp");
 
   try {
-    warpedDS = API::warpRasterDatasetToUTM(dataset, warpedFilepath.string());
+    warpedDS = API::WarpRasterDatasetToUtm(dataset, warpedFilepath.string());
   } catch (std::exception e) {
     TSR_LOG_ERROR("failed to warp dataset");
     TSR_LOG_TRACE("{}", e.what());
@@ -282,7 +282,7 @@ bool ChunkManager::IsAvailableInCache(const std::string &feature_id,
     return false;
   }
 
-  return IO::isChunkCached(feature_id, chunk);
+  return IO::IsChunkCached(feature_id, chunk);
 }
 
 } // namespace tsr

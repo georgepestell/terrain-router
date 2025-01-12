@@ -79,7 +79,7 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   timeFeature->AddDependency(distance, MultiplierFeature::DOUBLE);
   timeFeature->AddDependency(inverseSpeedFeature, MultiplierFeature::DOUBLE);
 
-  fm.setOutputFeature(timeFeature);
+  fm.SetOutputFeature(timeFeature);
 
   TSR_LOG_TRACE("initializing features");
 
@@ -92,7 +92,7 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   pathFeature->Tag(tin);
 
   //   /// DEBUG: Write watermap to KML
-  //   waterFeature->writeWaterMapToKML();
+  //   waterFeature->WriteWaterToKml();
 
   return fm;
 }

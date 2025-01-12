@@ -2,7 +2,7 @@
 
 namespace tsr {
 
-double interpolate_z(const Point3 &p1, const Point3 &p2, const Point3 &p3,
+double InterpolateZ(const Point3 &p1, const Point3 &p2, const Point3 &p3,
                      const double x, const double y);
 
 } // namespace tsr

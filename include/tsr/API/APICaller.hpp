@@ -21,7 +21,7 @@ class APICallerConfig;
 
 class APICaller {
 public:
-  bool fetchDataFromAPI(const std::string &url, const std::string &filepath);
+  bool FetchDataFromAPI(const std::string &url, const std::string &filepath);
 
   APICaller();
   ~APICaller();

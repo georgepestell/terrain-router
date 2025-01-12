@@ -38,27 +38,27 @@ public:
       : ChunkManager(url, tile_size, position_order, NULL) {}
 
   /// Fetch vector data from the API and automatically warp it to UTM
-  DataFile fetchVectorChunk(const ChunkInfo &chunk) const;
+  DataFile FetchVectorChunk(const ChunkInfo &chunk) const;
 
-  DataFile fetchVectorChunkAndRasterize(const ChunkInfo &chunk,
+  DataFile FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
                                         double pixel_resolution) const;
 
   /// Fetch raster data from the API and automatically warp it to UTM
-  DataFile fetchRasterChunk(const ChunkInfo &chunk) const;
+  DataFile FetchRasterChunk(const ChunkInfo &chunk) const;
 
   /// Converts a chunk to the relevant API address
-  std::string formatURL(const ChunkInfo &chunk) const;
+  std::string FormatUrl(const ChunkInfo &chunk) const;
 
   /// Gets the chunk bounding a particular latitude/longitude
-  ChunkInfo getChunkInfo(double lat, double lng) const;
+  ChunkInfo GetChunkInfo(double lat, double lng) const;
 
   // Gets the list of chunks required to cover an area
-  std::vector<ChunkInfo> getRequiredChunks(const MeshBoundary &boundary) const;
+  std::vector<ChunkInfo> GetRequiredChunks(const MeshBoundary &boundary) const;
 
   bool IsAvailableInCache(const std::string &feature_id,
                           const ChunkInfo &chunk);
 };
 
-void cache_set_enabled(bool isEnabled);
+void CacheSetEnabled(bool isEnabled);
 
 } // namespace tsr

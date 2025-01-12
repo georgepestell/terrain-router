@@ -6,15 +6,15 @@
 
 namespace tsr {
 
-template <typename inDataType, typename outDataType>
-class InverseFeature : public Feature<outDataType> {
+template <typename InDataType, typename OutDataType>
+class InverseFeature : public Feature<OutDataType> {
 private:
   enum DEPENDENCIES { VALUE };
 
 public:
-  using Feature<outDataType>::Feature;
+  using Feature<OutDataType>::Feature;
 
-  outDataType Calculate(TsrState &state);
+  OutDataType Calculate(TsrState &state);
 };
 
 template <> inline bool InverseFeature<bool, bool>::Calculate(TsrState &state) {

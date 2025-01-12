@@ -6,7 +6,7 @@
 
 namespace tsr::IO {
 
-GDALDatasetH parse_GDAL_dataset(std::string data);
+GDALDatasetH ParseGdalDataset(std::string data);
 
 /**
  * @brief Parses a file for use with GDAL mapping data tools.
@@ -14,16 +14,16 @@ GDALDatasetH parse_GDAL_dataset(std::string data);
  * @param filepath Map data file to load
  * @return std::unique_ptr<GDALDatasetH> GDAL dataset
  */
-void load_gdal_dataset_from_file(std::string filepath, GDALDatasetH &dataset);
-void load_vector_gdal_dataset_from_file(std::string filepath,
+void LoadGdalDatasetFromFile(std::string filepath, GDALDatasetH &dataset);
+void LoadVectorGdalDatasetFromFile(std::string filepath,
                                         GDALDatasetH &dataset);
 
 std::vector<std::vector<Point3>>
-extractContoursFromGDALDataset(GDALDataset *dataset, int layerID);
+ExtractGdalDatasetContours(GDALDataset *dataset, int layerID);
 
-void writeGDALDatasetToFile(std::string filename, const GDALDatasetH &hDataset);
+void WriteGdalDatasetToFile(std::string filename, const GDALDatasetH &hDataset);
 
-std::vector<Point3> extractPointsFromGDALDataset(GDALDatasetH hDataset,
+std::vector<Point3> ExtractGdalDatasetPoints(GDALDatasetH hDataset,
                                                  int layerID);
 
 } // namespace tsr::IO

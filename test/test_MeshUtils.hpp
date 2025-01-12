@@ -18,17 +18,17 @@ TEST(MeshUtilsTests, TestInitialize) {
   Point3 sourcePointWGS84(56.317649, -2.816415, 0);
   Point3 targetPointWGS84(56.329492, -2.782974, 0);
 
-  Point3 sourcePoint = WGS84_point_to_UTM(sourcePointWGS84);
-  Point3 targetPoint = WGS84_point_to_UTM(targetPointWGS84);
+  Point3 sourcePoint = TranslateWgs84PointToUtm(sourcePointWGS84);
+  Point3 targetPoint = TranslateWgs84PointToUtm(targetPointWGS84);
 
   MeshBoundary boundary(sourcePoint, targetPoint, 1);
   auto tin =
       InitializeTinFromBoundary(boundary, "0f789809fed28dc634c8d75695d0cc5c");
 
   SurfaceMesh mesh;
-  convertTINToMesh(tin, mesh);
+  ConvertTinToSurfaceMesh(tin, mesh);
 
-  IO::write_mesh_to_obj("test.obj", mesh);
+  IO::WriteMeshToObj("test.obj", mesh);
 
   SUCCEED();
 }
@@ -50,9 +50,9 @@ TEST(MeshUtilsTest, TestStoreAndRetrieveMesh) {
 
   std::string FILENAME = "./testStoreAndRetrieveMesh.mesh";
 
-  IO::write_CDT_to_file(FILENAME, tin);
+  IO::WriteTinToFile(FILENAME, tin);
 
-  IO::write_CDT_to_file("./testSToreAndRetrieveMesh.mesh", tin);
+  IO::WriteTinToFile("./testSToreAndRetrieveMesh.mesh", tin);
 
   Tin loadCDT = IO::loadCDTFromFile(FILENAME);
 

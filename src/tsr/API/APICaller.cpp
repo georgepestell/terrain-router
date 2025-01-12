@@ -38,7 +38,7 @@ APICaller::APICaller() = default;
 
 template <typename dataType> void fetch_DEM_from_opentopography() {}
 
-bool APICaller::fetchDataFromAPI(const std::string &url,
+bool APICaller::FetchDataFromAPI(const std::string &url,
                                  const std::string &filepath) {
   CURLcode response_code;
 

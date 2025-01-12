@@ -4,6 +4,6 @@
 
 namespace tsr::IO {
 
-std::string formatPointsAsGPXRoute(std::vector<Point3> points);
+std::string FormatRouteAsGpx(std::vector<Point3> points);
 
 }

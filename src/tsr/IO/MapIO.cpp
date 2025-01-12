@@ -17,7 +17,7 @@
 
 namespace tsr::IO {
 
-void load_gdal_dataset_from_file(std::string filepath, GDALDatasetH &dataset) {
+void LoadGdalDatasetFromFile(std::string filepath, GDALDatasetH &dataset) {
   GDALAllRegister();
 
   dataset = GDALOpen(filepath.c_str(), GA_ReadOnly);
@@ -28,7 +28,7 @@ void load_gdal_dataset_from_file(std::string filepath, GDALDatasetH &dataset) {
   }
 }
 
-void load_vector_gdal_dataset_from_file(std::string filepath,
+void LoadVectorGdalDatasetFromFile(std::string filepath,
                                         GDALDatasetH &dataset) {
 
   TSR_LOG_TRACE("opening vector GDAL dataset");
@@ -45,7 +45,7 @@ void load_vector_gdal_dataset_from_file(std::string filepath,
   }
 }
 
-void writeGDALDatasetToFile(const std::string filename,
+void WriteGdalDatasetToFile(const std::string filename,
                             const GDALDatasetH &hDataset) {
 
   GDALDataset *dataset = static_cast<GDALDataset *>(hDataset);
@@ -96,7 +96,7 @@ void writeGDALDatasetToFile(const std::string filename,
 }
 
 std::vector<std::vector<Point3>>
-extractContoursFromGDALDataset(GDALDataset *dataset, int layerID) {
+ExtractGdalDatasetContours(GDALDataset *dataset, int layerID) {
 
   if (!dataset) {
     TSR_LOG_ERROR("dataset invalid");
@@ -111,7 +111,7 @@ extractContoursFromGDALDataset(GDALDataset *dataset, int layerID) {
   return contours;
 }
 
-std::vector<Point3> extractPointsFromGDALDataset(GDALDatasetH hDataset,
+std::vector<Point3> ExtractGdalDatasetPoints(GDALDatasetH hDataset,
                                                  int layerID) {
 
   GDALDataset *dataset = static_cast<GDALDataset *>(hDataset);

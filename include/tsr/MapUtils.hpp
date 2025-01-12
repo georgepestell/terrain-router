@@ -2,7 +2,7 @@
 
 namespace tsr {
 
-int calculate_UTM_zone(double longitude);
-bool is_northern_hemisphere(double latitude);
+int CalculateUtmZone(double longitude);
+bool IsNorthernHemisphere(double latitude);
 
 } // namespace tsr

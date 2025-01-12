@@ -6,7 +6,7 @@
 
 namespace tsr::IO {
 
-std::string path_to_absolute(std::string filename) {
+std::string PathToAbsolute(std::string filename) {
   boost::filesystem::path path(filename);
 
   // Add pwd to relative path
@@ -24,7 +24,7 @@ void deleteFile(std::string filepath) {
   }
 }
 
-void write_data_to_file(std::string filepath, std::string data) {
+void WriteDataToFile(std::string filepath, std::string data) {
 
   std::ofstream ofile(filepath);
   ofile << data;

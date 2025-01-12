@@ -13,17 +13,17 @@ namespace tsr::IO {
  * @param filepath Output OBJ file path. Will be overriden if already exists.
  * @param mesh Surface mesh to write to the file
  */
-void write_mesh_to_obj(std::string filepath, SurfaceMesh mesh);
+void WriteMeshToObj(std::string filepath, SurfaceMesh mesh);
 
-std::vector<Point3> load_dem_from_file(std::string filepath);
+std::vector<Point3> LoadPointsFromXYZFile(std::string filepath);
 
-bool write_CDT_to_file(std::string filepath, const Tin &tin);
+bool WriteTinToFile(std::string filepath, const Tin &tin);
 Tin loadCDTFromFile(std::string);
 
-void write_vector_contours_to_file(
+void WriteContoursToFile(
     std::string filepath, const std::vector<std::vector<Point2>> &contours);
 
-void load_vector_contours_from_file(std::string filepath,
+void LoadContoursFromFile(std::string filepath,
                                     std::vector<std::vector<Point2>> &contours);
 
 } // namespace tsr::IO

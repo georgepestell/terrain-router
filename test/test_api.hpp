@@ -16,5 +16,5 @@ TEST(TestAPI, testAPICallerFetchNoThrow) {
   // Initialize API
   APICaller caller;
   // Make HTTPS request
-  ASSERT_NO_THROW(caller.fetchDataFromAPI("https://example.com"));
+  ASSERT_NO_THROW(caller.FetchDataFromAPI("https://example.com"));
 }

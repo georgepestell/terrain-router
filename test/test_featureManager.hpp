@@ -31,7 +31,7 @@ TEST(testFeatureManager, testSimpleDAG) {
 
   fm.outputFeature = boolToDoubleFeature;
 
-  ASSERT_FALSE(fm.has_dependency_cycle());
+  ASSERT_FALSE(fm.HasDependencyCycle());
 }
 
 TEST(testFeatureManager, testMoreComplexDAG) {
@@ -59,7 +59,7 @@ TEST(testFeatureManager, testMoreComplexDAG) {
 
   fm.outputFeature = boolToDoubleFeature;
 
-  ASSERT_FALSE(fm.has_dependency_cycle());
+  ASSERT_FALSE(fm.HasDependencyCycle());
 }
 
 TEST(testFeatureManager, testSimpleCycle) {
@@ -87,5 +87,5 @@ TEST(testFeatureManager, testSimpleCycle) {
 
   fm.outputFeature = boolToDoubleFeature;
 
-  ASSERT_TRUE(fm.has_dependency_cycle());
+  ASSERT_TRUE(fm.HasDependencyCycle());
 }

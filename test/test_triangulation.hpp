@@ -15,7 +15,7 @@ TEST(TestDTM, test_initializeEmptyThrows) {
   std::vector<Point3> empty_points;
 
   // Initialize empty DTM
-  EXPECT_THROW(create_tin_from_pointset(empty_points), std::invalid_argument);
+  EXPECT_THROW(CreateTinFromPoints(empty_points), std::invalid_argument);
 }
 
 TEST(TestDTM, test_initalizeDoesNotThrow) {
@@ -26,7 +26,7 @@ TEST(TestDTM, test_initalizeDoesNotThrow) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  ASSERT_NO_THROW(create_tin_from_pointset(points));
+  ASSERT_NO_THROW(CreateTinFromPoints(points));
 }
 
 TEST(TestDTM, test_getTopology) {
@@ -37,7 +37,7 @@ TEST(TestDTM, test_getTopology) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   ASSERT_NO_THROW(dtm.number_of_vertices());
 }
@@ -51,7 +51,7 @@ TEST(TestDTM, test_initalizeVertexCountMatchesDEM) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   TSR_LOG_TRACE("verifying vertex count");
 
@@ -68,12 +68,12 @@ TEST(TestDTM, test_simplify_tin_tin) {
 
   TSR_LOG_TRACE("constructing dtm");
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   TSR_LOG_TRACE("simplifying dtm");
 
   // Simplify
-  ASSERT_NO_THROW(simplifyTIN(dtm, dtm));
+  ASSERT_NO_THROW(SimplifyTin(dtm, dtm));
 
   ASSERT_TRUE(dtm.is_valid());
 }
@@ -98,10 +98,10 @@ TEST(TestDTM, test_simplify_tin_mesh_flat_plane) {
   points.push_back(Point3(2, 4, 0));
   points.push_back(Point3(4, 0, 0));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   // Simplify
-  simplifyTIN(dtm, dtm);
+  SimplifyTin(dtm, dtm);
 
   ASSERT_EQ(dtm.number_of_vertices(), 3);
 }
@@ -126,12 +126,12 @@ TEST(TestDTM, test_simplify_tin_mesh_small_angles) {
   points.push_back(Point3(2, 4, 0));
   points.push_back(Point3(4, 0, 0));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   Tin dtm_simple;
 
   // Simplify, ensuring distance is not the limiting factor
-  simplifyTIN(dtm, dtm_simple, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
+  SimplifyTin(dtm, dtm_simple, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
               DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
 
   ASSERT_EQ(dtm_simple.number_of_vertices(), 3);
@@ -157,10 +157,10 @@ TEST(TestDTM, test_simplify_tin_mesh_small_distances) {
   points.push_back(Point3(2, 4, 0));
   points.push_back(Point3(4, 0, 0));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   // Simplify, ensuring angle is not the limiting factor
-  simplifyTIN(dtm, dtm, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
+  SimplifyTin(dtm, dtm, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
               DEFAULT_MAX_DISTANCE_CORNERS);
 
   ASSERT_EQ(dtm.number_of_vertices(), 3);
@@ -186,10 +186,10 @@ TEST(TestDTM, test_simplify_tin_mesh_keeps_sharp_edges) {
   points.push_back(Point3(2, 4, 0));
   points.push_back(Point3(4, 0, 0));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   // Simplify, ensuring distance is not the limiting factor
-  simplifyTIN(dtm, dtm, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
+  SimplifyTin(dtm, dtm, DEFAULT_COSINE_MAX_ANGLE_REGIONS, 10000,
               DEFAULT_COSINE_MAX_ANGLE_CORNERS, 10000);
 
   ASSERT_EQ(dtm.number_of_vertices(), 4);
@@ -215,10 +215,10 @@ TEST(TestDTM, test_simplify_tin_mesh_keeps_long_distances) {
   points.push_back(Point3(20000, 40000, 0));
   points.push_back(Point3(40000, 0, 0));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   // Simplify, ensuring angle is not the limiting factor
-  simplifyTIN(dtm, dtm, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
+  SimplifyTin(dtm, dtm, 0, DEFAULT_MAX_DISTANCE_REGIONS, 0,
               DEFAULT_MAX_DISTANCE_CORNERS);
 
   ASSERT_EQ(dtm.number_of_vertices(), 4);
@@ -248,10 +248,10 @@ TEST(TestDTM, testConstraintAdd) {
   contour.push_back(Point2(0, 0));
   contour.push_back(Point2(3, 2));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   // Add constraints
-  add_contour_constraint(dtm, contour, 22);
+  AddContourConstraint(dtm, contour, 22);
 
   ASSERT_EQ(dtm.number_of_vertices(), 5);
   ASSERT_EQ(dtm.number_of_faces(), 3);
@@ -264,7 +264,7 @@ TEST(TestDTM, testConstraintAdd) {
 //   points.push_back(Point3(2, 4, 0));
 //   points.push_back(Point3(4, 0, 0));
 
-//   write_data_to_file("test.gpx", formatPointsAsGPXRoute(points));
+//   WriteDataToFile("test.gpx", FormatRouteAsGpx(points));
 // }
 
 TEST(TestDTM, testConstraintAddSplit) {
@@ -291,10 +291,10 @@ TEST(TestDTM, testConstraintAddSplit) {
   contour.push_back(Point2(0, 0));
   contour.push_back(Point2(30, 20));
 
-  auto dtm = create_tin_from_pointset(points);
+  auto dtm = CreateTinFromPoints(points);
 
   // Add constraints
-  add_contour_constraint(dtm, contour, 2);
+  AddContourConstraint(dtm, contour, 2);
 
   /**
    * distance  = sqrt(30^2 + 20^2) = 36.05...

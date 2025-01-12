@@ -42,7 +42,7 @@ private:
   static CEH_TERRAIN_TYPE
   interpretCEHTerrainColour(std::vector<double> colourValues);
 
-  static std::vector<double> getColourAtPoint(GDALDatasetH dataset, int x,
+  static std::vector<double> GetPixelColour(GDALDatasetH dataset, int x,
                                               int y);
   static std::string URL;
 

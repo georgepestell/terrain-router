@@ -15,14 +15,14 @@ class DistanceFeature : public Feature<double> {
 public:
   using Feature<double>::Feature;
 
-  double calculateDistance(Point3 p1, Point3 p2) {
+  double CalculateDistance(Point3 p1, Point3 p2) {
 
     return std::sqrt(CGAL::squared_distance(p1, p2));
   }
 
   double Calculate(TsrState &state) override {
 
-    return calculateDistance(state.current_vertex->point(),
+    return CalculateDistance(state.current_vertex->point(),
                              state.next_vertex->point());
   }
 };

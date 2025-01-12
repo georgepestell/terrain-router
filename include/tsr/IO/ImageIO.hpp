@@ -21,12 +21,12 @@ namespace tsr::IO {
  * @param filepath Image file to load
  * @return std::unique_ptr<cv::Mat> Image as OpenCV matrix
  */
-cv::Mat load_image_from_file(std::string filepath);
+cv::Mat LoadImageFromFile(std::string filepath);
 
-cv::Mat convert_grayscale_image_to_rgb(cv::Mat &image);
+cv::Mat ConvertGrayscaleToRgb(cv::Mat &image);
 
 std::vector<std::vector<Point2>>
-extract_feature_contours(cv::Mat &image, double simplification_factor,
+ExtractFeatureContours(cv::Mat &image, double simplification_factor,
                          double uloffset_x, double uloffset_y,
                          double cellsize_x, double cellsize_y);
 

@@ -13,13 +13,13 @@ MeshBoundary::MeshBoundary(const Point3 &source_point,
                            const Point3 &target_point,
                            const double radii_multiplier) {
 
-  const double distance = calculate_xy_distance(source_point, target_point);
+  const double distance = CalculateXYDistance(source_point, target_point);
   const double radius = (distance / 2.0) * radii_multiplier;
 
   this->midpoint = Point2((source_point.x() + target_point.x()) / 2.0,
                           (source_point.y() + target_point.y()) / 2.0);
 
-  this->angle = calculate_xy_angle(source_point, target_point);
+  this->angle = CalculateXYAngle(source_point, target_point);
 
   this->width = distance + 2 * radius;
   this->height = 2 * radius;
@@ -86,7 +86,7 @@ Point3 MeshBoundary::rotatePoint(const Point3 &p, const Point2 &midpoint,
   return Point3(newX + midpoint.x(), newY + midpoint.y(), p.z());
 }
 
-bool MeshBoundary::isBounded(Point3 p) const {
+bool MeshBoundary::IsBounded(Point3 p) const {
   // Rotate the point back (inverse rotation)
   Point3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
 
@@ -101,7 +101,7 @@ bool MeshBoundary::isBounded(Point3 p) const {
 
   return withinBounds;
 }
-bool MeshBoundary::isBoundedSafe(Point3 p) const {
+bool MeshBoundary::IsBoundedSafe(Point3 p) const {
   // Rotate the point back (inverse rotation)
   Point3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
 
@@ -120,13 +120,13 @@ bool MeshBoundary::isBoundedSafe(Point3 p) const {
   return withinBounds;
 }
 
-void MeshBoundary::filterPointsOutsideBoundary(
+void MeshBoundary::FilterPointsOutsideBoundary(
     std::vector<Point3> points) const {
   unsigned int initialSize = points.size();
 
   std::vector<Point3> filteredPoints;
   for (auto p : points) {
-    if (this->isBounded(p)) {
+    if (this->IsBounded(p)) {
       filteredPoints.push_back(p);
     }
   }
@@ -138,12 +138,12 @@ void MeshBoundary::filterPointsOutsideBoundary(
   points.swap(filteredPoints);
 }
 
-Point2 MeshBoundary::getLLCorner() const {
+Point2 MeshBoundary::GetLowerLeftPoint() const {
   // Calculate the lower left corner
   return this->ll;
 }
 
-Point2 MeshBoundary::getURCorner() const {
+Point2 MeshBoundary::GetUpperRightPoint() const {
   // Calculate the upper right corner
   return this->ur;
 }

@@ -38,7 +38,7 @@ std::string BoolWaterFeature::URL =
 
 void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
   // TODO: get datasets from cache/api
-  auto chunks = chunkManager.getRequiredChunks(boundary);
+  auto chunks = chunkManager.GetRequiredChunks(boundary);
 
   std::string dataFeatureID = this->feature_id + "/data";
   std::string contourFeatureID = this->feature_id + "/contour";
@@ -49,11 +49,11 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
   for (auto chunk : chunks) {
 
     std::vector<std::vector<Point2>> contours;
-    if (IO::isChunkCached(contourFeatureID, chunk)) {
+    if (IO::IsChunkCached(contourFeatureID, chunk)) {
       TSR_LOG_TRACE("reading cached contours");
 
       // TODO: Fetch contours from cache
-      IO::getChunkFromCache<std::vector<std::vector<Point2>>>(contourFeatureID,
+      IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(contourFeatureID,
                                                               chunk, contours);
 
       TSR_LOG_TRACE("cache chunk contours: {}", contours.size());
@@ -62,10 +62,10 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       TSR_LOG_TRACE("fetching contours from API");
 
       // Fetch data from api
-      auto data = chunkManager.fetchVectorChunkAndRasterize(chunk, 0.00001);
+      auto data = chunkManager.FetchAndRasterizeVectorChunk(chunk, 0.00001);
 
       // Cache data
-      IO::cacheChunk(dataFeatureID, chunk, data.dataset);
+      IO::CacheChunk(dataFeatureID, chunk, data.dataset);
 
       // Fetch the geotransform for the dataset
       double adfGeotransform[6];
@@ -78,18 +78,18 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 
       // Extract contours usign OpenCV
       const double SIMPLIFICATION_FACTOR = 0.01;
-      contours = API::extract_feature_contours(data.filename, adfGeotransform,
+      contours = API::ExtractFeatureContours(data.filename, adfGeotransform,
                                                SIMPLIFICATION_FACTOR);
 
       TSR_LOG_TRACE("chunk contours: {}", contours.size());
 
       // Cache contours
-      IO::cacheChunk(contourFeatureID, chunk, contours);
+      IO::CacheChunk(contourFeatureID, chunk, contours);
     }
 
     // add contours to mesh
     for (auto contour : contours) {
-      add_contour_constraint(tin, contour, MAX_SEGMENT_LENGTH);
+      AddContourConstraint(tin, contour, MAX_SEGMENT_LENGTH);
     }
   }
 }
@@ -117,21 +117,21 @@ void BoolWaterFeature::Tag(const Tin &tin) {
 
     Point3 centerWGS84;
     try {
-      centerWGS84 = UTM_point_to_WGS84(center, 30, true);
+      centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
     } catch (std::exception e) {
       continue;
     }
 
     // Get the required chunk
     ChunkInfo chunk =
-        chunkManager.getChunkInfo(centerWGS84.x(), centerWGS84.y());
+        chunkManager.GetChunkInfo(centerWGS84.x(), centerWGS84.y());
 
     GDALDatasetH dataset = nullptr;
 
     if (datasets.contains(chunk)) {
       dataset = datasets[chunk];
     } else if (chunkManager.IsAvailableInCache(dataFeatureID, chunk)) {
-      IO::getChunkFromCache<GDALDatasetH>(dataFeatureID, chunk, dataset);
+      IO::GetChunkFromCache<GDALDatasetH>(dataFeatureID, chunk, dataset);
       datasets[chunk] = dataset;
     } else {
       this->waterMap[face] = NODATA;
@@ -195,7 +195,7 @@ void BoolWaterFeature::Tag(const Tin &tin) {
   }
 }
 
-void BoolWaterFeature::writeWaterMapToKML() {
+void BoolWaterFeature::WriteWaterToKml() {
   std::vector<Face_handle> faces;
 
   for (auto f : this->waterMap) {
@@ -204,11 +204,11 @@ void BoolWaterFeature::writeWaterMapToKML() {
     }
   }
 
-  std::string waterKML = IO::generateKMLFaces(faces);
+  std::string waterKML = IO::GenerateKmlFaces(faces);
 
-  auto kml = IO::generateKMLDocument(waterKML);
+  auto kml = IO::GenerateKmlDocument(waterKML);
 
-  IO::write_data_to_file("water.kml", kml);
+  IO::WriteDataToFile("water.kml", kml);
 }
 
 bool BoolWaterFeature::Calculate(TsrState &state) {

@@ -68,8 +68,8 @@ TEST(TestFeature, testCEHFeatureInitialization) {
   Point3 src(56.317649, -2.816415, 0);
   Point3 tgt(56.329492, -2.782974, 0);
 
-  auto srcUTM = WGS84_point_to_UTM(src);
-  auto tgtUTM = WGS84_point_to_UTM(tgt);
+  auto srcUTM = TranslateWgs84PointToUtm(src);
+  auto tgtUTM = TranslateWgs84PointToUtm(tgt);
 
   MeshBoundary boundary(srcUTM, tgtUTM, 1);
 
@@ -86,9 +86,9 @@ TEST(TestFeature, testCEHFeatureInitialization) {
   pathFeature.Initialize(tin, boundary);
 
   SurfaceMesh mesh;
-  convertTINToMesh(tin, mesh);
+  ConvertTinToSurfaceMesh(tin, mesh);
 
-  IO::write_mesh_to_obj("test_featureMesh.obj", mesh);
+  IO::WriteMeshToObj("test_featureMesh.obj", mesh);
 
   // ceh.Tag(dtm);
 }

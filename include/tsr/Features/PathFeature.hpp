@@ -22,7 +22,7 @@ private:
 
   static std::string URL;
 
-  std::pair<Point2, Point2> normalizeSegment(Point2 p1, Point2 p2);
+  std::pair<Point2, Point2> NormalizeSegmentOrder(Point2 p1, Point2 p2);
 
 public:
   PathFeature(std::string name, double tile_size)

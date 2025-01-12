@@ -18,7 +18,7 @@
 
 namespace tsr::IO {
 
-std::string generateChunkID(const ChunkInfo &chunk) {
+std::string GenerateChunkId(const ChunkInfo &chunk) {
 
   boost::hash<ChunkInfo> hasher;
   auto positionIDHash = hasher(chunk);
@@ -26,23 +26,23 @@ std::string generateChunkID(const ChunkInfo &chunk) {
   return fmt::format("chunk_{}", positionIDHash);
 }
 
-bool isChunkCached(const std::string feature_id, const ChunkInfo &chunk) {
+bool IsChunkCached(const std::string feature_id, const ChunkInfo &chunk) {
 
-  std::string filepath = getChunkFilepath(feature_id, chunk);
+  std::string filepath = GetChunkFilepath(feature_id, chunk);
 
   return std::filesystem::exists(filepath);
 }
 
-void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
+void CacheChunk(const std::string feature_id, const ChunkInfo &chunk,
                 const Tin &tin) {
 
-  std::string filepath = getChunkFilepath(feature_id, chunk);
+  std::string filepath = GetChunkFilepath(feature_id, chunk);
 
   TSR_LOG_TRACE("caching to: {}", filepath.c_str());
-  IO::write_CDT_to_file(filepath, tin);
+  IO::WriteTinToFile(filepath, tin);
 }
 
-void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
+void CacheChunk(const std::string feature_id, const ChunkInfo &chunk,
                 const GDALDatasetH &dataset) {
 
   TSR_LOG_TRACE("calculating dir");
@@ -55,13 +55,13 @@ void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
     }
   }
 
-  auto filepath = getChunkFilepath(feature_id, chunk);
+  auto filepath = GetChunkFilepath(feature_id, chunk);
   TSR_LOG_TRACE("caching to: {}", filepath.c_str());
 
-  IO::writeGDALDatasetToFile(filepath, dataset);
+  IO::WriteGdalDatasetToFile(filepath, dataset);
 }
 
-std::string getChunkFilepath(const std::string feature_id,
+std::string GetChunkFilepath(const std::string feature_id,
                              const ChunkInfo &chunk) {
   std::filesystem::path dir = std::filesystem::path(CACHE_DIR) / feature_id;
 
@@ -71,50 +71,50 @@ std::string getChunkFilepath(const std::string feature_id,
     }
   }
 
-  std::string filename = generateChunkID(chunk);
+  std::string filename = GenerateChunkId(chunk);
   return std::filesystem::path(dir) / filename;
 }
 
-void cacheChunk(const std::string feature_id, const ChunkInfo &chunk,
+void CacheChunk(const std::string feature_id, const ChunkInfo &chunk,
                 const std::vector<std::vector<Point2>> &contours) {
 
-  auto filepath = getChunkFilepath(feature_id, chunk);
+  auto filepath = GetChunkFilepath(feature_id, chunk);
 
   TSR_LOG_TRACE("caching contours to: {}", filepath.c_str());
 
-  IO::write_vector_contours_to_file(filepath, contours);
+  IO::WriteContoursToFile(filepath, contours);
 }
 
 template <>
-void getChunkFromCache<Tin>(const std::string feature_id, const ChunkInfo &chunk,
+void GetChunkFromCache<Tin>(const std::string feature_id, const ChunkInfo &chunk,
                             Tin &dtm) {
 
-  auto filepath = getChunkFilepath(feature_id, chunk);
+  auto filepath = GetChunkFilepath(feature_id, chunk);
 
   dtm = loadCDTFromFile(filepath);
 }
 
 template <>
-void getChunkFromCache<GDALDatasetH>(const std::string feature_id,
+void GetChunkFromCache<GDALDatasetH>(const std::string feature_id,
                                      const ChunkInfo &chunk,
                                      GDALDatasetH &dataset) {
 
-  auto filepath = getChunkFilepath(feature_id, chunk);
+  auto filepath = GetChunkFilepath(feature_id, chunk);
 
-  load_gdal_dataset_from_file(filepath, dataset);
+  LoadGdalDatasetFromFile(filepath, dataset);
 }
 
 template <>
-void getChunkFromCache<std::vector<std::vector<Point2>>>(
+void GetChunkFromCache<std::vector<std::vector<Point2>>>(
     const std::string feature_id, const ChunkInfo &chunk,
     std::vector<std::vector<Point2>> &contours) {
 
-  auto filepath = getChunkFilepath(feature_id, chunk);
-  load_vector_contours_from_file(filepath, contours);
+  auto filepath = GetChunkFilepath(feature_id, chunk);
+  LoadContoursFromFile(filepath, contours);
 }
 
-void deleteCachedChunk(const std::string feature_id, const ChunkInfo &chunk) {
-  auto filepath = getChunkFilepath(feature_id, chunk);
+void DeleteChunkFromCache(const std::string feature_id, const ChunkInfo &chunk) {
+  auto filepath = GetChunkFilepath(feature_id, chunk);
   if (std::filesystem::exists(filepath)) {
     std::filesystem::remove(filepath);
   }

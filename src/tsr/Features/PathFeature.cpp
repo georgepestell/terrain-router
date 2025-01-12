@@ -42,7 +42,7 @@ std::string PathFeature::URL =
     "22bridge%22%5D%5B%22passenger_lines%22%5D%28if%3At%5B%22passenger_lines%"
     "22%5D%20%3E%200%29%28{},{},{},{}%29%3B%29%3Bout+body%3B%0A{}";
 
-std::pair<Point2, Point2> PathFeature::normalizeSegment(Point2 p1, Point2 p2) {
+std::pair<Point2, Point2> PathFeature::NormalizeSegmentOrder(Point2 p1, Point2 p2) {
 
   if (p1 < p2) {
     return {p2, p1};
@@ -52,7 +52,7 @@ std::pair<Point2, Point2> PathFeature::normalizeSegment(Point2 p1, Point2 p2) {
 }
 
 void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
-  auto chunks = chunkManager.getRequiredChunks(boundary);
+  auto chunks = chunkManager.GetRequiredChunks(boundary);
   const double MAX_SEGMENT_SIZE = 22;
 
   // Check if the paths are cached
@@ -61,28 +61,28 @@ void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 
     if (chunkManager.IsAvailableInCache(this->feature_id, chunk)) {
       // Contours are cached
-      IO::getChunkFromCache<std::vector<std::vector<Point2>>>(this->feature_id,
+      IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(this->feature_id,
                                                               chunk, contours);
     } else {
       // Download from API
-      auto data = chunkManager.fetchVectorChunk(chunk);
+      auto data = chunkManager.FetchVectorChunk(chunk);
       GDALReleaseDataset(data.dataset);
 
-      contours = IO::load_contours_from_file(data.filename, "features");
+      contours = IO::LoadContoursFromJsonFile(data.filename, "features");
 
       // Cache Contours
       try {
-        IO::cacheChunk(this->feature_id, chunk, contours);
+        IO::CacheChunk(this->feature_id, chunk, contours);
       } catch (std::exception e) {
         TSR_LOG_WARN("failed to cache path contours");
       }
     }
 
     for (auto contour : contours) {
-      add_contour_constraint(tin, contour, MAX_SEGMENT_SIZE);
+      AddContourConstraint(tin, contour, MAX_SEGMENT_SIZE);
 
       for (unsigned int i = 0; i < contour.size() - 1; i++) {
-        this->paths.insert(normalizeSegment(contour[i], contour[i + 1]));
+        this->paths.insert(NormalizeSegmentOrder(contour[i], contour[i + 1]));
       }
     }
   }
@@ -94,7 +94,7 @@ bool PathFeature::Calculate(TsrState &state) {
   const Point3 target_point = state.next_vertex->point();
 
   const std::pair<Point2, Point2> segment =
-      normalizeSegment(Point2(source_point.x(), source_point.y()),
+      NormalizeSegmentOrder(Point2(source_point.x(), source_point.y()),
                        Point2(target_point.x(), target_point.y()));
 
   return this->paths.contains(segment);

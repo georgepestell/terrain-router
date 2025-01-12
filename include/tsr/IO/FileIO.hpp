@@ -12,8 +12,8 @@ namespace tsr::IO {
  * @param filename Path to convert to absolute form.
  * @return std::string The absolute path version of filename
  */
-std::string path_to_absolute(std::string filename);
+std::string PathToAbsolute(std::string filename);
 
-void write_data_to_file(std::string filepath, std::string data);
+void WriteDataToFile(std::string filepath, std::string data);
 
 } // namespace tsr::IO

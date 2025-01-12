@@ -71,4 +71,18 @@ std::vector<Point3> TsrState::fetchRoute() const {
   return route;
 }
 
+  size_t TsrState::AddWarning(const std::string &warning, const short priority) {
+    if (!warning_index.contains(warning)) {
+      size_t index = warning_messages.size();
+      warning_messages.push_back(warning);
+
+      warning_index[warning] = index;
+      warning_priorities[index] = priority;
+
+      return index;
+    } else {
+      return warning_index[warning];
+    }
+  }
+
 } // namespace tsr
