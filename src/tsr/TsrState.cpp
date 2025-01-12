@@ -1,5 +1,7 @@
 
 #include "tsr/TsrState.hpp"
+#include "tsr/Point3.hpp"
+#include "tsr/Logging.hpp"
 
 namespace tsr {
 

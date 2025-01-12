@@ -1,7 +1,10 @@
 #include "tsr/Tin.hpp"
 #include "tsr/TsrState.hpp"
+#include "tsr/Point3.hpp"
+
 #include <string>
 #include <vector>
+
 namespace tsr::IO {
 
 void writeSuccessStateToKML(const std::string &filepath, TsrState &state);

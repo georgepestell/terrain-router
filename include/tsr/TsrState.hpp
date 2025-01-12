@@ -1,6 +1,8 @@
 #pragma once
 
 #include "tsr/RouteNode.hpp"
+#include "tsr/Point3.hpp"
+
 #include <unordered_map>
 
 namespace tsr {
