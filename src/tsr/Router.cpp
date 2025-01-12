@@ -18,7 +18,7 @@
 #include <vector>
 
 namespace tsr {
-double calculateXYDistance(Point3 p1, Point3 p2) {
+double calculateXYDistance(const Point3 p1, const Point3 p2) {
 
   double dx = p1.x() - p2.x();
   double dy = p1.y() - p2.y();
@@ -26,7 +26,7 @@ double calculateXYDistance(Point3 p1, Point3 p2) {
   return std::hypot(dx, dy);
 }
 
-Vertex_handle Router::nearestVertexToPoint(Tin &dtm, Point3 &point) {
+Vertex_handle Router::nearestVertexToPoint(const Tin &dtm, const Point3 &point) {
   Face_handle face = dtm.locate(point);
 
   if (face == nullptr || !face->is_valid() || dtm.is_infinite(face)) {
@@ -48,41 +48,14 @@ Vertex_handle Router::nearestVertexToPoint(Tin &dtm, Point3 &point) {
   return vertex;
 }
 
-std::vector<Point3> Router::calculateRoute(Tin &dtm, FeatureManager &fm,
-                                           MeshBoundary &boundary,
-                                           Point3 &start_point,
-                                           Point3 &end_point) {
-
-  double minX = 100000000;
-  double maxX = -100000000;
-  double minY = 100000000;
-  double maxY = -100000000;
-  for (auto v : dtm.all_vertex_handles()) {
-    if (dtm.is_infinite(v)) {
-      continue;
-    }
-    Point3 p = v->point();
-
-    if (p.x() > maxX)
-      maxX = p.x();
-    if (p.x() < minX)
-      minX = p.x();
-
-    if (p.y() > maxY)
-      maxY = p.y();
-    if (p.y() < minY)
-      minY = p.y();
-  }
-
-  TSR_LOG_TRACE("minX: {}, maxX: {}, minY: {}, maxY: {}", minX, maxX, minY,
-                maxY);
+std::vector<Point3> Router::calculateRoute(const Tin &dtm, FeatureManager &fm,
+                                           const MeshBoundary &boundary,
+                                           const Point3 &start_point,
+                                           const Point3 &end_point) {
 
   TSR_LOG_TRACE("Routing");
 
-  // TSR_LOG_DEBUG("Deleting outside vertices");
-  // delete_nodes_outside_rectangle(*this->dtm, start_point, end_point);
-  // TSR_LOG_DEBUG("Kept: {} vertices", this->dtm->number_of_vertices());
-
+  // Fetch the nearest search node to the given points
   this->state.start_vertex = nearestVertexToPoint(dtm, start_point);
   this->state.end_vertex = nearestVertexToPoint(dtm, end_point);
 

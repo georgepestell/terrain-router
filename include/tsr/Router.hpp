@@ -20,11 +20,11 @@ private:
   double calculateTrivialCost(const FeatureManager &fm, TsrState &state);
 
 public:
-  Vertex_handle nearestVertexToPoint(Tin &dtm, Point3 &point);
+  Vertex_handle nearestVertexToPoint(const Tin &dtm, const Point3 &point);
 
-  std::vector<Point3> calculateRoute(Tin &dtm, FeatureManager &fm,
-                                     MeshBoundary &boundary,
-                                     Point3 &start_point, Point3 &end_point);
+  std::vector<Point3> calculateRoute(const Tin &dtm, FeatureManager &fm,
+                                     const MeshBoundary &boundary,
+                                     const Point3 &start_point, const Point3 &end_point);
 };
 
 } // namespace tsr
