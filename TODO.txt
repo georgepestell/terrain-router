@@ -1,8 +1,0 @@
-TODO:  add ssh host pc1-023-l
-TODO:  override areas of water with very simplified 2d triangulation
-TODO: convert water feature data to XYZ locations
-
-
-bounding box:
-x: -5.127361122222 to -4.96513889987
-y: 56.761527788889 to 56.864861122305
