@@ -3,6 +3,10 @@
 
 namespace tsr {
 
+#ifdef @DEBUG_TIME@
+#define DEBUG_TIME
+#endif
+
 std::string get_git_description() { return "@TSR_GIT_DESCRIPTION@"; }
 
 std::string get_git_hash() { return "@TSR_GIT_COMMIT_HASH@"; }
