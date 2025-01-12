@@ -15,13 +15,13 @@ void TsrState::ProcessWarnings() {
   while (currentNode.vertex != start_vertex) {
     currentNode = this->routes.at(currentNode.parent);
 
-    // From the end point to the start point, add the warnings on the route
-    // itself
-    auto warningID = this->warnings[currentNode.face];
-    if (warningID > 0) {
-      // TODO: better showing warnings on route
-      // processedWarnings[currentNode.face] = (warningID);
-    }
+    // // From the end point to the start point, add the warnings on the route
+    // // itself
+    // auto warningID = this->warnings[currentNode.face];
+    // if (warningID > 0) {
+    //   // TODO: better showing warnings on route
+    //   // processedWarnings[currentNode.face] = (warningID);
+    // }
 
     // Otherwise, add an adjacent warning if required
     short maxPriority = 0;
