@@ -224,7 +224,7 @@ GDALDatasetH warpRasterDatasetToUTM(GDALDatasetH hDataset,
   warpOptions->nBandCount = bandCount;
   warpOptions->panSrcBands = (int *)CPLMalloc(sizeof(int) * bandCount);
   warpOptions->panDstBands = (int *)CPLMalloc(sizeof(int) * bandCount);
-  warpOptions->pfnProgress = GDALTermProgress;
+  warpOptions->pfnProgress = GDALDummyProgress; // Disable progress output
   warpOptions->padfDstNoDataReal =
       (double *)CPLMalloc(sizeof(double) * bandCount);
   warpOptions->papszWarpOptions =
