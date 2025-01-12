@@ -90,6 +90,12 @@ set(TSR_SOURCE_FILES
   src/tsr/MeshBoundary.cpp
   src/tsr/Feature.cpp
   src/tsr/Features/APIFeature.cpp
+  src/tsr/Features/GradientFeature.cpp
+  src/tsr/Features/GradientSpeedFeature.cpp
+  src/tsr/Features/BoolWaterFeature.cpp
+  src/tsr/Features/CEHTerrainFeature.cpp
+  src/tsr/Features/PathFeature.cpp
+  src/tsr/Features/MultiplierFeature.cpp
   src/tsr/FeatureManager.cpp
   src/tsr/IO/KMLWriter.cpp
   src/tsr/IO/JSONParser.cpp

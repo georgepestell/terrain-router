@@ -1,6 +1,6 @@
 #include "tsr/Feature.hpp"
-#include "tsr/Logging.hpp"
 #include "tsr/TsrState.hpp"
+
 #include <limits>
 #include <memory>
 
