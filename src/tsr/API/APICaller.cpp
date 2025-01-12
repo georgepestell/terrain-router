@@ -7,7 +7,6 @@
 #include <curl/easy.h>
 #include <fstream>
 #include <ios>
-#include <memory>
 #include <stdexcept>
 #include <string>
 #include <vector>
