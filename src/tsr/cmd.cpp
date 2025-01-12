@@ -1,27 +1,21 @@
-#include "tsr/Tin.hpp"
-#include "tsr/version_info.hpp"
 
 #include "tsr/ChunkManager.hpp"
+#include "tsr/Logging.hpp"
+#include "tsr/PointProcessor.hpp"
+#include "tsr/Presets.hpp"
+
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/FeatureManager.hpp"
 #include "tsr/MeshBoundary.hpp"
-#include "tsr/PointProcessor.hpp"
-#include "tsr/SurfaceMesh.hpp"
-
-#include "tsr/Presets.hpp"
-
-#include "tsr/IO/ImageIO.hpp"
-#include "tsr/IO/MapIO.hpp"
-
-#include "tsr/Logging.hpp"
 #include "tsr/Point3.hpp"
+#include "tsr/Router.hpp"
+#include "tsr/SurfaceMesh.hpp"
+#include "tsr/Tin.hpp"
 
 #include "tsr/GeometryUtils.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/GPXFormatter.hpp"
 #include "tsr/IO/MeshIO.hpp"
-
-#include "tsr/Router.hpp"
 
 #include <boost/program_options/cmdline.hpp>
 #include <boost/program_options/options_description.hpp>
@@ -29,16 +23,13 @@
 #include <boost/program_options/positional_options.hpp>
 #include <boost/program_options/value_semantic.hpp>
 #include <boost/program_options/variables_map.hpp>
+
 #include <cfenv>
 #include <cstdlib>
 #include <exception>
-#include <gdal/gdal.h>
 #include <iostream>
 #include <ostream>
-#include <string>
 #include <vector>
-
-#include <boost/program_options.hpp>
 
 namespace po = boost::program_options;
 
@@ -213,7 +204,7 @@ int main(int argc, char **argv) {
     return tsr::tsr_run(start_lat, start_lon, end_lat, end_lon);
 
   } catch (const std::exception &e) {
-    std::cerr << "ERROR: " << e.what() << std::endl;
+    TSR_LOG_ERROR("{}", e.what());
     return 1;
   }
 }
