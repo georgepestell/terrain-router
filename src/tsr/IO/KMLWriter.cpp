@@ -30,11 +30,11 @@ void writeSuccessStateToKML(const std::string &filepath, TsrState &state) {
 
 void writeFailureStateToKML(const std::string &filepath, TsrState &state) {
   // TODO: Draw all routes
-  auto routesKML = generateKMLForAllRoutes(state);
+  // auto routesKML = generateKMLForAllRoutes(state);
 
   auto warningsKML = generateKMLWarnings(state);
 
-  auto kml = generateKMLDocument(routesKML + warningsKML);
+  auto kml = generateKMLDocument(warningsKML);
 
   IO::write_data_to_file(filepath, kml);
 }
@@ -256,12 +256,6 @@ std::string generateKMLRoute(const std::vector<Point3> &route) {
   kml += "</Folder>\n";
 
   return kml;
-}
-
-std::string generateKMLForAllRoutes(const TsrState &state) {
-
-  // TODO: generate KML route mesh
-  return "";
 }
 
 } // namespace tsr::IO

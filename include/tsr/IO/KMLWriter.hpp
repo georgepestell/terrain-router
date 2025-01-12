@@ -13,8 +13,6 @@ std::string generateKMLWarnings(const TsrState &state);
 
 std::string generateKMLRoute(const std::vector<Point3> &route);
 
-std::string generateKMLForAllRoutes(const TsrState &state);
-
 std::string generateKMLDocument(const std::string &inner_kml);
 
 } // namespace tsr::IO
