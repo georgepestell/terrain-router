@@ -37,7 +37,6 @@ std::string BoolWaterFeature::URL =
     "body%3B{}";
 
 void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
-  // TODO: get datasets from cache/api
   auto chunks = chunkManager.GetRequiredChunks(boundary);
 
   std::string dataFeatureID = this->feature_id + "/data";
@@ -52,7 +51,6 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
     if (IO::IsChunkCached(contourFeatureID, chunk)) {
       TSR_LOG_TRACE("reading cached contours");
 
-      // TODO: Fetch contours from cache
       IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(contourFeatureID,
                                                               chunk, contours);
 
@@ -79,7 +77,7 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       // Extract contours usign OpenCV
       const double SIMPLIFICATION_FACTOR = 0.01;
       contours = API::ExtractFeatureContours(data.filename, adfGeotransform,
-                                               SIMPLIFICATION_FACTOR);
+                                             SIMPLIFICATION_FACTOR);
 
       TSR_LOG_TRACE("chunk contours: {}", contours.size());
 
@@ -97,7 +95,6 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 void BoolWaterFeature::Tag(const Tin &tin) {
   TSR_LOG_TRACE("Tagging water feature");
 
-  // TODO: Get dataset from cache or API
   const std::string dataFeatureID = this->feature_id + "/data";
 
   // Mark whether a face is water or not
