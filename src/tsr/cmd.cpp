@@ -1,3 +1,6 @@
+#include "tsr/Tin.hpp"
+#include "tsr/version_info.hpp"
+
 #include "tsr/ChunkManager.hpp"
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/FeatureManager.hpp"
@@ -31,9 +34,7 @@
 #include <exception>
 #include <gdal/gdal.h>
 #include <iostream>
-#include <memory>
 #include <ostream>
-#include <stdexcept>
 #include <string>
 #include <vector>
 
@@ -46,6 +47,10 @@ namespace po = boost::program_options;
 #define DEM_API_KEY "0f789809fed28dc634c8d75695d0cc5c"
 
 #include <sys/resource.h>
+
+#ifdef DEBUG_TIME
+log_set_global_logstream(LogStream::stderr);
+#endif
 
 namespace tsr {
 
@@ -67,11 +72,30 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   MeshBoundary boundary(startPoint, endPoint, RADII_MULTIPLIER);
 
   TSR_LOG_TRACE("Initializing mesh");
+
+#ifdef DEBUG_TIME
+  TSR_LOG_TRACE("DEBUG: TIME");
+  using std::chrono::duration;
+  using std::chrono::duration_cast;
+  using std::chrono::high_resolution_clock;
+  using std::chrono::miliseconds;
+
+  auto timer_initial_tin_start = high_resolution_clock::now();
+#endif
+
   Tin tin = InitializeTinFromBoundary(boundary, DEM_API_KEY);
+
+#ifdef DEBUG_TIME
+  auto timer_features_setup = high_resolution_clock::now();
+#endif
 
   TSR_LOG_TRACE("Vertices: {}", tin.number_of_vertices());
 
   FeatureManager fm = SetupTimePreset(tin, boundary);
+
+#ifdef DEBUG_TIME
+  auto timer_routing_start = high_resolution_clock::now();
+#endif
 
   TSR_LOG_TRACE("final vertex count: {}", tin.number_of_vertices());
 
@@ -91,6 +115,10 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
                 boundary.getURCorner().y());
   auto route = router.calculateRoute(tin, fm, boundary, startPoint, endPoint);
 
+#ifdef DEBUG_TIME
+  auto timer_routing_end = high_resolution_clock::now();
+#endif
+
   // Convert the points to WGS84
   std::vector<Point3> routeWGS84;
   for (auto &point : route) {
@@ -100,6 +128,21 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   // Output the route as a gpx file
   IO::write_data_to_file("route.gpx", IO::formatPointsAsGPXRoute(routeWGS84));
+
+// Output the timing information
+#ifdef DEBUG_TIME
+  duration<double, std::milli> ms_initial_tin =
+      timer_initial_tin_start - timer_features_setup;
+  duration<double, std::milli> ms_features_setup =
+      timer_routing_start - timer_features_setup;
+  duration<double, std::milli> ms_routing =
+      timer_routing_end - timer_routing_start;
+
+  log_set_global_logstream(LogStream::stdout);
+  TSR_LOG_INFO("{},{},{}", ms_initial_tin, ms_features_setup, ms_routing);
+  log_set_global_logstream(LogStream::stderr);
+
+#endif
 
   return EXIT_SUCCESS;
 }
