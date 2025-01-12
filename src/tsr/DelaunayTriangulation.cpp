@@ -74,7 +74,7 @@ Tin create_tin_from_pointset(const std::vector<Point3> &points) {
   return tin;
 }
 
-void add_contour_constraint(Tin &dtm, std::vector<Point2> contour,
+void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
                             double max_segment_length) {
 
   for (auto vertexIt = contour.begin(); vertexIt != contour.end(); ++vertexIt) {
@@ -85,9 +85,9 @@ void add_contour_constraint(Tin &dtm, std::vector<Point2> contour,
     const double x = vertexIt->x();
     const double y = vertexIt->y();
 
-    Tin::Face_handle vertexFace = dtm.locate(Point3(x, y, 0));
+    Tin::Face_handle vertexFace = tin.locate(Point3(x, y, 0));
 
-    if (vertexFace == nullptr || dtm.is_infinite(vertexFace)) {
+    if (vertexFace == nullptr || tin.is_infinite(vertexFace)) {
       // TSR_LOG_WARN("Point outside boundary x: {} y: {}", x, y);
       continue;
     }
@@ -101,9 +101,9 @@ void add_contour_constraint(Tin &dtm, std::vector<Point2> contour,
     const double next_x = vertexNextIt->x();
     const double next_y = vertexNextIt->y();
 
-    Tin::Face_handle vertexNextFace = dtm.locate(Point3(next_x, next_y, 0));
+    Tin::Face_handle vertexNextFace = tin.locate(Point3(next_x, next_y, 0));
 
-    if (vertexNextFace == nullptr || dtm.is_infinite(vertexNextFace)) {
+    if (vertexNextFace == nullptr || tin.is_infinite(vertexNextFace)) {
       // TSR_LOG_WARN("Point outside boundary x: {} y: {}", next_x, next_y);
       continue;
     }
@@ -130,9 +130,9 @@ void add_contour_constraint(Tin &dtm, std::vector<Point2> contour,
         double split_y = round(y + (dy / splits) * split);
 
         Tin::Face_handle vertexSplitFace =
-            dtm.locate(Point3(split_x, split_y, 0));
+            tin.locate(Point3(split_x, split_y, 0));
 
-        if (dtm.is_infinite(vertexSplitFace)) {
+        if (tin.is_infinite(vertexSplitFace)) {
           // TSR_LOG_ERROR("Point outside boundary x: {} y: {}", split_x,
           // split_y);
           return;
@@ -146,16 +146,16 @@ void add_contour_constraint(Tin &dtm, std::vector<Point2> contour,
       }
 
       // Add the constraints
-      dtm.insert_constraint(vertexPoint, splitPoints[0]);
+      tin.insert_constraint(vertexPoint, splitPoints[0]);
       ushort splitIndex;
       for (splitIndex = 1; splitIndex < splitPoints.size(); splitIndex++) {
-        dtm.insert_constraint(splitPoints[splitIndex - 1],
+        tin.insert_constraint(splitPoints[splitIndex - 1],
                               splitPoints[splitIndex]);
       }
-      dtm.insert_constraint(splitPoints[splitIndex - 1], vertexNextPoint);
+      tin.insert_constraint(splitPoints[splitIndex - 1], vertexNextPoint);
 
     } else {
-      dtm.insert_constraint(vertexPoint, vertexNextPoint);
+      tin.insert_constraint(vertexPoint, vertexNextPoint);
     }
   }
 }

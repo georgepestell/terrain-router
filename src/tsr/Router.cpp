@@ -26,7 +26,8 @@ double calculateXYDistance(const Point3 p1, const Point3 p2) {
   return std::hypot(dx, dy);
 }
 
-Vertex_handle Router::nearestVertexToPoint(const Tin &dtm, const Point3 &point) {
+Vertex_handle Router::nearestVertexToPoint(const Tin &dtm,
+                                           const Point3 &point) {
   Face_handle face = dtm.locate(point);
 
   if (face == nullptr || !face->is_valid() || dtm.is_infinite(face)) {

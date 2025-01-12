@@ -36,7 +36,7 @@ void simplifyTIN(Tin const &source_mesh, Tin &target_mesh,
 
 void simplifyTIN(Tin const &source_mesh, Tin &target_mesh);
 
-void add_contour_constraint(Tin &dtm, std::vector<Point2> contour,
+void add_contour_constraint(Tin &tin, std::vector<Point2> contour,
                             double max_segment_length);
 
 } // namespace tsr
