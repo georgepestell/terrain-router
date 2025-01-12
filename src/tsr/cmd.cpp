@@ -99,10 +99,10 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   TSR_LOG_TRACE("final vertex count: {}", tin.number_of_vertices());
 
-  // /// DEBUG: Write mesh to obj
-  // SurfaceMesh tmpMesh;
-  // ConvertTinToSurfaceMesh(tin, tmpMesh);
-  // IO::WriteMeshToObj("test.obj", tmpMesh);
+  /// DEBUG: Write mesh to obj
+  SurfaceMesh tmpMesh;
+  ConvertTinToSurfaceMesh(tin, tmpMesh);
+  IO::WriteMeshToObj("test.obj", tmpMesh);
 
   TSR_LOG_TRACE("Preparing router");
   Router router;
