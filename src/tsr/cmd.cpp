@@ -109,10 +109,6 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   // Calculate the optimal route
   TSR_LOG_TRACE("Calculating Route");
-  TSR_LOG_TRACE("ll: {} {}", boundary.GetLowerLeftPoint().x(),
-                boundary.GetLowerLeftPoint().y());
-  TSR_LOG_TRACE("ur: {} {}", boundary.GetUpperRightPoint().x(),
-                boundary.GetUpperRightPoint().y());
   auto route = router.Route(tin, fm, boundary, startPoint, endPoint);
 
 #ifdef DEBUG_TIME
