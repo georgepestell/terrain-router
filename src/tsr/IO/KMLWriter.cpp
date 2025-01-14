@@ -153,6 +153,29 @@ std::string GenerateKmlWarnings(const TsrState &state) {
   return kml;
 }
 
+std::string GenerateKmlLine(std::pair<Point3, Point3> line) {
+
+  std::string kml = "";
+
+  kml += "<Placemark>\n";
+  kml += "<LineString>\n";
+  kml += "<altitudeMode>clampToGround</altitudeMode>\n";
+  kml += "<coordinates>\n";
+
+  auto sourcePointWGS84 = TranslateUtmPointToWgs84(line.first, 30, true);
+  auto targetPointWGS84 = TranslateUtmPointToWgs84(line.second, 30, true);
+  kml += std::to_string(sourcePointWGS84.y()) + "," +
+         std::to_string(sourcePointWGS84.x()) + "," + "0\n";
+  kml += std::to_string(targetPointWGS84.y()) + "," +
+         std::to_string(targetPointWGS84.x()) + "," + "0\n";
+
+  kml += "</coordinates>\n";
+  kml += "</LineString>\n";
+  kml += "</Placemark>\n";
+
+  return kml;
+}
+
 std::string GenerateKmlRoute(const std::vector<Point3> &route) {
 
   // Used to show gradient
@@ -166,7 +189,8 @@ std::string GenerateKmlRoute(const std::vector<Point3> &route) {
   std::string kml;
 
   auto startPointWGS84 = TranslateUtmPointToWgs84(route[0], 30, true);
-  auto endPointWGS84 = TranslateUtmPointToWgs84(route[route.size() - 1], 30, true);
+  auto endPointWGS84 =
+      TranslateUtmPointToWgs84(route[route.size() - 1], 30, true);
 
   kml += "<Folder>\n";
   kml += "<name>Route</name>\n";

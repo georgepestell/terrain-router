@@ -4,6 +4,7 @@
 #include "tsr/Point3.hpp"
 #include "tsr/SurfaceMesh.hpp"
 #include "tsr/Tin.hpp"
+#include <utility>
 
 namespace tsr {
 
@@ -19,10 +20,10 @@ Tin InitializeTinFromBoundary(
                              "&east={}&outputFormat=GeoTiff&API_Key={}");
 
 void MergeTinPointsInBoundary(MeshBoundary &boundary, const Tin &srcTIN,
-                               Tin &dstTIN);
+                              Tin &dstTIN);
 
 Tin CreateTinFromPoints(std::vector<Point3> &points, Point3 source_point,
-                             Point3 target_point, double radii);
+                        Point3 target_point, double radii);
 
 Tin CreateTinFromPoints(const std::vector<Point3> &points);
 
@@ -36,7 +37,8 @@ void SimplifyTin(Tin const &source_mesh, Tin &target_mesh,
 
 void SimplifyTin(Tin const &source_mesh, Tin &target_mesh);
 
-void AddContourConstraint(Tin &tin, std::vector<Point2> contour,
-                            double max_segment_length);
+std::set<std::pair<Point3, Point3>>
+AddContourConstraint(Tin &tin, std::vector<Point2> contour,
+                     double max_segment_length);
 
 } // namespace tsr

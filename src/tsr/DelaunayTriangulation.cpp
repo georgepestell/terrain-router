@@ -1,6 +1,7 @@
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/GeometryUtils.hpp"
 #include "tsr/Logging.hpp"
+#include "tsr/Point2.hpp"
 #include "tsr/Point3.hpp"
 #include "tsr/SurfaceMesh.hpp"
 #include "tsr/Tin.hpp"
@@ -20,12 +21,18 @@
 #include <CGAL/tags.h>
 
 #include <boost/filesystem.hpp>
+#include <boost/filesystem/operations.hpp>
 #include <boost/property_map/vector_property_map.hpp>
 
 #include <cmath>
 #include <exception>
+#include <gdal.h>
 #include <iterator>
 
+#include <memory>
+#include <oneapi/tbb/flow_graph.h>
+#include <set>
+#include <string>
 #include <tbb/flow_graph.h>
 #include <tbb/parallel_for.h>
 
@@ -39,6 +46,7 @@
 
 #include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
 #include <sys/types.h>
+#include <utility>
 #include <vector>
 
 namespace tsr {
@@ -74,8 +82,11 @@ Tin CreateTinFromPoints(const std::vector<Point3> &points) {
   return tin;
 }
 
-void AddContourConstraint(Tin &tin, std::vector<Point2> contour,
-                            double max_segment_length) {
+std::set<std::pair<Point3, Point3>>
+AddContourConstraint(Tin &tin, std::vector<Point2> contour,
+                     double max_segment_length) {
+
+  std::set<std::pair<Point3, Point3>> constraints;
 
   for (auto vertexIt = contour.begin(); vertexIt != contour.end(); ++vertexIt) {
     auto vertexNextIt = std::next(vertexIt);
@@ -93,8 +104,8 @@ void AddContourConstraint(Tin &tin, std::vector<Point2> contour,
     }
 
     double z = InterpolateZ(vertexFace->vertex(0)->point(),
-                             vertexFace->vertex(1)->point(),
-                             vertexFace->vertex(2)->point(), x, y);
+                            vertexFace->vertex(1)->point(),
+                            vertexFace->vertex(2)->point(), x, y);
 
     Point3 vertex(vertexIt->x(), vertexIt->y(), z);
 
@@ -135,29 +146,35 @@ void AddContourConstraint(Tin &tin, std::vector<Point2> contour,
         if (tin.is_infinite(vertexSplitFace)) {
           // TSR_LOG_ERROR("Point outside boundary x: {} y: {}", split_x,
           // split_y);
-          return;
+          continue;
         }
 
-        double split_z = InterpolateZ(vertexSplitFace->vertex(0)->point(),
-                                       vertexSplitFace->vertex(1)->point(),
-                                       vertexSplitFace->vertex(2)->point(),
-                                       split_x, split_y);
+        double split_z =
+            InterpolateZ(vertexSplitFace->vertex(0)->point(),
+                         vertexSplitFace->vertex(1)->point(),
+                         vertexSplitFace->vertex(2)->point(), split_x, split_y);
         splitPoints.push_back(Point3(split_x, split_y, split_z));
       }
 
       // Add the constraints
-      tin.insert_constraint(vertexPoint, splitPoints[0]);
+      constraints.insert({vertexPoint, splitPoints[0]});
       ushort splitIndex;
       for (splitIndex = 1; splitIndex < splitPoints.size(); splitIndex++) {
-        tin.insert_constraint(splitPoints[splitIndex - 1],
-                              splitPoints[splitIndex]);
+        constraints.insert(
+            {splitPoints[splitIndex - 1], splitPoints[splitIndex]});
       }
-      tin.insert_constraint(splitPoints[splitIndex - 1], vertexNextPoint);
+      constraints.insert({splitPoints[splitIndex - 1], vertexNextPoint});
 
     } else {
-      tin.insert_constraint(vertexPoint, vertexNextPoint);
+      constraints.insert({vertexPoint, vertexNextPoint});
     }
   }
+
+  for (auto c : constraints) {
+    tin.insert_constraint(c.first, c.second);
+  }
+
+  return constraints;
 }
 
 void SimplifyTin(Tin const &source_mesh, Tin &target_mesh,
@@ -269,7 +286,6 @@ void SimplifyTin(Tin const &source_mesh, Tin &target_mesh) {
 Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
                               std::string url_format) {
 
-  // TODO: get the tiles required
   std::vector<ChunkInfo> apiTilesRequired;
   std::vector<ChunkInfo> cachedTilesRequired;
 
@@ -472,7 +488,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
 }
 
 void MergeTinPointsInBoundary(MeshBoundary &boundary, const Tin &srcTIN,
-                               Tin &dstTIN) {
+                              Tin &dstTIN) {
   for (auto vertex = srcTIN.all_vertices_begin();
        vertex != srcTIN.all_vertices_end(); ++vertex) {
 

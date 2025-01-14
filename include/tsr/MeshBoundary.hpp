@@ -25,8 +25,9 @@ public:
   static Point2 rotatePoint(const Point2 &p, const Point2 &midpoint,
                             double angle);
 
-  bool IsBounded(Point3 p) const;
-  bool IsBoundedSafe(Point3 p) const;
+  bool IsBounded(const Point3 &p) const;
+  bool IsBounded(const Point2 &p) const;
+  bool IsBoundedSafe(const Point3 &p) const;
 
   void FilterPointsOutsideBoundary(std::vector<Point3> points) const;
 
