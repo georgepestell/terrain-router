@@ -1,0 +1,17 @@
+---
+BasedOnStyle: GNU
+DisableFormat: false
+ColumnLimit: 80
+TabWidth: 4
+IndentWidth: 4
+UseTab: Never
+AlignAfterOpenBracket: Align
+AlignConsequtiveDeclarations: 'false'
+BreakBeforeBraces: Allman
+NamespaceIndentation: All
+
+---
+Language:        Cpp
+Standard:        Cpp17
+Cpp17BracedListStyle: true
+...
