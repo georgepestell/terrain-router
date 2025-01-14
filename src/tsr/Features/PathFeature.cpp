@@ -1,6 +1,7 @@
 #include "tsr/Features/PathFeature.hpp"
 #include "tsr/ChunkInfo.hpp"
 #include "tsr/DelaunayTriangulation.hpp"
+#include "tsr/Features/BoolWaterFeature.hpp"
 #include "tsr/IO/ChunkCache.hpp"
 #include "tsr/IO/JSONParser.hpp"
 #include "tsr/Logging.hpp"
@@ -9,53 +10,61 @@
 #include "tsr/Point3.hpp"
 #include "tsr/Tin.hpp"
 #include "tsr/TsrState.hpp"
+#include <cmath>
 #include <cstddef>
 #include <exception>
 #include <gdal.h>
+#include <memory>
 #include <string>
 #include <utility>
 #include <vector>
 
 namespace tsr {
 
-std::size_t EdgeHash::operator()(const std::pair<Point2, Point2> &edge) const {
-  std::size_t seed = 0;
-  boost::hash_combine(seed, edge.first);
-  boost::hash_combine(seed, edge.second);
+std::size_t EdgeHash::operator()(const std::pair<Point3, Point3> &edge) const {
+  size_t seed = 0;
+  boost::hash_combine(seed, edge.first.x());
+  boost::hash_combine(seed, edge.first.y());
+  boost::hash_combine(seed, edge.second.x());
+  boost::hash_combine(seed, edge.second.y());
   return seed;
 }
 
 std::string PathFeature::URL =
     "https://lz4.overpass-api.de/api/"
-    "interpreter?data=%5Bout%3Axml%5D%5Btimeout%3A25%5D%3B%28way%5B%"
-    "22highway%22~%22footway%7Cpath%7Cpedestrian%7Ctrack%7Ccycleway%22%5D%"
-    "28{},{},{},{}%29%3Bway%5B%22highway%22%5D%5B%22foot%22~%22yes%"
-    "7Cdesignated%"
-    "7Cpermissive%7Cno%22%5D%28{},{},{},{}%29%3Bway%5B%22highway%22%5D%5B%"
-    "22access%"
-    "22~%22yes%7Cdesignated%7Cpermissive%22%5D%28{},{},{},{}%29%3Bway%5B%"
-    "22sidewalk%"
-    "22~%22yes%7Cboth%7Cleft%7Cright%22%5D%28{},{},{},{}%29%3Bway%5B%"
-    "22bridge%22%5D%"
-    "5B%22sidewalk%22~%22yes%7Cboth%7Cleft%7Cright%22%5D%28{},{},{},{}%29%"
-    "3Bway%5B%"
-    "22bridge%22%5D%5B%22passenger_lines%22%5D%28if%3At%5B%22passenger_lines%"
-    "22%5D%20%3E%200%29%28{},{},{},{}%29%3B%29%3B%28._%3B%3E%3B%29%3Bout+body%"
+    "interpreter?data=%5Bout%3Axml%5D%5Btimeout%3A25%5D%3B%28way%5B%22highway%"
+    "22%5D%28{},{},{},{}%29%3B%29%3B%28._%3B%3E%3B%29%3Bout+body%"
     "3B%0A{}";
 
-std::pair<Point2, Point2> PathFeature::NormalizeSegmentOrder(Point2 p1,
-                                                             Point2 p2) {
+std::pair<Point3, Point3> PathFeature::NormalizeSegmentOrder(Point3 p1,
+                                                             Point3 p2) {
 
-  if (p1 < p2) {
-    return {p2, p1};
+  // Lexicographical ordering on coords
+  bool retainOrder;
+  if (p1.x() < p2.x()) {
+    retainOrder = true;
+  } else if (p1.x() > p2.x()) {
+    retainOrder = false;
+  } else if (p1.y() < p2.y()) {
+    retainOrder = true;
+  } else if (p1.y() > p2.y()) {
+    retainOrder = false;
+  } else if (p1.z() < p2.z()) {
+    retainOrder = true;
   } else {
+    retainOrder = false;
+  }
+
+  if (retainOrder) {
     return {p1, p2};
+  } else {
+    return {p2, p1};
   }
 }
 
 void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
   auto chunks = chunkManager.GetRequiredChunks(boundary);
-  const double MAX_SEGMENT_SIZE = 22;
+  const double MAX_SEGMENT_SIZE = 15;
 
   // Check if the paths are cached
   std::vector<std::vector<Point2>> contours;
@@ -68,7 +77,7 @@ void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
     } else {
       // Download from API
       auto data = chunkManager.FetchVectorChunk(chunk);
-      IO::CacheChunk("test", chunk, data.dataset);
+      // IO::CacheChunk("test", chunk, data.dataset);
       GDALReleaseDataset(data.dataset);
 
       contours = IO::LoadContoursFromJsonFile(data.filename, "features");
@@ -84,13 +93,16 @@ void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
     TSR_LOG_TRACE("Path Contours: {}", contours.size());
 
     for (auto contour : contours) {
-      AddContourConstraint(tin, contour, MAX_SEGMENT_SIZE);
+      auto constraints = AddContourConstraint(tin, contour, MAX_SEGMENT_SIZE);
 
-      for (unsigned int i = 0; i < contour.size() - 1; i++) {
-        this->paths.insert(NormalizeSegmentOrder(contour[i], contour[i + 1]));
+      for (auto constraint : constraints) {
+        this->paths.insert(
+            NormalizeSegmentOrder(constraint.first, constraint.second));
       }
     }
   }
+
+  TSR_LOG_TRACE("Total Paths: {}", paths.size());
 }
 
 bool PathFeature::Calculate(TsrState &state) {
@@ -98,11 +110,14 @@ bool PathFeature::Calculate(TsrState &state) {
   const Point3 source_point = state.current_vertex->point();
   const Point3 target_point = state.next_vertex->point();
 
-  const std::pair<Point2, Point2> segment =
-      NormalizeSegmentOrder(Point2(source_point.x(), source_point.y()),
-                            Point2(target_point.x(), target_point.y()));
+  const std::pair<Point3, Point3> segment =
+      NormalizeSegmentOrder(source_point, target_point);
 
-  return this->paths.contains(segment);
+  if (this->paths.contains(segment)) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 } // namespace tsr

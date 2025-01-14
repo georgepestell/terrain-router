@@ -288,7 +288,7 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
   options = CSLAddString(options, "-burn");
   options = CSLAddString(options, "255");
   options = CSLAddString(options, "-ot");
-  options = CSLAddString(options, "Int16");
+  options = CSLAddString(options, "Byte");
   options = CSLAddString(options, "-tr");
   options = CSLAddString(options, pixelResolutionString.c_str());
   options = CSLAddString(options, pixelResolutionString.c_str());
@@ -326,6 +326,7 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
 
   // options = CSLAddString(options, "-l");
   // options = CSLAddString(options, "multipolygon");
+  // TSR_LOG_TRACE("{} {} {} {}", minLng, minLat, maxLng, maxLat);
   options = CSLAddString(options, "-te");
   options = CSLAddString(options, minLng.c_str());
   options = CSLAddString(options, minLat.c_str());
@@ -364,7 +365,6 @@ std::vector<std::vector<Point2>>
 ExtractFeatureContours(const std::string &filepath, double adf_geotransform[6],
                        double simplification_factor) {
 
-  // TODO: Open the file as a MAT img
   auto image = IO::LoadImageFromFile(filepath);
 
   auto contours = IO::ExtractFeatureContours(image, simplification_factor,

@@ -25,16 +25,11 @@
 namespace tsr {
 
 std::string BoolWaterFeature::URL =
-    "https://lz4.overpass-api.de/api/interpreter?data="
-    "%5Bout%3Axml%5D%5Btimeout%3A25%5D%3B%0A%28node%5B%22natural%22%3D%"
-    "22water%22%5D%5B%22type%22%3D%22multipolygon%22%5D%28{},{},{},{}%29%3B%"
-    "0Away%5B%22natural%22%3D%22water%22%5D%5B%22type%22%3D%22multipolygon%"
-    "22%5D%28{},{},{},{}%29%3B%0Arelation%5B%22natural%22%3D%22water%22%5D%"
-    "5B%22type%22%3D%22multipolygon%22%5D%28{},{},{},{}%29%3B%0Anode%5B%"
-    "22natural%22%3D%22water%22%5D%28{},{},{},{}%29%3B%0Away%5B%22natural%22%"
-    "3D%22water%22%5D%28{},{},{},{}%29%3B%0Arelation%5B%22natural%22%3D%"
-    "22water%22%5D%28{},{},{},{}%29%3B%29%3B%0A%28._%3B%3E%3B%29%3Bout+"
-    "body%3B{}";
+    "https://lz4.overpass-api.de/api/"
+    "interpreter?data=%5Bout%3Axml%5D%5Btimeout%3A25%5D%3B(nwr%5B%22natural%"
+    "22%3D%22bay%22%5D%28{}%2C{}%2C{}%2C{}%29%3Bnwr%5B%22natural%22%3D%22water%"
+    "22%5D%28{}%2C{}%2C{}%2C{}%29%3Bnwr%5B%22natural%22%3D%22coastline%22%5D%"
+    "28{}%2C{}%2C{}%2C{}%29%3B);%28._%3B%3E%3B%29%3Bout%20body%3B%0A{}";
 
 void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
   auto chunks = chunkManager.GetRequiredChunks(boundary);
@@ -49,18 +44,11 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 
     std::vector<std::vector<Point2>> contours;
     if (chunkManager.IsAvailableInCache(contourFeatureID, chunk)) {
-      TSR_LOG_DEBUG("Fetching from cache");
-      TSR_LOG_TRACE("reading cached contours");
 
       IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(contourFeatureID,
                                                               chunk, contours);
 
-      TSR_LOG_TRACE("cache chunk contours: {}", contours.size());
-
     } else {
-      TSR_LOG_DEBUG("Fetchig from API");
-      TSR_LOG_TRACE("fetching contours from API");
-
       // Fetch data from api
       DataFile data;
       try {
@@ -69,8 +57,6 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
         TSR_LOG_WARN("Failed to fetch chunk or it is empty.");
         continue;
       }
-
-      TSR_LOG_DEBUG("Caching data");
 
       // Cache data
       IO::CacheChunk(dataFeatureID, chunk, data.dataset);
@@ -85,7 +71,7 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       TSR_LOG_TRACE("contour file: {}", data.filename);
 
       // Extract contours usign OpenCV
-      const double SIMPLIFICATION_FACTOR = 0.01;
+      const double SIMPLIFICATION_FACTOR = 0.001;
       TSR_LOG_DEBUG("Extracting Contours");
       contours = API::ExtractFeatureContours(data.filename, adfGeotransform,
                                              SIMPLIFICATION_FACTOR);
@@ -96,6 +82,8 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       TSR_LOG_DEBUG("Caching contours ");
       IO::CacheChunk(contourFeatureID, chunk, contours);
     }
+
+    TSR_LOG_TRACE("Water Contours: {}", contours.size());
 
     // add contours to mesh
     for (auto contour : contours) {
@@ -110,7 +98,8 @@ void BoolWaterFeature::Tag(const Tin &tin) {
   const std::string dataFeatureID = this->feature_id + "/data";
 
   // Mark whether a face is water or not
-  std::unordered_map<ChunkInfo, GDALDatasetH> datasets;
+  ChunkInfo dataset_chunk;
+  GDALDatasetH dataset = nullptr;
   for (Face_handle face : tin.all_face_handles()) {
 
     if (tin.is_infinite(face)) {
@@ -135,16 +124,19 @@ void BoolWaterFeature::Tag(const Tin &tin) {
     ChunkInfo chunk =
         chunkManager.GetChunkInfo(centerWGS84.x(), centerWGS84.y());
 
-    GDALDatasetH dataset = nullptr;
+    if (chunk != dataset_chunk) {
+      if (!IO::IsChunkCached(dataFeatureID, chunk)) {
+        this->waterMap[face] = NODATA;
+        TSR_LOG_WARN("Value not available in cache");
+        continue;
+      }
 
-    if (datasets.contains(chunk)) {
-      dataset = datasets[chunk];
-    } else if (chunkManager.IsAvailableInCache(dataFeatureID, chunk)) {
+      if (dataset != nullptr) {
+        GDALReleaseDataset(dataset);
+      }
+
       IO::GetChunkFromCache<GDALDatasetH>(dataFeatureID, chunk, dataset);
-      datasets[chunk] = dataset;
-    } else {
-      this->waterMap[face] = NODATA;
-      continue;
+      dataset_chunk = chunk;
     }
 
     if (dataset == nullptr) {
@@ -201,6 +193,10 @@ void BoolWaterFeature::Tag(const Tin &tin) {
     } else {
       this->waterMap[face] = WATER;
     }
+  }
+
+  if (dataset != nullptr) {
+    GDALReleaseDataset(dataset);
   }
 }
 

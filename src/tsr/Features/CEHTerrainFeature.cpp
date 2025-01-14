@@ -114,7 +114,6 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 
     std::vector<std::vector<Point2>> contours;
     if (chunkManager.IsAvailableInCache(contourCacheID, chunk)) {
-      // TODO: Add contours from cache
       IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(contourCacheID,
                                                               chunk, contours);
     } else {
