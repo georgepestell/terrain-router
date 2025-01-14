@@ -149,7 +149,7 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       GDALReleaseDataset(data.dataset);
 
       contours =
-          API::ExtractFeatureContours(data.filename, adfGeotransform, 0.001);
+          API::ExtractFeatureContours(data.filename, adfGeotransform, 0.5);
 
       // TODO: Cache contours
       TSR_LOG_TRACE("Caching contours");
@@ -159,6 +159,8 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
         TSR_LOG_WARN("failed to cache CEH contours");
       }
     }
+
+    TSR_LOG_TRACE("CEH Contours: {}", contours.size());
 
     // Add contours to the mesh
     for (auto contour : contours) {
