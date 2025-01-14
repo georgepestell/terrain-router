@@ -10,9 +10,11 @@
 #include <gdal/gdal.h>
 #include <gdal/gdal_priv.h>
 #include <gdal/gdal_utils.h>
+#include <gdal/ogrsf_frmts.h>
 #include <gdal_alg.h>
 #include <gdalwarper.h>
 #include <ogr_api.h>
+#include <ogr_core.h>
 #include <ogr_srs_api.h>
 #include <stdexcept>
 #include <string>
@@ -23,7 +25,6 @@
 #include <boost/filesystem/operations.hpp>
 #include <boost/filesystem/path.hpp>
 
-#include "tsr/DataFile.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/ImageIO.hpp"
 
@@ -297,8 +298,32 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
   options = CSLAddString(options, "GTiff");
   options = CSLAddString(options, "-co");
   options = CSLAddString(options, "PROFILE=GeoTIFF");
-  options = CSLAddString(options, "-l");
-  options = CSLAddString(options, "multipolygons");
+
+  // Now add one -l argument per layer:
+  int layerCount = dataset->GetLayerCount();
+  for (int i = 0; i < layerCount; ++i) {
+    OGRLayer *layer = dataset->GetLayer(i);
+    if (!layer) {
+      continue;
+    }
+
+    // Skip empty layers
+    if (layer->GetFeatureCount() == 0) {
+      continue;
+    }
+
+    // Check the layer type is valid
+    OGRwkbGeometryType geomType = layer->GetGeomType();
+    if (geomType != wkbMultiPolygon) {
+      continue;
+    }
+
+    // Add -l <layername>
+    options = CSLAddString(options, "-l");
+    options = CSLAddString(options, layer->GetName());
+    TSR_LOG_TRACE("Layer: {}", layer->GetName());
+  }
+
   // options = CSLAddString(options, "-l");
   // options = CSLAddString(options, "multipolygon");
   options = CSLAddString(options, "-te");
@@ -315,6 +340,8 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
   int usageError;
   GDALDatasetH outputDataset = GDALRasterize(
       filepath.c_str(), NULL, source_dataset, rasterizeOptions, &usageError);
+
+  TSR_LOG_TRACE("FINISHED");
 
   CSLDestroy(options);
   GDALRasterizeOptionsFree(rasterizeOptions);
@@ -334,16 +361,14 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
 }
 
 std::vector<std::vector<Point2>>
-ExtractFeatureContours(const std::string &filepath,
-                         double adf_geotransform[6],
-                         double simplification_factor) {
+ExtractFeatureContours(const std::string &filepath, double adf_geotransform[6],
+                       double simplification_factor) {
 
   // TODO: Open the file as a MAT img
   auto image = IO::LoadImageFromFile(filepath);
 
-  auto contours = IO::ExtractFeatureContours(
-      image, simplification_factor, adf_geotransform[0], adf_geotransform[3],
-      adf_geotransform[1], adf_geotransform[5]);
+  auto contours = IO::ExtractFeatureContours(image, simplification_factor,
+                                             adf_geotransform);
 
   TSR_LOG_TRACE("contour count: {}", contours.size());
 

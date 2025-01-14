@@ -122,7 +122,6 @@ bool MeshBoundary::IsBoundedSafe(Point3 p) const {
 
 void MeshBoundary::FilterPointsOutsideBoundary(
     std::vector<Point3> points) const {
-  unsigned int initialSize = points.size();
 
   std::vector<Point3> filteredPoints;
   for (auto p : points) {
@@ -131,9 +130,8 @@ void MeshBoundary::FilterPointsOutsideBoundary(
     }
   }
 
-  unsigned int finalSize = filteredPoints.size();
   TSR_LOG_TRACE("Discarded {} points outside boundary",
-                initialSize - finalSize);
+                points.size() - filteredPoints.size());
 
   points.swap(filteredPoints);
 }
