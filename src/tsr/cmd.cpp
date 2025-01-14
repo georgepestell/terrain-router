@@ -37,15 +37,23 @@ namespace po = boost::program_options;
 #define RADII_MULTIPLIER 1.5
 #define DEM_API_KEY "0f789809fed28dc634c8d75695d0cc5c"
 
-#include <sys/resource.h>
+/// DEBUG: remove DEBUG_TIME
+#define DEBUG_TIME
 
-#ifdef DEBUG_TIME
-log_set_global_logstream(LogStream::stderr);
-#endif
+#include <sys/resource.h>
 
 namespace tsr {
 
+#ifdef DEBUG_TIME
+#include <chrono>
+#include <ratio>
+#endif
+
 bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
+
+#ifdef DEBUG_TIME
+  log_set_global_logstream(tsr::LogStream::STDERR);
+#endif
 
   struct rlimit limit;
   getrlimit(RLIMIT_STACK, &limit);
@@ -65,15 +73,16 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   TSR_LOG_TRACE("Initializing mesh");
 
 #ifdef DEBUG_TIME
-  TSR_LOG_TRACE("DEBUG: TIME");
+  TSR_LOG_DEBUG("DEBUG: TIME");
   using std::chrono::duration;
   using std::chrono::duration_cast;
   using std::chrono::high_resolution_clock;
-  using std::chrono::miliseconds;
+  using std::chrono::milliseconds;
 
   auto timer_initial_tin_start = high_resolution_clock::now();
 #endif
 
+  TSR_LOG_INFO("Initializing TIN");
   Tin tin = InitializeTinFromBoundary(boundary, DEM_API_KEY);
 
 #ifdef DEBUG_TIME
@@ -82,11 +91,14 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 
   TSR_LOG_TRACE("Vertices: {}", tin.number_of_vertices());
 
+  TSR_LOG_INFO("Preparing Feature Manager");
   FeatureManager fm = SetupTimePreset(tin, boundary);
 
 #ifdef DEBUG_TIME
   auto timer_routing_start = high_resolution_clock::now();
 #endif
+
+  TSR_LOG_DEBUG("Finished setup");
 
   TSR_LOG_TRACE("final vertex count: {}", tin.number_of_vertices());
 
@@ -99,39 +111,52 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   Router router;
 
   // Calculate the optimal route
-  TSR_LOG_TRACE("Calculating Route");
-  auto route = router.Route(tin, fm, boundary, startPoint, endPoint);
+  std::vector<Point3> route;
+
+  TSR_LOG_INFO("Routing");
+
+  bool routeStatus = EXIT_SUCCESS;
+  try {
+    route = router.Route(tin, fm, boundary, startPoint, endPoint);
+  } catch (std::exception e) {
+    // Continue
+    routeStatus = EXIT_FAILURE;
+  }
 
 #ifdef DEBUG_TIME
   auto timer_routing_end = high_resolution_clock::now();
 #endif
 
-  // Convert the points to WGS84
-  std::vector<Point3> routeWGS84;
-  for (auto &point : route) {
-    Point3 pointWGS84 = TranslateUtmPointToWgs84(point, 30, true);
-    routeWGS84.push_back(pointWGS84);
-  }
+  // // Convert the points to WGS84
+  // std::vector<Point3> routeWGS84;
+  // for (auto &point : route) {
+  //   Point3 pointWGS84 = TranslateUtmPointToWgs84(point, 30, true);
+  //   routeWGS84.push_back(pointWGS84);
+  // }
 
-  // Output the route as a gpx file
-  IO::WriteDataToFile("route.gpx", IO::FormatRouteAsGpx(routeWGS84));
+  // // Output the route as a gpx file
+  // IO::WriteDataToFile("route.gpx", IO::FormatRouteAsGpx(routeWGS84));
 
 // Output the timing information
 #ifdef DEBUG_TIME
-  duration<double, std::milli> ms_initial_tin =
-      timer_initial_tin_start - timer_features_setup;
-  duration<double, std::milli> ms_features_setup =
+  duration<double> s_initial_tin =
+      timer_features_setup - timer_initial_tin_start;
+  duration<double> s_features_setup =
       timer_routing_start - timer_features_setup;
-  duration<double, std::milli> ms_routing =
-      timer_routing_end - timer_routing_start;
+  duration<double> s_routing = timer_routing_end - timer_routing_start;
 
-  log_set_global_logstream(LogStream::stdout);
-  TSR_LOG_INFO("{},{},{}", ms_initial_tin, ms_features_setup, ms_routing);
-  log_set_global_logstream(LogStream::stderr);
+  log_set_global_logstream(LogStream::STDOUT);
+  TSR_LOG_INFO("'{}, {}','{}, {}',{},{},{},{},{},{},{}", sLat, sLon, eLat, eLon,
+               CalculateXYDistance(startPoint, endPoint),
+               tin.number_of_vertices(), s_initial_tin.count(),
+               s_features_setup.count(), s_routing.count(), routeStatus == 0,
+               IsCacheEnabled());
+
+  log_set_global_logstream(LogStream::STDERR);
 
 #endif
 
-  return EXIT_SUCCESS;
+  return routeStatus;
 }
 
 void PrintUsage() {
@@ -205,6 +230,7 @@ int main(int argc, char **argv) {
 
   } catch (const std::exception &e) {
     TSR_LOG_ERROR("{}", e.what());
+    throw e;
     return 1;
   }
 }

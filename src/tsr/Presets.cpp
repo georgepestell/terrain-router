@@ -33,6 +33,8 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   TSR_LOG_TRACE("Setting up feature manager");
   FeatureManager fm;
 
+  TSR_LOG_DEBUG("Constructors");
+
   auto gradientFeature = std::make_shared<GradientFeature>("gradient");
   auto distance = std::make_shared<DistanceFeature>("distance");
   auto gradientSpeedInfluence =
@@ -41,7 +43,6 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
 
   auto terrainFeature =
       std::make_shared<CEHTerrainFeature>("terrain_type", 0.1);
-  terrainFeature->Initialize(tin, boundary);
 
   auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
 
@@ -82,11 +83,16 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   fm.SetOutputFeature(timeFeature);
 
   TSR_LOG_TRACE("initializing features");
+  TSR_LOG_DEBUG("Initialization");
 
-  waterFeature->Initialize(tin, boundary);
-  pathFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Terrain");
   terrainFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Water");
+  waterFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Paths");
+  pathFeature->Initialize(tin, boundary);
 
+  //   TSR_LOG_DEBUG("Tagging");
   terrainFeature->Tag(tin);
   waterFeature->Tag(tin);
   pathFeature->Tag(tin);

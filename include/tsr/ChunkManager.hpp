@@ -60,5 +60,6 @@ public:
 };
 
 void CacheSetEnabled(bool isEnabled);
+bool IsCacheEnabled();
 
 } // namespace tsr

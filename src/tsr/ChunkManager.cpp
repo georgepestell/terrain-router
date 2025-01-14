@@ -28,9 +28,10 @@
 
 namespace tsr {
 
-bool g_cache_enabled = true;
+static bool g_cache_enabled = true;
 
 void CacheSetEnabled(bool isEnabled) { g_cache_enabled = isEnabled; }
+bool IsCacheEnabled() { return g_cache_enabled; }
 
 ChunkInfo ChunkManager::GetChunkInfo(double lat, double lng) const {
   double minLat = std::floor(lat / tile_size) * this->tile_size;
@@ -43,8 +44,10 @@ std::vector<ChunkInfo>
 ChunkManager::GetRequiredChunks(const MeshBoundary &boundary) const {
 
   // Convert the boundary to WGS84
-  const Point2 ur = TranslateUtmPointToWgs84(boundary.GetUpperRightPoint(), 30, true);
-  const Point2 ll = TranslateUtmPointToWgs84(boundary.GetLowerLeftPoint(), 30, true);
+  const Point2 ur =
+      TranslateUtmPointToWgs84(boundary.GetUpperRightPoint(), 30, true);
+  const Point2 ll =
+      TranslateUtmPointToWgs84(boundary.GetLowerLeftPoint(), 30, true);
 
   const double minLat = std::min(ur.x(), ll.x());
   const double maxLat = std::max(ur.x(), ll.x());
@@ -167,6 +170,8 @@ ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
   boost::filesystem::path raster_filepath =
       boost::filesystem::unique_path(dir / "tempfile-%%%%%.tmp");
 
+  TSR_LOG_DEBUG("Rasterizing Dataset");
+
   // Rasterize dataset
   GDALDatasetH rasterDataset;
   try {
@@ -191,6 +196,7 @@ ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
   TSR_LOG_TRACE("raster filepath: {}", raster_filepath.string());
 
   TSR_LOG_TRACE("warping dataset");
+  TSR_LOG_DEBUG("Warping dataset");
   try {
     warpedDS =
         API::WarpRasterDatasetToUtm(rasterDataset, warpedFilepath.string());
