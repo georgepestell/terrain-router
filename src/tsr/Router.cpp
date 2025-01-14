@@ -1,20 +1,18 @@
 #include "tsr/Router.hpp"
 #include "tsr/FeatureManager.hpp"
-#include "tsr/Features/BoolWaterFeature.hpp"
-#include "tsr/IO/FileIO.hpp"
 #include "tsr/IO/KMLWriter.hpp"
 #include "tsr/Logging.hpp"
+#include "tsr/MeshBoundary.hpp"
 #include "tsr/Point3.hpp"
+#include "tsr/RouteNode.hpp"
 #include "tsr/Tin.hpp"
 #include "tsr/TsrState.hpp"
 
 #include <CGAL/circulator.h>
-#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <queue>
 #include <stdexcept>
-#include <unordered_map>
 #include <vector>
 
 namespace tsr {
@@ -26,11 +24,11 @@ double calculateXYDistance(const Point3 p1, const Point3 p2) {
   return std::hypot(dx, dy);
 }
 
-Vertex_handle Router::CalculateNearestVertexToPoint(const Tin &dtm,
-                                           const Point3 &point) {
-  Face_handle face = dtm.locate(point);
+Vertex_handle Router::CalculateNearestVertexToPoint(const Tin &tin,
+                                                    const Point3 &point) {
+  Face_handle face = tin.locate(point);
 
-  if (face == nullptr || !face->is_valid() || dtm.is_infinite(face)) {
+  if (face == nullptr || !face->is_valid() || tin.is_infinite(face)) {
     TSR_LOG_ERROR("Point outside DTM domain");
     TSR_LOG_TRACE("point: {} {}", point.x(), point.y());
     throw std::runtime_error("Point outside DTM domain");
@@ -49,16 +47,16 @@ Vertex_handle Router::CalculateNearestVertexToPoint(const Tin &dtm,
   return vertex;
 }
 
-std::vector<Point3> Router::Route(const Tin &dtm, FeatureManager &fm,
-                                           const MeshBoundary &boundary,
-                                           const Point3 &start_point,
-                                           const Point3 &end_point) {
+std::vector<Point3> Router::Route(const Tin &tin, FeatureManager &fm,
+                                  const MeshBoundary &boundary,
+                                  const Point3 &start_point,
+                                  const Point3 &end_point) {
 
   TSR_LOG_TRACE("Routing");
 
   // Fetch the nearest search node to the given points
-  this->state.start_vertex = CalculateNearestVertexToPoint(dtm, start_point);
-  this->state.end_vertex = CalculateNearestVertexToPoint(dtm, end_point);
+  this->state.start_vertex = CalculateNearestVertexToPoint(tin, start_point);
+  this->state.end_vertex = CalculateNearestVertexToPoint(tin, end_point);
 
   // Setup the queue of gCosts to calculate and CLOSED set
   std::priority_queue<RouteNode, std::vector<RouteNode>, CompareNode>
@@ -76,7 +74,7 @@ std::vector<Point3> Router::Route(const Tin &dtm, FeatureManager &fm,
    * vertices
    */
   TSR_LOG_TRACE("Starting search");
-  do {
+  while (!this->state.routes.contains(this->state.end_vertex)) {
 
     // Select best node from queue
     RouteNode current_node = cost_queue.top();
@@ -102,7 +100,7 @@ std::vector<Point3> Router::Route(const Tin &dtm, FeatureManager &fm,
      * Calculate the costs of the adjacent not-closed nodes
      */
 
-    if (!dtm.is_valid()) {
+    if (!tin.is_valid()) {
       TSR_LOG_FATAL("Invalid DTM detected");
       throw std::runtime_error("Invalid DTM detected");
     }
@@ -114,7 +112,7 @@ std::vector<Point3> Router::Route(const Tin &dtm, FeatureManager &fm,
       do {
 
         auto face = faceCirculator;
-        if (dtm.is_infinite(face)) {
+        if (tin.is_infinite(face)) {
           continue;
         }
 
@@ -150,7 +148,7 @@ std::vector<Point3> Router::Route(const Tin &dtm, FeatureManager &fm,
         }
       } while (++faceCirculator != faceCirculatorEnd);
     }
-  } while (!this->state.routes.contains(this->state.end_vertex));
+  }
 
   auto route = this->state.fetchRoute();
 

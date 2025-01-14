@@ -9,5 +9,6 @@ struct DataFile {
   std::string filename;
   DataFile(GDALDatasetH dataset, std::string filename)
       : dataset(dataset), filename(filename) {};
+  DataFile() {}
 };
 } // namespace tsr

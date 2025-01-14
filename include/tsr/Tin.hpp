@@ -23,5 +23,6 @@ typedef CGAL::Constrained_Delaunay_triangulation_2<TIN_Pt, CGAL::Default,
 // Define commonly used features of the mesh
 typedef Tin::Vertex_handle Vertex_handle;
 typedef Tin::Face_handle Face_handle;
+typedef Tin::Edge Edge;
 
 } // namespace tsr
