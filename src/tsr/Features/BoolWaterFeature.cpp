@@ -48,7 +48,8 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
   for (auto chunk : chunks) {
 
     std::vector<std::vector<Point2>> contours;
-    if (IO::IsChunkCached(contourFeatureID, chunk)) {
+    if (chunkManager.IsAvailableInCache(contourFeatureID, chunk)) {
+      TSR_LOG_DEBUG("Fetching from cache");
       TSR_LOG_TRACE("reading cached contours");
 
       IO::GetChunkFromCache<std::vector<std::vector<Point2>>>(contourFeatureID,
@@ -57,10 +58,19 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       TSR_LOG_TRACE("cache chunk contours: {}", contours.size());
 
     } else {
+      TSR_LOG_DEBUG("Fetchig from API");
       TSR_LOG_TRACE("fetching contours from API");
 
       // Fetch data from api
-      auto data = chunkManager.FetchAndRasterizeVectorChunk(chunk, 0.00001);
+      DataFile data;
+      try {
+        data = chunkManager.FetchAndRasterizeVectorChunk(chunk, 0.0001);
+      } catch (std::exception e) {
+        TSR_LOG_WARN("Failed to fetch chunk or it is empty.");
+        continue;
+      }
+
+      TSR_LOG_DEBUG("Caching data");
 
       // Cache data
       IO::CacheChunk(dataFeatureID, chunk, data.dataset);
@@ -76,12 +86,14 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
 
       // Extract contours usign OpenCV
       const double SIMPLIFICATION_FACTOR = 0.01;
+      TSR_LOG_DEBUG("Extracting Contours");
       contours = API::ExtractFeatureContours(data.filename, adfGeotransform,
                                              SIMPLIFICATION_FACTOR);
 
       TSR_LOG_TRACE("chunk contours: {}", contours.size());
 
       // Cache contours
+      TSR_LOG_DEBUG("Caching contours ");
       IO::CacheChunk(contourFeatureID, chunk, contours);
     }
 

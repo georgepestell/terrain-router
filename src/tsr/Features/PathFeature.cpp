@@ -40,9 +40,11 @@ std::string PathFeature::URL =
     "5B%22sidewalk%22~%22yes%7Cboth%7Cleft%7Cright%22%5D%28{},{},{},{}%29%"
     "3Bway%5B%"
     "22bridge%22%5D%5B%22passenger_lines%22%5D%28if%3At%5B%22passenger_lines%"
-    "22%5D%20%3E%200%29%28{},{},{},{}%29%3B%29%3Bout+body%3B%0A{}";
+    "22%5D%20%3E%200%29%28{},{},{},{}%29%3B%29%3B%28._%3B%3E%3B%29%3Bout+body%"
+    "3B%0A{}";
 
-std::pair<Point2, Point2> PathFeature::NormalizeSegmentOrder(Point2 p1, Point2 p2) {
+std::pair<Point2, Point2> PathFeature::NormalizeSegmentOrder(Point2 p1,
+                                                             Point2 p2) {
 
   if (p1 < p2) {
     return {p2, p1};
@@ -66,6 +68,7 @@ void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
     } else {
       // Download from API
       auto data = chunkManager.FetchVectorChunk(chunk);
+      IO::CacheChunk("test", chunk, data.dataset);
       GDALReleaseDataset(data.dataset);
 
       contours = IO::LoadContoursFromJsonFile(data.filename, "features");
@@ -77,6 +80,8 @@ void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
         TSR_LOG_WARN("failed to cache path contours");
       }
     }
+
+    TSR_LOG_TRACE("Path Contours: {}", contours.size());
 
     for (auto contour : contours) {
       AddContourConstraint(tin, contour, MAX_SEGMENT_SIZE);
@@ -95,7 +100,7 @@ bool PathFeature::Calculate(TsrState &state) {
 
   const std::pair<Point2, Point2> segment =
       NormalizeSegmentOrder(Point2(source_point.x(), source_point.y()),
-                       Point2(target_point.x(), target_point.y()));
+                            Point2(target_point.x(), target_point.y()));
 
   return this->paths.contains(segment);
 }

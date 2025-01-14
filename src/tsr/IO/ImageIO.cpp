@@ -35,8 +35,7 @@ cv::Mat ConvertGrayscaleToRgb(cv::Mat &image) {
 
 std::vector<std::vector<Point2>>
 ExtractFeatureContours(cv::Mat &image, double simplification_factor,
-                         double uloffset_x, double uloffset_y,
-                         double cellsize_x, double cellsize_y) {
+                       double adfGeoTransform[6]) {
 
   // Convert images to RGB
   unsigned int channels = image.channels();
@@ -76,8 +75,16 @@ ExtractFeatureContours(cv::Mat &image, double simplification_factor,
     std::vector<Point2> contour;
     for (const auto &point : new_contour) {
       // Convert OpenCV points to CGAL points
-      Point2 cgal_point(round(point.x * cellsize_x + uloffset_x),
-                        round(uloffset_y - point.y * cellsize_y));
+
+      // Standard formula result:
+      double lat = adfGeoTransform[0] + point.x * adfGeoTransform[1] +
+                    point.y * adfGeoTransform[2]; // Usually longitude
+
+      double lng = adfGeoTransform[3] + point.x * adfGeoTransform[4] +
+                    point.y * adfGeoTransform[5]; // Usually latitude
+
+
+      Point2 cgal_point(round(lat), round(lng));
       contour.push_back(cgal_point);
     }
 

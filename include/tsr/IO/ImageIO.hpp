@@ -27,7 +27,6 @@ cv::Mat ConvertGrayscaleToRgb(cv::Mat &image);
 
 std::vector<std::vector<Point2>>
 ExtractFeatureContours(cv::Mat &image, double simplification_factor,
-                         double uloffset_x, double uloffset_y,
-                         double cellsize_x, double cellsize_y);
+                       double adfGeoTransform[6]);
 
 } // namespace tsr::IO

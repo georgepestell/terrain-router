@@ -68,7 +68,7 @@ CEHTerrainFeature::interpretCEHTerrainColour(std::vector<double> colourValues) {
 }
 
 std::vector<double> CEHTerrainFeature::GetPixelColour(GDALDatasetH dataset,
-                                                        int x, int y) {
+                                                      int x, int y) {
   int rasterXSize = GDALGetRasterXSize(dataset);
   int rasterYSize = GDALGetRasterYSize(dataset);
 
@@ -171,7 +171,9 @@ void CEHTerrainFeature::Tag(const Tin &tin) {
   TSR_LOG_TRACE("Tagging CEH terrain type feature");
 
   std::string dataCacheID = this->feature_id + "/data";
-  std::unordered_map<ChunkInfo, GDALDatasetH> datasets;
+
+  GDALDatasetH dataset = nullptr;
+  ChunkInfo dataset_chunk;
   for (Face_handle face : tin.all_face_handles()) {
 
     if (tin.is_infinite(face)) {
@@ -194,11 +196,14 @@ void CEHTerrainFeature::Tag(const Tin &tin) {
     ChunkInfo chunk =
         chunkManager.GetChunkInfo(centerWGS84.x(), centerWGS84.y());
 
-    GDALDatasetH dataset = nullptr;
-    if (datasets.contains(chunk)) {
-      dataset = datasets.at(chunk);
-    } else if (IO::IsChunkCached(dataCacheID, chunk)) {
+    if (chunk != dataset_chunk && IO::IsChunkCached(dataCacheID, chunk)) {
+
+      if (dataset != nullptr) {
+        GDALReleaseDataset(dataset);
+      }
+
       IO::GetChunkFromCache<GDALDatasetH>(dataCacheID, chunk, dataset);
+      dataset_chunk = chunk;
     } else {
       continue;
     }
@@ -235,6 +240,10 @@ void CEHTerrainFeature::Tag(const Tin &tin) {
 
     // TSR_LOG_TRACE("interpreting and setting colour value");
     this->terrain_map[face] = interpretCEHTerrainColour(colourValues);
+  }
+
+  if (dataset != nullptr) {
+    GDALReleaseDataset(dataset);
   }
 }
 
