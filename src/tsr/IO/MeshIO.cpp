@@ -60,10 +60,7 @@ bool WriteTinToFile(std::string filepath, const Tin &tin) {
   return true;
 }
 
-// TODO: Delete direct access of DEM from file
 std::vector<Point3> LoadPointsFromXYZFile(std::string filepath) {
-
-  // TODO: error checking
 
   TSR_LOG_TRACE("loading points from file");
 
@@ -79,8 +76,8 @@ std::vector<Point3> LoadPointsFromXYZFile(std::string filepath) {
   return points;
 }
 
-void LoadContoursFromFile(
-    std::string filepath, std::vector<std::vector<Point2>> &contours) {
+void LoadContoursFromFile(std::string filepath,
+                          std::vector<std::vector<Point2>> &contours) {
 
   std::ifstream iFile(filepath, std::ios_base::binary);
   if (!iFile) {
@@ -104,8 +101,8 @@ void LoadContoursFromFile(
   contours.swap(loadedContours);
 }
 
-void WriteContoursToFile(
-    std::string filepath, const std::vector<std::vector<Point2>> &contours) {
+void WriteContoursToFile(std::string filepath,
+                         const std::vector<std::vector<Point2>> &contours) {
 
   std::ofstream oFile(filepath);
   if (!oFile) {

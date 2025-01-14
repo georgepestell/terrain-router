@@ -170,8 +170,6 @@ ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
   boost::filesystem::path raster_filepath =
       boost::filesystem::unique_path(dir / "tempfile-%%%%%.tmp");
 
-  TSR_LOG_DEBUG("Rasterizing Dataset");
-
   // Rasterize dataset
   GDALDatasetH rasterDataset;
   try {

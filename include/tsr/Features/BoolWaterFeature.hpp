@@ -24,8 +24,8 @@ private:
 
 public:
   BoolWaterFeature(std::string name, double tile_size)
-      : APIFeature(name, URL, tile_size, {0, 1, 2, 3, 0, 1, 2, 3, 0, 1,
-                                          2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {};
+      : APIFeature(name, URL, tile_size, {0, 1, 2, 3, 0, 1, 2, 3, 0, 1, 2, 3}) {
+        };
 
   void Initialize(Tin &tin, const MeshBoundary &boundary) override;
 

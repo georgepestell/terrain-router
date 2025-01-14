@@ -136,7 +136,6 @@ std::vector<Point3> Router::Route(const Tin &tin, FeatureManager &fm,
           }
 
           // Calculate the cost
-          // TODO: Face_handle neighbourFace = face->neighbor(edgeIndex);
           RouteNode node(connectedVertex, face);
           this->state.next_vertex = connectedVertex;
           node.gCost =
