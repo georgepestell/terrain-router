@@ -21,7 +21,7 @@ MeshBoundary::MeshBoundary(const Point3 &source_point,
 
   this->angle = CalculateXYAngle(source_point, target_point);
 
-  this->width = distance + 2 * radius;
+  this->width = distance + radius;
   this->height = 2 * radius;
 
   double bboxMinX = this->midpoint.x() - this->width / 2;
@@ -86,7 +86,23 @@ Point3 MeshBoundary::rotatePoint(const Point3 &p, const Point2 &midpoint,
   return Point3(newX + midpoint.x(), newY + midpoint.y(), p.z());
 }
 
-bool MeshBoundary::IsBounded(Point3 p) const {
+bool MeshBoundary::IsBounded(const Point2 &p) const {
+  // Rotate the point back (inverse rotation)
+  Point2 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
+
+  // Check if the rotated point is within the axis-aligned rectangle
+  double halfWidth = width / 2.0;
+  double halfHeight = height / 2.0;
+
+  bool withinBounds = (rotatedPoint.x() >= this->midpoint.x() - halfWidth &&
+                       rotatedPoint.x() <= this->midpoint.x() + halfWidth &&
+                       rotatedPoint.y() >= this->midpoint.y() - halfHeight &&
+                       rotatedPoint.y() <= this->midpoint.y() + halfHeight);
+
+  return withinBounds;
+}
+
+bool MeshBoundary::IsBounded(const Point3 &p) const {
   // Rotate the point back (inverse rotation)
   Point3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
 
@@ -101,7 +117,7 @@ bool MeshBoundary::IsBounded(Point3 p) const {
 
   return withinBounds;
 }
-bool MeshBoundary::IsBoundedSafe(Point3 p) const {
+bool MeshBoundary::IsBoundedSafe(const Point3 &p) const {
   // Rotate the point back (inverse rotation)
   Point3 rotatedPoint = rotatePoint(p, this->midpoint, -this->angle);
 
