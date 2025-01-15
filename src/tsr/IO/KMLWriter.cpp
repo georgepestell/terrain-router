@@ -210,11 +210,11 @@ std::string GenerateKmlRoute(const std::vector<Point3> &route) {
          "LineStyle></Style>";
 
   kml += "<Style "
-         "id=\"slightGradientWarning\"><LineStyle><color>#ffffa500</"
+         "id=\"slightGradientWarning\"><LineStyle><color>#ff0050ff</"
          "color><width>4</width></"
          "LineStyle></Style>";
   kml += "<Style "
-         "id=\"steepGradientWarning\"><LineStyle><color>#ffff4500</"
+         "id=\"steepGradientWarning\"><LineStyle><color>#ff0045ff</"
          "color><width>4</width></"
          "LineStyle></Style>";
 
