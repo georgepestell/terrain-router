@@ -17,6 +17,7 @@
 #include "tsr/Features/BoolWaterFeature.hpp"
 #include "tsr/Features/CEHTerrainFeature.hpp"
 #include "tsr/Features/ConditionalFeature.hpp"
+#include "tsr/Features/ConstantFeature.hpp"
 #include "tsr/Features/DistanceFeature.hpp"
 #include "tsr/Features/GradientFeature.hpp"
 #include "tsr/Features/GradientSpeedFeature.hpp"
@@ -46,7 +47,7 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
 
   auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
 
-  auto pathFeature = std::make_shared<PathFeature>("paths", 0.1);
+  auto pathFeature = std::make_shared<PathFeature>("paths", 0.05);
 
   auto waterSpeedInfluence =
       std::make_shared<InverseFeature<bool, bool>>("water_speed");
@@ -54,17 +55,12 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
 
   auto speedFeature = std::make_shared<MultiplierFeature>("speed");
   speedFeature->AddDependency(waterSpeedInfluence, MultiplierFeature::BOOL);
-  speedFeature->AddDependency(terrainFeature, MultiplierFeature::DOUBLE); //
-  // DO NOT MERGE: Not using terrain type
+  speedFeature->AddDependency(terrainFeature, MultiplierFeature::DOUBLE);
   speedFeature->AddDependency(gradientSpeedInfluence,
                               MultiplierFeature::DOUBLE);
 
-  // DO NOT MEGE : Using constant path speed instead of gradient/terrain based
   auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
   pathSpeed->AddDependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
-
-  // auto pathSpeed =
-  // std::make_shared<ConstantFeature<double>>("path_speed", 1.0);
 
   auto speedWithPathFeature =
       std::make_shared<ConditionalFeature<double>>("speed_with_path");
@@ -83,7 +79,6 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   fm.SetOutputFeature(timeFeature);
 
   TSR_LOG_TRACE("initializing features");
-  TSR_LOG_DEBUG("Initialization");
 
   TSR_LOG_DEBUG("Terrain");
   terrainFeature->Initialize(tin, boundary);
@@ -92,13 +87,14 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   TSR_LOG_DEBUG("Paths");
   pathFeature->Initialize(tin, boundary);
 
-  //   TSR_LOG_DEBUG("Tagging");
+  TSR_LOG_DEBUG("Tagging");
   terrainFeature->Tag(tin);
   waterFeature->Tag(tin);
   pathFeature->Tag(tin);
 
   //   /// DEBUG: Write watermap to KML
-  //   waterFeature->WriteWaterToKml();
+  waterFeature->WriteWaterToKml();
+  pathFeature->WritePathsToKml();
 
   return fm;
 }
