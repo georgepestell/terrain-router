@@ -56,8 +56,12 @@ std::string GenerateKmlDocument(const std::string &inner_kml) {
   return kml;
 }
 
-std::string GenerateKmlFaces(std::vector<Face_handle> &faces) {
+std::string GenerateKmlFaces(std::vector<Face_handle> &faces,
+                             std::string name) {
   std::string kml;
+
+  kml += "<Folder>\n";
+  kml += "<name>" + name + "</name>\n";
 
   for (uint f = 0; f < faces.size(); f++) {
 
@@ -97,6 +101,8 @@ std::string GenerateKmlFaces(std::vector<Face_handle> &faces) {
     kml += "  </Polygon>\n";
     kml += "</Placemark>\n";
   }
+
+  kml += "</Folder>\n";
 
   return kml;
 }
