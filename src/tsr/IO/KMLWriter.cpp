@@ -1,4 +1,5 @@
 #include "tsr/IO/KMLWriter.hpp"
+#include "fmt/core.h"
 #include "tsr/Features/GradientSpeedFeature.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/Logging.hpp"
@@ -10,8 +11,9 @@
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
 #include <chrono>
 #include <ctime>
-#include <format>
 #include <string>
+
+#include <fmt/chrono.h>
 
 #include "tsr/Features/GradientFeature.hpp"
 
@@ -205,7 +207,7 @@ std::string GenerateKmlRoute(const std::vector<Point3> &route,
   auto endPointWGS84 =
       TranslateUtmPointToWgs84(route[route.size() - 1], 30, true);
 
-  std::string durationString = std::format(
+  std::string durationString = fmt::format(
       "{:%H:%M:%S}", std::chrono::duration_cast<std::chrono::seconds>(
                          std::chrono::duration<double>(duration)));
 
