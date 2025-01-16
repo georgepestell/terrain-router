@@ -1,5 +1,8 @@
 #include "tsr/IO/GPXFormatter.hpp"
+#include "tsr/Point3.hpp"
 #include <fmt/core.h>
+#include <string>
+#include <vector>
 
 namespace tsr::IO {
 
