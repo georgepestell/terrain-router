@@ -16,7 +16,8 @@ std::string GenerateKmlFaces(std::vector<Face_handle> &faces, std::string name);
 
 std::string GenerateKmlWarnings(const TsrState &state);
 
-std::string GenerateKmlRoute(const std::vector<Point3> &route);
+std::string GenerateKmlRoute(const std::vector<Point3> &route,
+                             const double duration);
 
 std::string GenerateKmlDocument(const std::string &inner_kml);
 

@@ -8,6 +8,10 @@
 #include "tsr/TsrState.hpp"
 #include <CGAL/Kernel/global_functions_3.h>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <chrono>
+#include <ctime>
+#include <format>
+#include <string>
 
 #include "tsr/Features/GradientFeature.hpp"
 
@@ -19,7 +23,9 @@ void writeSuccessStateToKML(const std::string &filepath, TsrState &state) {
 
   auto route = state.fetchRoute();
 
-  auto routeKML = GenerateKmlRoute(route);
+  double estimatedTime = state.estimateTime();
+
+  auto routeKML = GenerateKmlRoute(route, estimatedTime);
 
   auto warningsKML = GenerateKmlWarnings(state);
 
@@ -182,7 +188,8 @@ std::string GenerateKmlLine(std::pair<Point3, Point3> line) {
   return kml;
 }
 
-std::string GenerateKmlRoute(const std::vector<Point3> &route) {
+std::string GenerateKmlRoute(const std::vector<Point3> &route,
+                             const double duration) {
 
   // Used to show gradient
   GradientSpeedFeature Fg("gradient");
@@ -198,8 +205,14 @@ std::string GenerateKmlRoute(const std::vector<Point3> &route) {
   auto endPointWGS84 =
       TranslateUtmPointToWgs84(route[route.size() - 1], 30, true);
 
+  std::string durationString = std::format(
+      "{:%H:%M:%S}", std::chrono::duration_cast<std::chrono::seconds>(
+                         std::chrono::duration<double>(duration)));
+
   kml += "<Folder>\n";
   kml += "<name>Route</name>\n";
+  kml += "<description>Estimated Route Time: " + durationString +
+         "</description>\n";
 
   kml += "<Style "
          "id=\"routeStyle\"><IconStyle><color>#ff61ffb8</color>";
