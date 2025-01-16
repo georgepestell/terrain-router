@@ -53,7 +53,7 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       DataFile data;
       try {
         data = chunkManager.FetchAndRasterizeVectorChunk(chunk, 0.0001);
-      } catch (std::exception e) {
+      } catch (std::exception &e) {
         TSR_LOG_WARN("Failed to fetch chunk or it is empty.");
         continue;
       }
@@ -116,7 +116,7 @@ void BoolWaterFeature::Tag(const Tin &tin) {
     Point3 centerWGS84;
     try {
       centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       continue;
     }
 

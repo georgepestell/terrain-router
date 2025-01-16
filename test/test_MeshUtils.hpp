@@ -1,5 +1,6 @@
 #include <gtest/gtest.h>
 
+#include "tsr/Config.hpp"
 #include "tsr/DelaunayTriangulation.hpp"
 #include "tsr/GeometryUtils.hpp"
 #include "tsr/MapUtils.hpp"
@@ -22,8 +23,7 @@ TEST(MeshUtilsTests, TestInitialize) {
   Point3 targetPoint = TranslateWgs84PointToUtm(targetPointWGS84);
 
   MeshBoundary boundary(sourcePoint, targetPoint, 1);
-  auto tin =
-      InitializeTinFromBoundary(boundary, "0f789809fed28dc634c8d75695d0cc5c");
+  auto tin = InitializeTinFromBoundary(boundary, OPENTOP_KEY);
 
   SurfaceMesh mesh;
   ConvertTinToSurfaceMesh(tin, mesh);

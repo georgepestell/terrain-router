@@ -14,7 +14,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_definitions ( -Wno-gnu-zero-variadic-macro-arguments )
+# add_compile_definitions(OPENTOP_KEY=${OPENTOP_KEY})
+# add_definitions ( -Wno-gnu-zero-variadic-macro-arguments )
 
 # # get current working branch
 # execute_process(
@@ -216,6 +217,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(tsr-route PRIVATE -Wall -Wextra -pedantic -frounding-math)
 endif()
 
+
 set(PACKAGE_SOURCES
   docs
   include
@@ -224,6 +226,7 @@ set(PACKAGE_SOURCES
   CMakeLists.txt
   README.md
 )
+
 
 add_custom_target(package 
   COMMAND zip TSR_v1.0.0.zip ${PACKAGE_SOURCES} -r

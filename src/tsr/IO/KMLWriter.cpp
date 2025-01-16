@@ -145,7 +145,7 @@ std::string GenerateKmlWarnings(const TsrState &state) {
     Point3 centerWGS84;
     try {
       centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       continue;
     }
 

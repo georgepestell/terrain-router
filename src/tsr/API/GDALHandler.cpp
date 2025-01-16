@@ -136,7 +136,7 @@ GDALDatasetH WarpVectorDatasetToUtm(GDALDatasetH hDataset,
 
     warpedDataset = GDALVectorTranslate(filepath.c_str(), nullptr, 1, &hDataset,
                                         warpOptions, nullptr);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("failed to warp dataset");
     GDALVectorTranslateOptionsFree(warpOptions);
