@@ -96,7 +96,7 @@ double TsrState::estimateTime() const {
     // Cost / Speed = Distance / (SpeedMul * Speed) = Time
 
     // Metres a second = 1.34 on average 20-29 yrs old
-    double DEFAULT_WALKING_SPEED = 1.34;
+    double DEFAULT_WALKING_SPEED = 1.2;
 
     return endCost / DEFAULT_WALKING_SPEED;
 
