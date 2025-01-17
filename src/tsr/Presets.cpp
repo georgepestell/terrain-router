@@ -92,7 +92,7 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   waterFeature->Tag(tin);
   pathFeature->Tag(tin);
 
-  //   /// DEBUG: Write watermap to KML
+  // Write water and paths to KML
   waterFeature->WriteWaterToKml();
   pathFeature->WritePathsToKml();
 
@@ -171,12 +171,13 @@ FeatureManager SetupTimeWithSwimmingPreset(Tin &tin,
   waterFeature->Tag(tin);
   pathFeature->Tag(tin);
 
-  //   /// DEBUG: Write watermap to KML
+  // Write water and paths to KML
   waterFeature->WriteWaterToKml();
   pathFeature->WritePathsToKml();
 
   return fm;
 }
+
 FeatureManager SetupTimeRestrictSwimmingPreset(Tin &tin,
                                                const MeshBoundary &boundary) {
 
@@ -250,7 +251,7 @@ FeatureManager SetupTimeRestrictSwimmingPreset(Tin &tin,
   waterFeature->Tag(tin);
   pathFeature->Tag(tin);
 
-  //   /// DEBUG: Write watermap to KML
+  // Write water and paths to KML
   waterFeature->WriteWaterToKml();
   pathFeature->WritePathsToKml();
 

@@ -150,7 +150,6 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       contours =
           API::ExtractFeatureContours(data.filename, adfGeotransform, 0.5);
 
-      // TODO: Cache contours
       TSR_LOG_TRACE("Caching contours");
       try {
         IO::CacheChunk(contourCacheID, chunk, contours);
