@@ -322,6 +322,8 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
       continue;
     }
 
+    layer->ResetReading();
+
     // Add -l <layername>
     options = CSLAddString(options, "-l");
     options = CSLAddString(options, layer->GetName());
@@ -357,9 +359,9 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
   }
 
   if (usageError != CE_None) {
-    TSR_LOG_ERROR("Rasterization usage errr");
-    TSR_LOG_ERROR("erorr: {}", usageError);
-    throw std::runtime_error("rasterization failed");
+    TSR_LOG_ERROR("Rasterization usage error");
+    TSR_LOG_ERROR("error: {}", usageError);
+    // throw std::runtime_error("rasterization failed");
   }
 
   TSR_LOG_TRACE("rasterization complete");
