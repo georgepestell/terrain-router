@@ -257,4 +257,38 @@ FeatureManager SetupTimeRestrictSwimmingPreset(Tin &tin,
 
   return fm;
 }
+
+FeatureManager SetupSimpleDistancePreset() {
+
+  // Feature Manager Configuration
+  TSR_LOG_TRACE("Setting up feature manager");
+  FeatureManager fm;
+
+  auto distance = std::make_shared<DistanceFeature>("distance");
+
+  fm.SetOutputFeature(distance);
+
+  return fm;
+}
+FeatureManager SetupSimpleGradientPreset() {
+
+  // Feature Manager Configuration
+  TSR_LOG_TRACE("Setting up feature manager");
+  FeatureManager fm;
+
+  auto distance = std::make_shared<DistanceFeature>("distance");
+  auto gradient = std::make_shared<GradientFeature>("gradient");
+
+  auto distanceGrad = std::make_shared<MultiplierFeature>("distance_grad");
+
+  distanceGrad->AddDependency(distance,
+                              MultiplierFeature::DEPENDENCY_TYPE::DOUBLE);
+  distanceGrad->AddDependency(gradient,
+                              MultiplierFeature::DEPENDENCY_TYPE::DOUBLE);
+
+  fm.SetOutputFeature(distanceGrad);
+
+  return fm;
+}
+
 } // namespace tsr
