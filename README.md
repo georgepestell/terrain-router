@@ -1,69 +1,50 @@
 - author: George Pestell (200007413)
 - supervisor: Prof. Graham Kirby
 
-# Terrain Sensitive Routing
+# System Requirements
 
-# Building
+The following is a list of required c++ libraries that need to be installed, including versions used in development:
 
-## Release Version
+- `GDAL (v3.4.3)` - GIS data processing
+- `CGAL (v5.6.2)` - Delaunay triangulation and mesh processing
+- `oneTBB (v2.13)` - Parallelization
+- `OpenCV (4.10.0)` - Computer Vision
+- `GeographicLib (v26.1.0)` - Point projection conversion
+- `simdjson (v3.6.0)` - JSON parsing (automatically fetched by CMAKE)
+- `Eigen (v3.3)` - parallelization for CGAL
 
-This project uses CMAKE to configure the project, and ninja to build.
+# Compilation Instructions
 
-```bash
-mkdir build && cd build
-
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DTSR_TEST=OFF
-```
-
-For performance reasons, setting `CMAKE_BUILD_TYPE=Release` is highly reccommended. Note: this will disable TRACE logs, except in testing. See [#Testing] for more info on tests. 
-
-To build, run:
+To build the library and router, first setup the build directory:
 
 ```bash
-# Build everything
-ninja
-
-# Build just the library
-ninja tsr
-
-# Build the cmd executable
-ninja tsr-route
+$ cd tsr-cli
+$ mkdir build && cd build
 ```
-## Development / Debug
 
-### Testing
-
-To build tests, set `TSR_TEST=ON` in cmake configuration:
+Then configure with cmake, making sure to set configuration option values as appropriate:
 
 ```bash
-cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Debug -DTSR_TEST=ON
+  $ cmake .. -G Ninja -DCMAKE_BUILD_TYPE= -DTSR_TEST=
 ```
-# Running
 
-## Running The Tests
+- `TSR_TEST=ON/OFF `
+  Specify whether to build test suite.
+- `CMAKE_BUILD_TYPE=Release/Debug`
+  Specify build type. Release is far more performant, but Debug contains much more logging information.
 
-To run the tests, setting the cmake build flag `TSR_TEST` is essential to enable. It is also recommended to set  `CMAKE_BUILD_TYPE=Debug` for more verbose error logs.
-
-To configure cmake with these settings, run:
+The library, CLI app, and tests can then be compiled using one of the following:
 
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Debug -DTSR_Test=ON ..
+  # Compile everything
+  $ ninja
+
+  # Compile just the library
+  $ ninja tsr
+
+  # Compile the tests
+  $ ninja test-tsr
+
+  # Compile the cli application
+  $ ninja tsr-cli
 ```
-To run all of the tests generated, run:
-
-```bash
-./test-tsr
-```
-Specific tests can be specified using the `--gtest_filter` option. This does a REGEX match with tests named `<test_suite>.<test_case>`.
-
-```bash
-# Run all tests under a specific test suite
-./test-tsr --gtest_filter="<test_suite>.*"
-
-# Run a specific test case
-./test-tsr --gtest_filter="<test_suite>.<test_case>"
-
-# Run all tests beginning with testRead under the IOTests suite
-./test-tsr --gtest_filter="IOTests.testRead*"
-```
-Run `./test-tsr --help` for more options.
