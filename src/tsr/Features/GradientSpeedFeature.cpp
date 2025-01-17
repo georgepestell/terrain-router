@@ -32,8 +32,7 @@ double GradientSpeedFeature::Calculate(TsrState &state) {
   if (gradient > 0) {
     speedInfluence = SolvePolynomial(gradient, this->upwards_coefficients);
   } else {
-    speedInfluence =
-        SolvePolynomial(abs(gradient), this->downwards_coefficients);
+    speedInfluence = SolvePolynomial(gradient, this->downwards_coefficients);
   }
 
   // Cap the speedInfluence to a minimum of 0x speed
