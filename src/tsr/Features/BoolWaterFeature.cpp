@@ -53,7 +53,7 @@ void BoolWaterFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       DataFile data;
       try {
         data = chunkManager.FetchAndRasterizeVectorChunk(chunk, 0.0001);
-      } catch (std::exception e) {
+      } catch (std::exception &e) {
         TSR_LOG_WARN("Failed to fetch chunk or it is empty.");
         continue;
       }
@@ -116,7 +116,7 @@ void BoolWaterFeature::Tag(const Tin &tin) {
     Point3 centerWGS84;
     try {
       centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       continue;
     }
 
@@ -201,17 +201,21 @@ void BoolWaterFeature::Tag(const Tin &tin) {
 }
 
 void BoolWaterFeature::WriteWaterToKml() {
-  std::vector<Face_handle> faces;
+  std::vector<Face_handle> waterFaces;
+  std::vector<Face_handle> nodataFaces;
 
   for (auto f : this->waterMap) {
     if (f.second == WATER) {
-      faces.push_back(f.first);
+      waterFaces.push_back(f.first);
+    } else if (f.second == NODATA) {
+      nodataFaces.push_back(f.first);
     }
   }
 
-  std::string waterKML = IO::GenerateKmlFaces(faces);
+  std::string waterKML = IO::GenerateKmlFaces(waterFaces, "Water Faces");
+  std::string noDataFaces = IO::GenerateKmlFaces(nodataFaces, "No Water Data");
 
-  auto kml = IO::GenerateKmlDocument(waterKML);
+  auto kml = IO::GenerateKmlDocument(waterKML + noDataFaces);
 
   IO::WriteDataToFile("water.kml", kml);
 }

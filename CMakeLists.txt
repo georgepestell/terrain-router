@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.25)
 
-project(terrin_senstive_routing)
+project(terrin_senstive_routing VERSION 1.0.0)
 
 option(TSR_TEST "include test targets in build system" OFF)
 option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
@@ -14,24 +14,25 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-add_definitions ( -Wno-gnu-zero-variadic-macro-arguments )
+# add_compile_definitions(OPENTOP_KEY=${OPENTOP_KEY})
+# add_definitions ( -Wno-gnu-zero-variadic-macro-arguments )
 
-# get current working branch
-execute_process(
-  COMMAND git describe --all --dirty
-  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-  OUTPUT_VARIABLE TSR_GIT_DESCRIPTION
-  OUTPUT_STRIP_TRAILING_WHITESPACE
-)
+# # get current working branch
+# execute_process(
+#   COMMAND git describe --all --dirty
+#   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+#   OUTPUT_VARIABLE TSR_GIT_DESCRIPTION
+#   OUTPUT_STRIP_TRAILING_WHITESPACE
+# )
 
-# last commit hash
-execute_process(
-    COMMAND git log -1 --format=%H
-    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-    OUTPUT_VARIABLE TSR_GIT_COMMIT_HASH
-    OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-string(TIMESTAMP TSR_TIMESTAMP "%Y%m%dT%H%MZ" UTC)
+# # last commit hash
+# execute_process(
+#     COMMAND git log -1 --format=%H
+#     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+#     OUTPUT_VARIABLE TSR_GIT_COMMIT_HASH
+#     OUTPUT_STRIP_TRAILING_WHITESPACE
+# )
+# string(TIMESTAMP TSR_TIMESTAMP "%Y%m%dT%H%MZ" UTC)
 
 # CGAL
 
@@ -215,3 +216,19 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
   target_compile_options(tsr PRIVATE -Wall -Wextra -pedantic -frounding-math)
   target_compile_options(tsr-route PRIVATE -Wall -Wextra -pedantic -frounding-math)
 endif()
+
+
+set(PACKAGE_SOURCES
+  docs
+  include
+  src
+  test
+  CMakeLists.txt
+  README.md
+)
+
+
+add_custom_target(package 
+  COMMAND zip TSR_v1.0.0.zip ${PACKAGE_SOURCES} -r
+  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+)

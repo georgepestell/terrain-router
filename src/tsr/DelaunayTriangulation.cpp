@@ -326,7 +326,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
       TSR_LOG_TRACE("merging chunk {} {} {} {}", chunk.minLat, chunk.minLng,
                     chunk.maxLat, chunk.maxLng);
       MergeTinPointsInBoundary(boundary, chunkMesh, masterTIN);
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       TSR_LOG_ERROR("Cached chunk corrupted");
       TSR_LOG_ERROR("{}", e.what());
 
@@ -380,7 +380,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
           auto response = chunkManager.FetchRasterChunk(data.chunkInfo);
           data.dataset = response.dataset;
           boost::filesystem::remove(response.filename);
-        } catch (std::exception e) {
+        } catch (std::exception &e) {
           TSR_LOG_ERROR("{}", e.what());
           throw e;
         }
@@ -395,7 +395,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
             //  TSR_LOG_TRACE("Point Extractor node");
             try {
               data.points = IO::ExtractGdalDatasetPoints(data.dataset, 1);
-            } catch (std::exception e) {
+            } catch (std::exception &e) {
               TSR_LOG_ERROR("failed extracting DTM points from dataset");
               TSR_LOG_TRACE("{}", e.what());
               GDALReleaseDataset(data.dataset);
@@ -406,7 +406,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
 
             try {
               SimplifyPoints(data.points);
-            } catch (std::exception e) {
+            } catch (std::exception &e) {
               TSR_LOG_ERROR("failed to simplify points");
               TSR_LOG_TRACE("{}", e.what());
               throw e;
@@ -423,7 +423,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
             try {
               data.tin =
                   std::make_shared<Tin>(CreateTinFromPoints(data.points));
-            } catch (std::exception e) {
+            } catch (std::exception &e) {
               TSR_LOG_ERROR("{}", e.what());
               throw e;
             }
@@ -436,7 +436,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
       [](ParallelChunkData data) -> ParallelChunkData {
         try {
           SimplifyTin(*data.tin, *data.tin);
-        } catch (std::exception e) {
+        } catch (std::exception &e) {
           TSR_LOG_ERROR("failed to simplify mesh");
           TSR_LOG_TRACE("{}", e.what());
           throw e;
@@ -450,7 +450,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
         // TSR_LOG_TRACE("Cache node");
         try {
           IO::CacheChunk(TIN_FEATURE_ID, data.chunkInfo, *data.tin);
-        } catch (std::exception e) {
+        } catch (std::exception &e) {
           TSR_LOG_ERROR("caching chunk failed");
           TSR_LOG_TRACE("{}", e.what());
         }
@@ -475,7 +475,7 @@ Tin InitializeTinFromBoundary(MeshBoundary boundary, std::string api_key,
     try {
       input_node.activate();
       flowGraph.wait_for_all();
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       TSR_LOG_ERROR("{}", e.what());
       flowGraph.cancel();
       flowGraph.wait_for_all();

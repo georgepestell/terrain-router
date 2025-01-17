@@ -135,7 +135,7 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
         TSR_LOG_TRACE("caching chunk");
         try {
           IO::CacheChunk(dataCacheID, chunk, data.dataset);
-        } catch (std::exception e) {
+        } catch (std::exception &e) {
           TSR_LOG_ERROR("failed to cache data");
           throw e;
         }
@@ -150,11 +150,10 @@ void CEHTerrainFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       contours =
           API::ExtractFeatureContours(data.filename, adfGeotransform, 0.5);
 
-      // TODO: Cache contours
       TSR_LOG_TRACE("Caching contours");
       try {
         IO::CacheChunk(contourCacheID, chunk, contours);
-      } catch (std::exception e) {
+      } catch (std::exception &e) {
         TSR_LOG_WARN("failed to cache CEH contours");
       }
     }
@@ -190,7 +189,7 @@ void CEHTerrainFeature::Tag(const Tin &tin) {
     Point3 centerWGS84;
     try {
       centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       continue;
     }
 

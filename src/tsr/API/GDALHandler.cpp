@@ -136,7 +136,7 @@ GDALDatasetH WarpVectorDatasetToUtm(GDALDatasetH hDataset,
 
     warpedDataset = GDALVectorTranslate(filepath.c_str(), nullptr, 1, &hDataset,
                                         warpOptions, nullptr);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("failed to warp dataset");
     GDALVectorTranslateOptionsFree(warpOptions);
@@ -318,6 +318,12 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
       continue;
     }
 
+    if (layer->GetNextFeature() == NULL) {
+      continue;
+    }
+
+    layer->ResetReading();
+
     // Add -l <layername>
     options = CSLAddString(options, "-l");
     options = CSLAddString(options, layer->GetName());
@@ -348,13 +354,14 @@ GDALDatasetH RasterizeDataset(const GDALDatasetH &source_dataset,
   GDALRasterizeOptionsFree(rasterizeOptions);
 
   if (!outputDataset) {
-    TSR_LOG_ERROR("Rasterization failed");
+    TSR_LOG_ERROR("No output dataset generated");
     throw std::runtime_error("rasterization failed");
   }
 
   if (usageError != CE_None) {
-    TSR_LOG_ERROR("Rasterization failed");
-    throw std::runtime_error("rasterization failed");
+    TSR_LOG_ERROR("Rasterization usage error");
+    TSR_LOG_ERROR("error: {}", usageError);
+    // throw std::runtime_error("rasterization failed");
   }
 
   TSR_LOG_TRACE("rasterization complete");

@@ -1,4 +1,5 @@
 #include "tsr/IO/KMLWriter.hpp"
+#include "fmt/core.h"
 #include "tsr/Features/GradientSpeedFeature.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/Logging.hpp"
@@ -8,6 +9,11 @@
 #include "tsr/TsrState.hpp"
 #include <CGAL/Kernel/global_functions_3.h>
 #include <boost/dynamic_bitset/dynamic_bitset.hpp>
+#include <chrono>
+#include <ctime>
+#include <string>
+
+#include <fmt/chrono.h>
 
 #include "tsr/Features/GradientFeature.hpp"
 
@@ -19,7 +25,9 @@ void writeSuccessStateToKML(const std::string &filepath, TsrState &state) {
 
   auto route = state.fetchRoute();
 
-  auto routeKML = GenerateKmlRoute(route);
+  double estimatedTime = state.estimateTime();
+
+  auto routeKML = GenerateKmlRoute(route, estimatedTime);
 
   auto warningsKML = GenerateKmlWarnings(state);
 
@@ -56,8 +64,12 @@ std::string GenerateKmlDocument(const std::string &inner_kml) {
   return kml;
 }
 
-std::string GenerateKmlFaces(std::vector<Face_handle> &faces) {
+std::string GenerateKmlFaces(std::vector<Face_handle> &faces,
+                             std::string name) {
   std::string kml;
+
+  kml += "<Folder>\n";
+  kml += "<name>" + name + "</name>\n";
 
   for (uint f = 0; f < faces.size(); f++) {
 
@@ -98,6 +110,8 @@ std::string GenerateKmlFaces(std::vector<Face_handle> &faces) {
     kml += "</Placemark>\n";
   }
 
+  kml += "</Folder>\n";
+
   return kml;
 }
 
@@ -131,7 +145,7 @@ std::string GenerateKmlWarnings(const TsrState &state) {
     Point3 centerWGS84;
     try {
       centerWGS84 = TranslateUtmPointToWgs84(center, 30, true);
-    } catch (std::exception e) {
+    } catch (std::exception &e) {
       continue;
     }
 
@@ -176,7 +190,8 @@ std::string GenerateKmlLine(std::pair<Point3, Point3> line) {
   return kml;
 }
 
-std::string GenerateKmlRoute(const std::vector<Point3> &route) {
+std::string GenerateKmlRoute(const std::vector<Point3> &route,
+                             const double duration) {
 
   // Used to show gradient
   GradientSpeedFeature Fg("gradient");
@@ -192,8 +207,14 @@ std::string GenerateKmlRoute(const std::vector<Point3> &route) {
   auto endPointWGS84 =
       TranslateUtmPointToWgs84(route[route.size() - 1], 30, true);
 
+  std::string durationString = fmt::format(
+      "{:%H:%M:%S}", std::chrono::duration_cast<std::chrono::seconds>(
+                         std::chrono::duration<double>(duration)));
+
   kml += "<Folder>\n";
   kml += "<name>Route</name>\n";
+  kml += "<description>Estimated Route Time: " + durationString +
+         "</description>\n";
 
   kml += "<Style "
          "id=\"routeStyle\"><IconStyle><color>#ff61ffb8</color>";
@@ -204,11 +225,11 @@ std::string GenerateKmlRoute(const std::vector<Point3> &route) {
          "LineStyle></Style>";
 
   kml += "<Style "
-         "id=\"slightGradientWarning\"><LineStyle><color>#ffffa500</"
+         "id=\"slightGradientWarning\"><LineStyle><color>#ff0050ff</"
          "color><width>4</width></"
          "LineStyle></Style>";
   kml += "<Style "
-         "id=\"steepGradientWarning\"><LineStyle><color>#ffff4500</"
+         "id=\"steepGradientWarning\"><LineStyle><color>#ff0045ff</"
          "color><width>4</width></"
          "LineStyle></Style>";
 

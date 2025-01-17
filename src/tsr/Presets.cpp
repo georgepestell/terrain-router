@@ -17,6 +17,7 @@
 #include "tsr/Features/BoolWaterFeature.hpp"
 #include "tsr/Features/CEHTerrainFeature.hpp"
 #include "tsr/Features/ConditionalFeature.hpp"
+#include "tsr/Features/ConstantFeature.hpp"
 #include "tsr/Features/DistanceFeature.hpp"
 #include "tsr/Features/GradientFeature.hpp"
 #include "tsr/Features/GradientSpeedFeature.hpp"
@@ -46,7 +47,7 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
 
   auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
 
-  auto pathFeature = std::make_shared<PathFeature>("paths", 0.1);
+  auto pathFeature = std::make_shared<PathFeature>("paths", 0.05);
 
   auto waterSpeedInfluence =
       std::make_shared<InverseFeature<bool, bool>>("water_speed");
@@ -54,17 +55,12 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
 
   auto speedFeature = std::make_shared<MultiplierFeature>("speed");
   speedFeature->AddDependency(waterSpeedInfluence, MultiplierFeature::BOOL);
-  speedFeature->AddDependency(terrainFeature, MultiplierFeature::DOUBLE); //
-  // DO NOT MERGE: Not using terrain type
+  speedFeature->AddDependency(terrainFeature, MultiplierFeature::DOUBLE);
   speedFeature->AddDependency(gradientSpeedInfluence,
                               MultiplierFeature::DOUBLE);
 
-  // DO NOT MEGE : Using constant path speed instead of gradient/terrain based
   auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
   pathSpeed->AddDependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
-
-  // auto pathSpeed =
-  // std::make_shared<ConstantFeature<double>>("path_speed", 1.0);
 
   auto speedWithPathFeature =
       std::make_shared<ConditionalFeature<double>>("speed_with_path");
@@ -83,7 +79,6 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   fm.SetOutputFeature(timeFeature);
 
   TSR_LOG_TRACE("initializing features");
-  TSR_LOG_DEBUG("Initialization");
 
   TSR_LOG_DEBUG("Terrain");
   terrainFeature->Initialize(tin, boundary);
@@ -92,13 +87,206 @@ FeatureManager SetupTimePreset(Tin &tin, const MeshBoundary &boundary) {
   TSR_LOG_DEBUG("Paths");
   pathFeature->Initialize(tin, boundary);
 
-  //   TSR_LOG_DEBUG("Tagging");
+  TSR_LOG_DEBUG("Tagging");
   terrainFeature->Tag(tin);
   waterFeature->Tag(tin);
   pathFeature->Tag(tin);
 
-  //   /// DEBUG: Write watermap to KML
-  //   waterFeature->WriteWaterToKml();
+  // Write water and paths to KML
+  waterFeature->WriteWaterToKml();
+  pathFeature->WritePathsToKml();
+
+  return fm;
+}
+
+FeatureManager SetupTimeWithSwimmingPreset(Tin &tin,
+                                           const MeshBoundary &boundary) {
+
+  // Feature Manager Configuration
+  TSR_LOG_TRACE("Setting up feature manager");
+  FeatureManager fm;
+
+  TSR_LOG_DEBUG("Constructors");
+
+  auto gradientFeature = std::make_shared<GradientFeature>("gradient");
+  auto distance = std::make_shared<DistanceFeature>("distance");
+  auto gradientSpeedInfluence =
+      std::make_shared<GradientSpeedFeature>("gradient_speed");
+  gradientSpeedInfluence->AddDependency(gradientFeature);
+
+  auto terrainFeature =
+      std::make_shared<CEHTerrainFeature>("terrain_type", 0.1);
+
+  auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
+
+  auto pathFeature = std::make_shared<PathFeature>("paths", 0.05);
+
+  auto swimSpeed = std::make_shared<ConstantFeature<double>>("swimSpeed", 0.89);
+  auto noImpact = std::make_shared<ConstantFeature<double>>("swimSpeed", 1);
+  auto waterSpeedInfluence =
+      std::make_shared<ConditionalFeature<double>>("water_speed");
+  // If water
+  waterSpeedInfluence->AddDependency(waterFeature);
+  // Then swimspeed
+  waterSpeedInfluence->AddDependency(swimSpeed);
+  // Else, don't impact speed
+  waterSpeedInfluence->AddDependency(noImpact);
+
+  auto speedFeature = std::make_shared<MultiplierFeature>("speed");
+  speedFeature->AddDependency(waterSpeedInfluence, MultiplierFeature::DOUBLE);
+  speedFeature->AddDependency(terrainFeature, MultiplierFeature::DOUBLE);
+  speedFeature->AddDependency(gradientSpeedInfluence,
+                              MultiplierFeature::DOUBLE);
+
+  auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
+  pathSpeed->AddDependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
+
+  auto speedWithPathFeature =
+      std::make_shared<ConditionalFeature<double>>("speed_with_path");
+  speedWithPathFeature->AddDependency(pathFeature);
+  speedWithPathFeature->AddDependency(pathSpeed);
+  speedWithPathFeature->AddDependency(speedFeature);
+
+  auto inverseSpeedFeature =
+      std::make_shared<InverseFeature<double, double>>("inverse_speed");
+  inverseSpeedFeature->AddDependency(speedWithPathFeature);
+
+  auto timeFeature = std::make_shared<MultiplierFeature>("time");
+  timeFeature->AddDependency(distance, MultiplierFeature::DOUBLE);
+  timeFeature->AddDependency(inverseSpeedFeature, MultiplierFeature::DOUBLE);
+
+  fm.SetOutputFeature(timeFeature);
+
+  TSR_LOG_TRACE("initializing features");
+
+  TSR_LOG_DEBUG("Terrain");
+  terrainFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Water");
+  waterFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Paths");
+  pathFeature->Initialize(tin, boundary);
+
+  TSR_LOG_DEBUG("Tagging");
+  terrainFeature->Tag(tin);
+  waterFeature->Tag(tin);
+  pathFeature->Tag(tin);
+
+  // Write water and paths to KML
+  waterFeature->WriteWaterToKml();
+  pathFeature->WritePathsToKml();
+
+  return fm;
+}
+
+FeatureManager SetupTimeRestrictSwimmingPreset(Tin &tin,
+                                               const MeshBoundary &boundary) {
+
+  // Feature Manager Configuration
+  TSR_LOG_TRACE("Setting up feature manager");
+  FeatureManager fm;
+
+  TSR_LOG_DEBUG("Constructors");
+
+  auto gradientFeature = std::make_shared<GradientFeature>("gradient");
+  auto distance = std::make_shared<DistanceFeature>("distance");
+  auto gradientSpeedInfluence =
+      std::make_shared<GradientSpeedFeature>("gradient_speed");
+  gradientSpeedInfluence->AddDependency(gradientFeature);
+
+  auto terrainFeature =
+      std::make_shared<CEHTerrainFeature>("terrain_type", 0.1);
+
+  auto waterFeature = std::make_shared<BoolWaterFeature>("water", 0.1);
+
+  auto pathFeature = std::make_shared<PathFeature>("paths", 0.05);
+
+  auto swimSpeed =
+      std::make_shared<ConstantFeature<double>>("swimSpeed", 0.001);
+  auto noImpact = std::make_shared<ConstantFeature<double>>("swimSpeed", 1);
+  auto waterSpeedInfluence =
+      std::make_shared<ConditionalFeature<double>>("water_speed");
+  // If water
+  waterSpeedInfluence->AddDependency(waterFeature);
+  // Then swimspeed
+  waterSpeedInfluence->AddDependency(swimSpeed);
+  // Else, don't impact speed
+  waterSpeedInfluence->AddDependency(noImpact);
+
+  auto speedFeature = std::make_shared<MultiplierFeature>("speed");
+  speedFeature->AddDependency(waterSpeedInfluence, MultiplierFeature::DOUBLE);
+  speedFeature->AddDependency(terrainFeature, MultiplierFeature::DOUBLE);
+  speedFeature->AddDependency(gradientSpeedInfluence,
+                              MultiplierFeature::DOUBLE);
+
+  auto pathSpeed = std::make_shared<MultiplierFeature>("path_speed");
+  pathSpeed->AddDependency(gradientSpeedInfluence, MultiplierFeature::DOUBLE);
+
+  auto speedWithPathFeature =
+      std::make_shared<ConditionalFeature<double>>("speed_with_path");
+  speedWithPathFeature->AddDependency(pathFeature);
+  speedWithPathFeature->AddDependency(pathSpeed);
+  speedWithPathFeature->AddDependency(speedFeature);
+
+  auto inverseSpeedFeature =
+      std::make_shared<InverseFeature<double, double>>("inverse_speed");
+  inverseSpeedFeature->AddDependency(speedWithPathFeature);
+
+  auto timeFeature = std::make_shared<MultiplierFeature>("time");
+  timeFeature->AddDependency(distance, MultiplierFeature::DOUBLE);
+  timeFeature->AddDependency(inverseSpeedFeature, MultiplierFeature::DOUBLE);
+
+  fm.SetOutputFeature(timeFeature);
+
+  TSR_LOG_TRACE("initializing features");
+
+  TSR_LOG_DEBUG("Terrain");
+  terrainFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Water");
+  waterFeature->Initialize(tin, boundary);
+  TSR_LOG_DEBUG("Paths");
+  pathFeature->Initialize(tin, boundary);
+
+  TSR_LOG_DEBUG("Tagging");
+  terrainFeature->Tag(tin);
+  waterFeature->Tag(tin);
+  pathFeature->Tag(tin);
+
+  // Write water and paths to KML
+  waterFeature->WriteWaterToKml();
+  pathFeature->WritePathsToKml();
+
+  return fm;
+}
+
+FeatureManager SetupSimpleDistancePreset() {
+
+  // Feature Manager Configuration
+  TSR_LOG_TRACE("Setting up feature manager");
+  FeatureManager fm;
+
+  auto distance = std::make_shared<DistanceFeature>("distance");
+
+  fm.SetOutputFeature(distance);
+
+  return fm;
+}
+FeatureManager SetupSimpleGradientPreset() {
+
+  // Feature Manager Configuration
+  TSR_LOG_TRACE("Setting up feature manager");
+  FeatureManager fm;
+
+  auto distance = std::make_shared<DistanceFeature>("distance");
+  auto gradient = std::make_shared<GradientFeature>("gradient");
+
+  auto distanceGrad = std::make_shared<MultiplierFeature>("distance_grad");
+
+  distanceGrad->AddDependency(distance,
+                              MultiplierFeature::DEPENDENCY_TYPE::DOUBLE);
+  distanceGrad->AddDependency(gradient,
+                              MultiplierFeature::DEPENDENCY_TYPE::DOUBLE);
+
+  fm.SetOutputFeature(distanceGrad);
 
   return fm;
 }

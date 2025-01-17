@@ -85,7 +85,7 @@ void PathFeature::Initialize(Tin &tin, const MeshBoundary &boundary) {
       // Cache Contours
       try {
         IO::CacheChunk(this->feature_id, chunk, contours);
-      } catch (std::exception e) {
+      } catch (std::exception &e) {
         TSR_LOG_WARN("failed to cache path contours");
       }
     }

@@ -113,7 +113,7 @@ DataFile ChunkManager::FetchVectorChunk(const ChunkInfo &chunk) const {
     API::APICaller caller;
     caller.FetchDataFromAPI(chunkURL, filepath.string());
     IO::LoadVectorGdalDatasetFromFile(filepath.string(), dataset);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("No response from API");
     throw e;
@@ -127,7 +127,7 @@ DataFile ChunkManager::FetchVectorChunk(const ChunkInfo &chunk) const {
 
   try {
     warpedDS = API::WarpVectorDatasetToUtm(dataset, warpedFilepath.string());
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_ERROR("failed to warp dataset");
     TSR_LOG_TRACE("{}", e.what());
     GDALReleaseDataset(dataset);
@@ -159,7 +159,7 @@ ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
     API::APICaller caller;
     caller.FetchDataFromAPI(chunkURL, filepath.string());
     IO::LoadVectorGdalDatasetFromFile(filepath.string(), dataset);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("No response from API");
     boost::filesystem::remove(filepath);
@@ -175,7 +175,7 @@ ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
   try {
     rasterDataset = API::RasterizeDataset(dataset, raster_filepath.string(),
                                           chunk, pixel_resolution);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("failed to rasterize vector dataset");
     boost::filesystem::remove(filepath);
@@ -198,7 +198,7 @@ ChunkManager::FetchAndRasterizeVectorChunk(const ChunkInfo &chunk,
   try {
     warpedDS =
         API::WarpRasterDatasetToUtm(rasterDataset, warpedFilepath.string());
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_ERROR("failed to warp dataset");
     TSR_LOG_TRACE("{}", e.what());
     GDALReleaseDataset(rasterDataset);
@@ -237,7 +237,7 @@ DataFile ChunkManager::FetchRasterChunk(const ChunkInfo &chunk) const {
     caller.FetchDataFromAPI(chunkURL, filepath.string());
 
     TSR_LOG_TRACE("parsing response");
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_TRACE("{}", e.what());
     TSR_LOG_ERROR("Calling API failed");
     throw e;
@@ -247,7 +247,7 @@ DataFile ChunkManager::FetchRasterChunk(const ChunkInfo &chunk) const {
   GDALDatasetH dataset;
   try {
     IO::LoadGdalDatasetFromFile(filepath.string(), dataset);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_ERROR("failed to open GDAL dataset");
     TSR_LOG_TRACE("{}", e.what());
     throw e;
@@ -263,7 +263,7 @@ DataFile ChunkManager::FetchRasterChunk(const ChunkInfo &chunk) const {
 
   try {
     warpedDS = API::WarpRasterDatasetToUtm(dataset, warpedFilepath.string());
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     TSR_LOG_ERROR("failed to warp dataset");
     TSR_LOG_TRACE("{}", e.what());
     GDALReleaseDataset(dataset);

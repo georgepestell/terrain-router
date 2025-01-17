@@ -1,7 +1,7 @@
 
 #include "tsr/TsrState.hpp"
-#include "tsr/Point3.hpp"
 #include "tsr/Logging.hpp"
+#include "tsr/Point3.hpp"
 
 namespace tsr {
 
@@ -73,18 +73,36 @@ std::vector<Point3> TsrState::fetchRoute() const {
   return route;
 }
 
-  size_t TsrState::AddWarning(const std::string &warning, const short priority) {
-    if (!warning_index.contains(warning)) {
-      size_t index = warning_messages.size();
-      warning_messages.push_back(warning);
+size_t TsrState::AddWarning(const std::string &warning, const short priority) {
+  if (!warning_index.contains(warning)) {
+    size_t index = warning_messages.size();
+    warning_messages.push_back(warning);
 
-      warning_index[warning] = index;
-      warning_priorities[index] = priority;
+    warning_index[warning] = index;
+    warning_priorities[index] = priority;
 
-      return index;
-    } else {
-      return warning_index[warning];
-    }
+    return index;
+  } else {
+    return warning_index[warning];
   }
+}
+
+double TsrState::estimateTime() const {
+  if (this->routes.contains(end_vertex)) {
+    double endCost = this->routes.at(end_vertex).gCost;
+
+    // Time =  Distance / (Speed * SpeedMul)
+    // Cost = Distance / SpeedMul
+    // Cost / Speed = Distance / (SpeedMul * Speed) = Time
+
+    // Metres a second = 1.34 on average 20-29 yrs old
+    double DEFAULT_WALKING_SPEED = 1.2;
+
+    return endCost / DEFAULT_WALKING_SPEED;
+
+  } else {
+    return -1;
+  }
+}
 
 } // namespace tsr

@@ -1,5 +1,3 @@
-#define OPENTOP_KEY "0f789809fed28dc634c8d75695d0cc5c"
-
 #include <exception>
 #include <gtest/gtest.h>
 
@@ -7,6 +5,7 @@
 #include "tsr/API/GDALHandler.hpp"
 #include "tsr/IO/MapIO.hpp"
 
+#include "tsr/Config.hpp"
 #include "tsr/Logging.hpp"
 
 #include <gdal/gdal.h>
@@ -25,7 +24,7 @@ TEST(GDALHandlerTests, TestWarping) {
   GDALDatasetH warpedDataset;
   try {
     warpedDataset = API::warpWGS84DatasetToUTM(dataset);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     GDALReleaseDataset(dataset);
     FAIL();
   }

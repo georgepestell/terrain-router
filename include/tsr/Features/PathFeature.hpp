@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tsr/Features/APIFeature.hpp"
+#include "tsr/Features/DataFeature.hpp"
 #include "tsr/IO/FileIO.hpp"
 #include "tsr/MeshBoundary.hpp"
 #include "tsr/Point3.hpp"
@@ -19,7 +19,7 @@ struct EdgeHash {
   std::size_t operator()(const std::pair<Point3, Point3> &edge) const;
 };
 
-class PathFeature : public APIFeature<bool> {
+class PathFeature : public DataFeature<bool> {
 private:
   std::unordered_set<std::pair<Point3, Point3>, EdgeHash> paths;
 
@@ -29,7 +29,7 @@ private:
 
 public:
   PathFeature(std::string name, double tile_size)
-      : APIFeature(name, URL, tile_size, {0, 1, 2, 3}) {}
+      : DataFeature(name, URL, tile_size, {0, 1, 2, 3}) {}
 
   void Initialize(Tin &tin, const MeshBoundary &boundary) override;
   bool Calculate(TsrState &state) override;

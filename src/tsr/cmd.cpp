@@ -31,11 +31,13 @@
 #include <ostream>
 #include <vector>
 
+#include "tsr/Config.hpp"
+
 namespace po = boost::program_options;
 
 #define DEFAULT_DEM_FILE SOURCE_ROOT "/data/benNevis_DEM.xyz"
 #define RADII_MULTIPLIER 1.5
-#define DEM_API_KEY "0f789809fed28dc634c8d75695d0cc5c"
+#define DEM_API_KEY OPENTOP_KEY
 
 /// DEBUG: remove DEBUG_TIME
 #define DEBUG_TIME
@@ -83,7 +85,7 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
 #endif
 
   TSR_LOG_INFO("Initializing TIN");
-  Tin tin = InitializeTinFromBoundary(boundary, DEM_API_KEY);
+  Tin tin = InitializeTinFromBoundary(boundary, OPENTOP_KEY);
 
 #ifdef DEBUG_TIME
   auto timer_features_setup = high_resolution_clock::now();
@@ -118,7 +120,7 @@ bool tsr_run(double sLat, double sLon, double eLat, double eLon) {
   bool routeStatus = EXIT_SUCCESS;
   try {
     route = router.Route(tin, fm, boundary, startPoint, endPoint);
-  } catch (std::exception e) {
+  } catch (std::exception &e) {
     // Continue
     routeStatus = EXIT_FAILURE;
   }

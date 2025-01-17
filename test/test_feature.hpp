@@ -13,6 +13,8 @@
 #include <gdal/gdal.h>
 #include <gtest/gtest.h>
 
+#include "tsr/Config.hpp"
+
 // DEBUG
 #include "tsr/IO/MapIO.hpp"
 #include "tsr/TsrState.hpp"
@@ -73,8 +75,7 @@ TEST(TestFeature, testCEHFeatureInitialization) {
 
   MeshBoundary boundary(srcUTM, tgtUTM, 1);
 
-  Tin tin =
-      InitializeTinFromBoundary(boundary, "0f789809fed28dc634c8d75695d0cc5c");
+  Tin tin = InitializeTinFromBoundary(boundary, OPENTOP_KEY);
 
   CEHTerrainFeature ceh = CEHTerrainFeature("CEH", 0.1);
   ceh.Initialize(tin, boundary);

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "tsr/RouteNode.hpp"
 #include "tsr/Point3.hpp"
+#include "tsr/RouteNode.hpp"
 
 #include <unordered_map>
 
@@ -33,6 +33,8 @@ struct TsrState {
   void ProcessWarnings();
 
   std::vector<Point3> fetchRoute() const;
+
+  double estimateTime() const;
 };
 
 } // namespace tsr

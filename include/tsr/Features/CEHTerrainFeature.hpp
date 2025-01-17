@@ -1,4 +1,4 @@
-#include "tsr/Features/APIFeature.hpp"
+#include "tsr/Features/DataFeature.hpp"
 #include "tsr/MeshBoundary.hpp"
 #include "tsr/Tin.hpp"
 #include "tsr/TsrState.hpp"
@@ -33,7 +33,7 @@ enum CEH_TERRAIN_TYPE {
   NO_DATA
 };
 
-class CEHTerrainFeature : public APIFeature<double> {
+class CEHTerrainFeature : public DataFeature<double> {
 private:
   static std::map<uint32_t, CEH_TERRAIN_TYPE> TERRAIN_COLOURS;
 
@@ -42,13 +42,12 @@ private:
   static CEH_TERRAIN_TYPE
   interpretCEHTerrainColour(std::vector<double> colourValues);
 
-  static std::vector<double> GetPixelColour(GDALDatasetH dataset, int x,
-                                              int y);
+  static std::vector<double> GetPixelColour(GDALDatasetH dataset, int x, int y);
   static std::string URL;
 
 public:
   CEHTerrainFeature(std::string name, double tile_size)
-      : APIFeature(name, URL, tile_size, {1, 0, 3, 2}) {};
+      : DataFeature(name, URL, tile_size, {1, 0, 3, 2}) {};
 
   void Initialize(Tin &tin, const MeshBoundary &boundary) override;
 
