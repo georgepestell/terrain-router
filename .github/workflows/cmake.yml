@@ -14,12 +14,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: install deps
-    - run: sudo apt install libopencv-dev libgeographiclib-dev libfmt-dev libcgal-dev libsimdjson-dev libgdal-dev
+      run: sudo apt install libopencv-dev libgeographiclib-dev libfmt-dev libcgal-dev libsimdjson-dev libgdal-dev
     - name: make build directory
-    - run: mkdir build
+      run: mkdir build
     - name: cmake setup
-    - run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DTSR_TEST=ON ..
+      run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DTSR_TEST=ON ..
     - name: build tests
-    - run: ninja tsr-test
+      run: ninja tsr-test
     - name: run tests
-    - run: ninja test
+      run: ninja test
