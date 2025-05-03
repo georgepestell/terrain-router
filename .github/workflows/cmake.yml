@@ -13,13 +13,18 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
-    - name: install deps
-      run: sudo apt install libopencv-dev libgeographiclib-dev libfmt-dev libcgal-dev libsimdjson-dev libgdal-dev
-    - name: make build directory
-      run: mkdir build && cd build
-    - name: cmake setup
-      run: cmake -G Ninja -DCMAKE_BUILD_TYPE=Release -DTSR_TEST=ON ..
-    - name: build tests
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libopencv-dev libgeographiclib-dev libfmt-dev libcgal-dev libsimdjson-dev libgdal-dev
+          version: 1.0
+    - name: Make Build Directory
+      run: mkdir build
+    - name: CMake Setup
+      working-directory: ./build
+      run: cmake .. -G Ninja -DCMAKE_BUILD_TYPE=Release -DTSR_TEST=ON
+    - name: Build Tests
+      working-directory: ./build
       run: ninja tsr-test
-    - name: run tests
+    - name: Run Tests
+      working-directory: ./build
       run: ninja test
