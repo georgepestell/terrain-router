@@ -11,14 +11,13 @@ The following is a list of required c++ libraries that need to be installed, inc
 - `OpenCV (4.10.0)` - Computer Vision
 - `GeographicLib (v26.1.0)` - Point projection conversion
 - `simdjson (v3.6.0)` - JSON parsing (automatically fetched by CMAKE)
-- `Eigen (v3.3)` - parallelization for CGAL
+- `Eigen3 (v3.3)` - parallelization for CGAL
 
 # Compilation Instructions
 
 To build the library and router, first setup the build directory:
 
 ```bash
-$ cd tsr-cli
 $ mkdir build && cd build
 ```
 
