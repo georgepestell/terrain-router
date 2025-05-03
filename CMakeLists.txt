@@ -1,234 +1,88 @@
-cmake_minimum_required(VERSION 3.25)
+# Created by the script cgal_create_CMakeLists
+# This is the CMake script for compiling a set of CGAL applications.
 
-project(terrin_senstive_routing VERSION 1.0.0)
+cmake_minimum_required(VERSION 3.1...3.23)
 
-option(TSR_TEST "include test targets in build system" OFF)
-option(TSR_DOWNLOAD_DEPS "download dependencies during cmake configure" ON)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -frounding-math")
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -frounding-math")
-
-set(CGAL_DISABLE_ROUNDING_MATH_CHECK ON)
+project( terrain-router )
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# add_compile_definitions(OPENTOP_KEY=${OPENTOP_KEY})
-# add_definitions ( -Wno-gnu-zero-variadic-macro-arguments )
+configure_file(cmake/version_info.cpp.in version_info.cpp)
 
-# # get current working branch
-# execute_process(
-#   COMMAND git describe --all --dirty
-#   WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-#   OUTPUT_VARIABLE TSR_GIT_DESCRIPTION
-#   OUTPUT_STRIP_TRAILING_WHITESPACE
-# )
+# GDAL and it's components
+find_package(GDAL CONFIG REQUIRED)
 
-# # last commit hash
-# execute_process(
-#     COMMAND git log -1 --format=%H
-#     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-#     OUTPUT_VARIABLE TSR_GIT_COMMIT_HASH
-#     OUTPUT_STRIP_TRAILING_WHITESPACE
-# )
-# string(TIMESTAMP TSR_TIMESTAMP "%Y%m%dT%H%MZ" UTC)
+find_package(fmt CONFIG REQUIRED)
 
-# CGAL
-
-find_package(CGAL REQUIRED)
-if (NOT CGAL_FOUND)
-  message(FATAL_ERROR "CGAL not found, cannot proceed")
-endif()
-
-if (CGAL_VERSION VERSION_LESS "5.6")
-  message(FATAL_ERROR "CGAL version \"${CGAL_VERSION}\" is too old, at least 5.6 is required")
-endif()
-
-# Boost
-set(Boost_USE_STATIC_LIBS ON CACHE BOOL "" FORCE)
-set(Boost_USE_STATIC_LINS ON)
-find_package(Boost REQUIRED COMPONENTS
-  program_options
-  filesystem
-  system
-)
-
-include(FetchContent)
-
-
-# SimdJSON
-
-FetchContent_Declare(
-  simdjson
-  GIT_REPOSITORY https://github.com/simdjson/simdjson.git
-  GIT_TAG  tags/v3.6.0
-  GIT_SHALLOW TRUE)
-
-FetchContent_MakeAvailable(simdjson)
-
-FetchContent_Declare(
-  fmt
-  GIT_REPOSITORY https://github.com/fmtlib/fmt
-  GIT_TAG        e69e5f977d458f2650bb346dadf2ad30c5320281) # 10.2.1
-
- FetchContent_MakeAvailable(fmt)
-
-set(TSR_SOURCE_FILES
-  src/tsr/DelaunayTriangulation.cpp
-  src/tsr/GeometryUtils.cpp
-  src/tsr/Logging.cpp
-  src/tsr/IO/FileIO.cpp
-  src/tsr/IO/ImageIO.cpp
-  src/tsr/IO/GPXFormatter.cpp
-  src/tsr/IO/MeshIO.cpp
-  src/tsr/IO/MapIO.cpp
-  src/tsr/IO/ChunkCache.cpp
-  src/tsr/API/APICaller.cpp
-  src/tsr/Router.cpp
-  src/tsr/PointProcessor.cpp
-  src/tsr/TsrState.cpp
-  src/tsr/MeshBoundary.cpp
-  src/tsr/Feature.cpp
-  src/tsr/Features/GradientFeature.cpp
-  src/tsr/Features/GradientSpeedFeature.cpp
-  src/tsr/Features/BoolWaterFeature.cpp
-  src/tsr/Features/CEHTerrainFeature.cpp
-  src/tsr/Features/PathFeature.cpp
-  src/tsr/Features/MultiplierFeature.cpp
-  src/tsr/FeatureManager.cpp
-  src/tsr/IO/KMLWriter.cpp
-  src/tsr/IO/JSONParser.cpp
-  src/tsr/MapUtils.cpp
-  src/tsr/ChunkManager.cpp
-  src/tsr/API/GDALHandler.cpp
-  src/tsr/API/APICaller.cpp
-  src/tsr/Point3.cpp
-)
-
-configure_file(src/tsr/version_info.cpp version_info.cpp)
-
-add_library(tsr
-  ${TSR_SOURCE_FILES}
-)
-
-# target_sources(tsr PRIVATE
-# )
-
-find_package(TBB)
-find_package (Eigen3 3.3 REQUIRED NO_MODULE)
-
-find_package(OpenCV REQUIRED)
-find_package(TBB REQUIRED)
 find_package(GeographicLib REQUIRED)
 
-##' GDAL
-find_package(GDAL CONFIG)
+find_package(simdjson REQUIRED)
 
-if (NOT GDAL_FOUND)
-  find_package(GDAL REQUIRED)
-endif()
-
-### libcurl
 find_package(CURL REQUIRED)
 
-target_compile_definitions(tsr PUBLIC $<$<CONFIG:Debug>:TSR_DEBUG>)
+find_package(OpenCV REQUIRED)
 
-target_include_directories(tsr
-  PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    ${Boost_INCLUDE_DIRS}
+include_directories( ${GeographicLib_INCLUDE_DIRS} )
+include_directories( ${OpenCV_INCLUDE_DIRS} )
 
-  PRIVATE
-    ${CGAL_INCLUDE_DIR}
-    ${OpenCV_INCLUDE_DIRS}
-    ${GeographicLib_INCLDUE_DIRS}
-)
+# CGAL and its components
+find_package( CGAL REQUIRED COMPONENTS Core)
 
-target_link_libraries(tsr
-  PUBLIC
-    ${Boost_LIBRARIES}
-    fmt::fmt
+include(FindEigen3)
+include(CGAL_Eigen3_support)
 
-  PRIVATE
-    CGAL::CGAL
-    Eigen3::Eigen
-    ${OpenCV_LIBS}
-    TBB::tbb
-    ${GeographicLib_LIBRARIES}
-    GDAL::GDAL
-    CURL::libcurl
-    simdjson
-)
-
-add_executable(tsr-route
-  src/tsr/cmd.cpp
-  src/tsr/Presets.cpp
-)
-
-target_compile_definitions(tsr-route 
-  PRIVATE "-DSOURCE_ROOT=\"${CMAKE_CURRENT_SOURCE_DIR}\""
-  PUBLIC $<$<CONFIG:Debug>:TSR_DEBUG>
-  )
-
-target_include_directories(tsr-route
-  PRIVATE 
-    ${Boost_INCLUDE_DIRS}
-    ${CMAKE_CURRENT_SOURCE_DIR}/include/
-    ${OpenCV_INCLUDE_DIRS}
-)
-
-target_link_libraries(tsr-route
-  PRIVATE
-    ${Boost_LIBRARIES}
-    tsr
-    fmt::fmt
-    TBB::tbb
-    ${OPENCV_LIBS}
-)
-
-if (TSR_TEST)
-
-  FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/03597a01ee50ed33e9dfd640b249b4be3799d395.zip
-    )
-  # For Windows: Prevent overriding the parent project's compiler/linker settings
-  set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
-  FetchContent_MakeAvailable(googletest)
-
-  enable_testing()
+include(FindTBB)
+include(CGAL_TBB_support)
 
 
-  add_executable(test-tsr test/main.cpp)
-  target_include_directories(test-tsr PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/include ${OpenCV_INCLUDE_DIRS})
-  target_link_libraries(test-tsr PRIVATE Eigen3::Eigen ${OpenCV_LIBS} tsr GTest::gtest_main TBB::tbb)
+if ( NOT CGAL_FOUND )
 
-
-  
-  include(GoogleTest)
-  gtest_discover_tests(test-tsr)
+  message(STATUS "This project requires the CGAL library, and will not be compiled.")
+  return()  
 
 endif()
 
-# Add additional compiler flags if required
-if (CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
-  target_compile_options(tsr PRIVATE -Wall -Wextra -pedantic -frounding-math)
-  target_compile_options(tsr-route PRIVATE -Wall -Wextra -pedantic -frounding-math)
+
+# Boost and its components
+find_package( Boost REQUIRED COMPONENTS filesystem program_options system )
+
+if ( NOT Boost_FOUND )
+
+  message(STATUS "This project requires the Boost library, and will not be compiled.")
+
+  return()  
+
 endif()
 
+# include for local directory
+include_directories( BEFORE include )
 
-set(PACKAGE_SOURCES
-  docs
-  include
-  src
-  test
-  CMakeLists.txt
-  README.md
+# include for local package
+
+# Boost linking
+add_definitions( "-DCGAL_USE_BOOST_FILESYSTEM" )
+list(APPEND CGAL_3RD_PARTY_LIBRARIES ${Boost_FILESYSTEM_LIBRARY} )
+add_definitions( "-DCGAL_USE_BOOST_PROGRAM_OPTIONS" )
+list(APPEND CGAL_3RD_PARTY_LIBRARIES ${Boost_PROGRAM_OPTIONS_LIBRARY} )
+add_definitions( "-DCGAL_USE_BOOST_SYSTEM" )
+list(APPEND CGAL_3RD_PARTY_LIBRARIES ${Boost_SYSTEM_LIBRARY} )
+
+
+# Creating entries for target: terrain-router
+# ############################
+
+file(GLOB TSR_SRC
+  "./src/tsr/**.cpp"
+  "./src/tsr/IO/**.cpp"
+  "./src/tsr/API/**.cpp"
+  "./src/tsr/Features/**.cpp"
 )
 
+add_executable( terrain-router ${TSR_SRC} )
 
-add_custom_target(package 
-  COMMAND zip TSR_v1.0.0.zip ${PACKAGE_SOURCES} -r
-  WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
-)
+add_to_cached_list( CGAL_EXECUTABLE_TARGETS terrain-router )
+
+# Link the executable to CGAL and third-party libraries
+target_link_libraries( terrain-router PRIVATE CGAL::CGAL CGAL::CGAL_Core CGAL::Eigen3_support CGAL::TBB_support GDAL::GDAL fmt::fmt ${GeographicLib_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} TBB::tbb CURL::libcurl simdjson ${OpenCV_LIBS} )
+

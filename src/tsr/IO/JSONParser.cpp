@@ -1,4 +1,3 @@
-#include "simdjson/error.h"
 #include "tsr/Logging.hpp"
 #include "tsr/Point2.hpp"
 #include <string>

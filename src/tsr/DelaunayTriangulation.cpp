@@ -7,7 +7,7 @@
 #include "tsr/Tin.hpp"
 
 #include <CGAL/Polygon_mesh_processing/connected_components.h>
-#include <CGAL/Polygon_mesh_processing/region_growing.h>
+#include <CGAL/Shape_detection/Region_growing/Region_growing.h>
 #include <CGAL/Polygon_mesh_processing/remesh_planar_patches.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Polygon_mesh_processing/repair_degeneracies.h>
