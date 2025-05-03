@@ -1,6 +1,8 @@
 - author: George Pestell (200007413)
 - supervisor: Prof. Graham Kirby
 
+[![CMAKE Test](https://github.com/georgepestell/terrain-router/actions/workflows/cmake.yml/badge.svg)](https://github.com/georgepestell/terrain-router/actions/workflows/cmake.yml)
+
 # System Requirements
 
 The following is a list of required c++ libraries that need to be installed, including versions used in development:
