@@ -24,6 +24,7 @@ find_package(GDAL CONFIG REQUIRED)
 
 find_package(fmt CONFIG REQUIRED)
 
+set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};/usr/share/cmake/geographiclib")
 find_package(GeographicLib REQUIRED)
 
 find_package(simdjson REQUIRED)
