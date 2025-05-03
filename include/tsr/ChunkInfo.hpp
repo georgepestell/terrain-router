@@ -15,7 +15,7 @@ struct ChunkInfo {
 
   bool operator==(const ChunkInfo &other) const {
     return (other.minLat == this->minLat && other.minLng == this->minLng &&
-            other.maxLat == other.maxLat && other.maxLng == this->maxLng);
+            other.maxLat == this->maxLat && other.maxLng == this->maxLng);
   }
 };
 
