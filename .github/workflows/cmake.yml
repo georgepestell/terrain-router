@@ -16,8 +16,9 @@ jobs:
     - uses: awalsh128/cache-apt-pkgs-action@latest
       with:
         packages: libopencv-dev libgeographiclib-dev libfmt-dev libcgal-dev libsimdjson-dev libgdal-dev libboost-all-dev libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libeigen3-dev
-        execute_install_scripts: true
         version: 1.0
+    - name: Install dependencies
+      run: sudo apt install libopencv-dev libgeographiclib-dev libfmt-dev libcgal-dev libsimdjson-dev libgdal-dev libboost-filesystem-dev libboost-program-options-dev libboost-system-dev libeigen3-dev
     - name: Make Build Directory
       run: mkdir build
     - name: CMake Setup
