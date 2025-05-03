@@ -69,7 +69,7 @@ add_definitions( "-DCGAL_USE_BOOST_SYSTEM" )
 list(APPEND CGAL_3RD_PARTY_LIBRARIES ${Boost_SYSTEM_LIBRARY} )
 
 
-# Creating entries for target: terrain-router
+# Creating entries for target: tsr-route
 # ############################
 
 file(GLOB TSR_SRC
@@ -79,10 +79,12 @@ file(GLOB TSR_SRC
   "./src/tsr/Features/**.cpp"
 )
 
-add_executable( terrain-router ${TSR_SRC} )
+add_library ( tsr "src/cmd.cpp" )
+add_executable( tsr-route ${TSR_SRC} )
 
-add_to_cached_list( CGAL_EXECUTABLE_TARGETS terrain-router )
+add_to_cached_list( CGAL_EXECUTABLE_TARGETS tsr-route)
 
 # Link the executable to CGAL and third-party libraries
-target_link_libraries( terrain-router PRIVATE CGAL::CGAL CGAL::CGAL_Core CGAL::Eigen3_support CGAL::TBB_support GDAL::GDAL fmt::fmt ${GeographicLib_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} TBB::tbb CURL::libcurl simdjson ${OpenCV_LIBS} )
+target_link_libraries( tsr PRIVATE CGAL::CGAL CGAL::CGAL_Core CGAL::Eigen3_support CGAL::TBB_support GDAL::GDAL fmt::fmt ${GeographicLib_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} TBB::tbb CURL::libcurl simdjson ${OpenCV_LIBS} )
+target_link_libraries( tsr-route PRIVATE tsr CGAL::CGAL CGAL::CGAL_Core CGAL::Eigen3_support CGAL::TBB_support GDAL::GDAL fmt::fmt ${GeographicLib_LIBRARIES} ${Boost_LIBRARIES} ${OpenCV_LIBS} TBB::tbb CURL::libcurl simdjson ${OpenCV_LIBS} )
 

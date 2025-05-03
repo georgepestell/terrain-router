@@ -45,5 +45,13 @@ The library, CLI app, and tests can then be compiled using one of the following:
   $ ninja test-tsr
 
   # Compile the cli application
-  $ ninja tsr-cli
+  $ ninja tsr-route
+```
+
+# Running instructions
+
+Run the router with:
+
+```bash
+./tsr-route <start-lat> <start-lon> <end-lat> <end-lon>
 ```

@@ -1,4 +1,3 @@
-
 #include "tsr/ChunkManager.hpp"
 #include "tsr/Logging.hpp"
 #include "tsr/PointProcessor.hpp"
